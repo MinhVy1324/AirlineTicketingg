@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AirlineTicketing.DAL\AirlineTicketing.DAL.csproj" />
+    <ProjectReference Include="..\AirlineTicketing.DTO\AirlineTicketing.DTO.csproj" />
+    <ProjectReference Include="..\AirlineTicketing.Domain\AirlineTicketing.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

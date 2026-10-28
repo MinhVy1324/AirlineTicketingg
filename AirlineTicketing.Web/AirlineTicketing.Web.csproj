@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AirlineTicketing.BUS\AirlineTicketing.BUS.csproj" />
+    <ProjectReference Include="..\AirlineTicketing.DAL\AirlineTicketing.DAL.csproj" />
+    <ProjectReference Include="..\AirlineTicketing.DTO\AirlineTicketing.DTO.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
