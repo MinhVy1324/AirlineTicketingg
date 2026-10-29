@@ -1,7 +1,9 @@
 **/bin/
 **/obj/
-.vs/
+**/TestResults/
 .git/
+.vs/
+.vscode/
 .env
 .env.*
-**/node_modules/
+docs/
