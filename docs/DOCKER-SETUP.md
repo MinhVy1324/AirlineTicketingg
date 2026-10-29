@@ -2,6 +2,8 @@
 
 Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Máy host truy cập website qua `http://localhost:8080` và PostgreSQL qua `localhost:5432`.
 
+Thiết kế bảng, ERD và các DTO nằm trong [DATABASE-DESIGN.md](DATABASE-DESIGN.md).
+
 ## 1. Môi trường cần có — DOCKER-01
 
 1. Cài Docker Desktop cho Windows theo [hướng dẫn chính thức](https://docs.docker.com/desktop/setup/install/windows-install/). Backend WSL 2 là lựa chọn mặc định phù hợp cho đa số máy Windows; bật virtualization/WSL 2 nếu trình cài đặt yêu cầu.
@@ -43,7 +45,7 @@ Nếu cổng 5432 hoặc 8080 đã được dùng, đổi giá trị tương ứ
 
 ## 3. Chạy PostgreSQL — DOCKER-02, DOCKER-03
 
-`compose.yaml` định nghĩa PostgreSQL 16 Alpine, health check `pg_isready`, ánh xạ cổng chỉ trên loopback `127.0.0.1`, và named volume `postgres_data` lưu dữ liệu ngoài vòng đời container.
+`compose.yaml` định nghĩa PostgreSQL 16 Alpine, health check xác thực truy vấn bằng đúng user/database/mật khẩu trong `.env`, ánh xạ cổng chỉ trên loopback `127.0.0.1`, và named volume `postgres_data` lưu dữ liệu ngoài vòng đời container.
 
 ```powershell
 docker compose config --quiet

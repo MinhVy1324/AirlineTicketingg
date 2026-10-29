@@ -8,22 +8,29 @@ public sealed class VeConfiguration : IEntityTypeConfiguration<Ve>
 {
     public void Configure(EntityTypeBuilder<Ve> builder)
     {
-        builder.HasKey(ve => ve.Id);
-        builder.Property(ve => ve.MaVe).HasMaxLength(30).IsRequired();
-        builder.HasIndex(ve => ve.MaVe).IsUnique();
-        builder.Property(ve => ve.SoGhe).HasMaxLength(10).IsRequired();
-        builder.HasIndex(ve => new { ve.ChuyenBayId, ve.SoGhe }).IsUnique();
-        builder.Property(ve => ve.HangVe).HasMaxLength(30).IsRequired();
-        builder.Property(ve => ve.GiaVe).HasPrecision(18, 2);
-        builder.Property(ve => ve.TrangThai).HasMaxLength(30).IsRequired();
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.MaVe).HasMaxLength(30).IsRequired();
+        builder.HasIndex(x => x.MaVe).IsUnique();
+        builder.Property(x => x.SoGhe).HasMaxLength(5).IsRequired();
+        builder.HasIndex(x => new { x.ChuyenBayId, x.SoGhe }).IsUnique()
+            .HasFilter("\"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
+        builder.HasIndex(x => new { x.ChuyenBayId, x.HanhKhachId }).IsUnique()
+            .HasFilter("\"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
+        builder.HasIndex(x => new { x.DatVeId, x.TrangThai });
+        builder.Property(x => x.HangVe).HasMaxLength(20).IsRequired();
+        builder.Property(x => x.GiaVe).HasPrecision(12, 2);
+        builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_Ve_GiaVe", "\"GiaVe\" >= 0");
+            t.HasCheckConstraint("CK_Ve_TrangThai", "\"TrangThai\" IN ('TamGiu', 'DaPhatHanh', 'DaHuy', 'DaHoanTien')");
+        });
 
-        builder.HasOne(ve => ve.ChuyenBay)
-            .WithMany(chuyenBay => chuyenBay.Ves)
-            .HasForeignKey(ve => ve.ChuyenBayId)
-            .OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(ve => ve.DatVe)
-            .WithMany(datVe => datVe.Ves)
-            .HasForeignKey(ve => ve.DatVeId)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(x => x.ChuyenBay).WithMany(x => x.Ves)
+            .HasForeignKey(x => x.ChuyenBayId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.DatVe).WithMany(x => x.Ves)
+            .HasForeignKey(x => x.DatVeId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.HanhKhach).WithMany(x => x.Ves)
+            .HasForeignKey(x => x.HanhKhachId).OnDelete(DeleteBehavior.Restrict);
     }
 }

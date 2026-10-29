@@ -8,22 +8,22 @@ public sealed class ChuyenBayConfiguration : IEntityTypeConfiguration<ChuyenBay>
 {
     public void Configure(EntityTypeBuilder<ChuyenBay> builder)
     {
-        builder.HasKey(chuyenBay => chuyenBay.Id);
-        builder.Property(chuyenBay => chuyenBay.SoHieu).HasMaxLength(20).IsRequired();
-        builder.HasIndex(chuyenBay => new { chuyenBay.SoHieu, chuyenBay.GioKhoiHanh }).IsUnique();
-        builder.Property(chuyenBay => chuyenBay.GiaCoBan).HasPrecision(18, 2);
-
-        builder.HasOne(chuyenBay => chuyenBay.SanBayDi)
-            .WithMany(sanBay => sanBay.ChuyenBayDi)
-            .HasForeignKey(chuyenBay => chuyenBay.SanBayDiId)
-            .OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(chuyenBay => chuyenBay.SanBayDen)
-            .WithMany(sanBay => sanBay.ChuyenBayDen)
-            .HasForeignKey(chuyenBay => chuyenBay.SanBayDenId)
-            .OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(chuyenBay => chuyenBay.MayBay)
-            .WithMany(mayBay => mayBay.ChuyenBays)
-            .HasForeignKey(chuyenBay => chuyenBay.MayBayId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.SoHieu).HasMaxLength(20).IsRequired();
+        builder.HasIndex(x => new { x.SoHieu, x.GioKhoiHanh }).IsUnique();
+        builder.HasIndex(x => new { x.TuyenBayId, x.GioKhoiHanh });
+        builder.HasIndex(x => new { x.MayBayId, x.GioKhoiHanh });
+        builder.Property(x => x.GiaCoBan).HasPrecision(12, 2);
+        builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_ChuyenBay_TimeRange", "\"GioHaCanh\" > \"GioKhoiHanh\"");
+            t.HasCheckConstraint("CK_ChuyenBay_GiaCoBan", "\"GiaCoBan\" >= 0");
+            t.HasCheckConstraint("CK_ChuyenBay_TrangThai", "\"TrangThai\" IN ('DuKien', 'DangBay', 'HoanTat', 'BiHuy')");
+        });
+        builder.HasOne(x => x.TuyenBay).WithMany(x => x.ChuyenBays)
+            .HasForeignKey(x => x.TuyenBayId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.MayBay).WithMany(x => x.ChuyenBays)
+            .HasForeignKey(x => x.MayBayId).OnDelete(DeleteBehavior.Restrict);
     }
 }

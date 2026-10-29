@@ -8,11 +8,12 @@ public sealed class MayBayConfiguration : IEntityTypeConfiguration<MayBay>
 {
     public void Configure(EntityTypeBuilder<MayBay> builder)
     {
-        builder.HasKey(mayBay => mayBay.Id);
-        builder.Property(mayBay => mayBay.MaMayBay).HasMaxLength(20).IsRequired();
-        builder.HasIndex(mayBay => mayBay.MaMayBay).IsUnique();
-        builder.Property(mayBay => mayBay.TenMayBay).HasMaxLength(100).IsRequired();
-        builder.Property(mayBay => mayBay.HangSanXuat).HasMaxLength(100).IsRequired();
-        builder.Property(mayBay => mayBay.SoGhe).IsRequired();
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.MaMayBay).HasMaxLength(20).IsRequired();
+        builder.HasIndex(x => x.MaMayBay).IsUnique();
+        builder.Property(x => x.TenMayBay).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.HangSanXuat).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.DangHoatDong).HasDefaultValue(true);
+        builder.ToTable(t => t.HasCheckConstraint("CK_MayBay_SoGhe", "\"SoGhe\" > 0"));
     }
 }
