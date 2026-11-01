@@ -1,0 +1,224 @@
+@model AdminAccountsViewModel
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+    ViewData["AdminNav"] = "accounts";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Quản lý tài khoản</h1>
+            <p class="admin-page-subtitle">Cấp quyền truy cập phù hợp, theo dõi và bảo vệ tài khoản hệ thống.</p>
+        </div>
+        <button type="button" class="av-btn av-btn--primary">
+            @Html.Icon("plus", 17)
+            <span>Tạo tài khoản nhân sự</span>
+        </button>
+    </header>
+
+    <section class="admin-kpis admin-kpis--compact" aria-label="Thống kê tài khoản">
+        @foreach (var kpi in Model.Stats)
+        {
+            <article class="admin-kpi admin-kpi--compact">
+                <span class="admin-kpi__label">@kpi.Label</span>
+                <span class="admin-kpi__value admin-kpi__value--compact">@kpi.Value</span>
+            </article>
+        }
+    </section>
+
+    <section class="av-card admin-card">
+        <div class="av-card__body admin-card__body">
+            <div class="admin-card__head-main">
+                <h2 class="av-card__title">Danh sách tài khoản</h2>
+                <span class="av-caption">Thông tin cá nhân dưới đây là dữ liệu minh họa.</span>
+            </div>
+
+            <form class="admin-filters admin-filters--accounts" method="get" action="/admin/tai-khoan">
+                <label class="av-field">
+                    <span class="av-label">Tìm kiếm</span>
+                    <span class="av-control">
+                        <input type="search" name="q" placeholder="@Model.SearchPlaceholder" autocomplete="off" />
+                        @Html.Icon("search", 17)
+                    </span>
+                </label>
+
+                <label class="av-field">
+                    <span class="av-label">Vai trò</span>
+                    <span class="av-control">
+                        <select name="vai-tro">
+                            <option selected>@Model.RoleFilter</option>
+                            <option>Admin</option>
+                            <option>Manager</option>
+                            <option>Khách hàng</option>
+                        </select>
+                        @Html.Icon("chevron-down", 17)
+                    </span>
+                </label>
+
+                <label class="av-field">
+                    <span class="av-label">Trạng thái</span>
+                    <span class="av-control">
+                        <select name="trang-thai">
+                            <option selected>@Model.StatusFilter</option>
+                            <option>Hoạt động</option>
+                            <option>Đã khóa</option>
+                        </select>
+                        @Html.Icon("chevron-down", 17)
+                    </span>
+                </label>
+
+                <button type="submit" class="av-btn av-btn--outline admin-filters__submit">Áp dụng</button>
+            </form>
+
+            <div class="admin-table">
+                <table class="av-table admin-table--accounts">
+                    <thead>
+                        <tr>
+                            <th scope="col">Tài khoản / Email</th>
+                            <th scope="col">Vai trò</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Lần đăng nhập cuối</th>
+                            <th scope="col">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Accounts)
+                        {
+                            <tr class="@(row.IsSelected ? "is-selected" : null)">
+                                <td>
+                                    <span class="admin-account-name">@row.Name</span>
+                                    <span class="admin-account-email">@row.Email</span>
+                                </td>
+                                <td>@row.Role</td>
+                                <td class="admin-table__result admin-table__result--@row.StatusTone">@row.StatusText</td>
+                                <td>@row.LastLogin</td>
+                                <td><a class="admin-table__action" href="@row.ActionHref">@row.ActionText</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="av-pagination">
+                <span>@Model.ResultText</span>
+                <span class="av-pagination__links">
+                    <a href="/admin/tai-khoan">Trước</a>
+                    <span class="is-current">1</span>
+                    <a href="/admin/tai-khoan">Sau</a>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-grid admin-grid--detail">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.Detail.Title</h2>
+                    <span class="av-caption">@Model.Detail.Subtitle</span>
+                </div>
+
+                <div class="admin-detail-rows">
+                    @foreach (var field in Model.Detail.Fields)
+                    {
+                        <div class="admin-detail-rows__row">
+                            <span class="admin-detail-rows__label">@field.Label</span>
+                            <span class="admin-detail-rows__value">@field.Value</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="admin-detail-actions">
+                    <button type="button" class="av-btn av-btn--ghost">@Model.Detail.PrimaryActionText</button>
+                    <a class="av-btn av-btn--ghost admin-text-danger" href="@Model.Detail.DangerActionHref">@Model.Detail.DangerActionText</a>
+                </div>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <h2 class="av-card__title">Kiểm soát truy cập</h2>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("shield-check", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">Không khóa Admin cuối cùng</span>
+                        <span>
+                            Luôn duy trì ít nhất một quản trị viên hoạt động. Mọi thao tác khóa, mở và cấp quyền
+                            đều có nhật ký.
+                        </span>
+                    </div>
+                </div>
+
+                <p class="av-caption admin-card__note">
+                    Khóa tài khoản sẽ kết thúc các phiên hiện tại. Đặt chỗ và dữ liệu lịch sử vẫn được giữ nguyên.
+                </p>
+            </div>
+        </article>
+    </section>
+</div>
+
+@if (Model.ShowLockDialog)
+{
+    <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="lock-account-title">
+        <a class="av-modal__backdrop" href="@Model.LockDialog.CancelHref" aria-label="Đóng hộp thoại"></a>
+
+        <form class="av-modal__panel" method="post" action="@Model.LockDialog.SubmitHref">
+            @Html.AntiForgeryToken()
+
+            <div class="av-modal__head">
+                <div class="admin-modal__head-main">
+                    <h2 class="av-modal__title" id="lock-account-title">Khóa tài khoản @Model.LockDialog.AccountName?</h2>
+                    <p class="av-caption">Tài khoản / Xác nhận khóa · Thao tác chưa được thực hiện</p>
+                </div>
+                <a class="admin-modal__close" href="@Model.LockDialog.CancelHref" aria-label="Đóng">
+                    @Html.Icon("x", 24)
+                </a>
+            </div>
+
+            <div class="admin-detail-rows admin-detail-rows--dialog">
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">Tài khoản</span>
+                    <span class="admin-detail-rows__value">@Model.LockDialog.AccountName</span>
+                </div>
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">Email</span>
+                    <span class="admin-detail-rows__value">@Model.LockDialog.Email</span>
+                </div>
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">Vai trò / Trạng thái hiện tại</span>
+                    <span class="admin-detail-rows__value">@Model.LockDialog.RoleStatus</span>
+                </div>
+            </div>
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Tài khoản sẽ không thể tiếp tục truy cập</span>
+                    <span>
+                        Kết thúc tất cả phiên truy cập hiện tại và ngăn đăng nhập mới. Dữ liệu đặt chỗ và
+                        lịch sử xử lý vẫn được giữ nguyên; không xóa tài khoản.
+                    </span>
+                </div>
+            </div>
+
+            <label class="av-field">
+                <span class="av-label">Lý do khóa tài khoản <span class="req">*</span></span>
+                <span class="av-control av-control--area">
+                    <textarea name="reason" rows="3" required>@Model.LockDialog.Reason</textarea>
+                </span>
+                <span class="av-field__hint">Bắt buộc nhập lý do. Thao tác và người thực hiện được ghi vào nhật ký.</span>
+            </label>
+
+            <p class="av-caption admin-modal__note">
+                Bạn đang thao tác với vai trò Admin · @DemoCatalog.AdminName. Không cho phép tự khóa Admin đang thao tác
+                hoặc khóa Admin hoạt động cuối cùng.
+            </p>
+
+            <div class="av-modal__foot">
+                <a class="av-btn av-btn--outline" href="@Model.LockDialog.CancelHref">Hủy thao tác</a>
+                <button type="submit" class="av-btn av-btn--danger">Khóa tài khoản</button>
+            </div>
+        </form>
+    </div>
+}

@@ -1,0 +1,58 @@
+@model FlightCardModel
+@{
+    var flight = Model.Flight;
+    var cardClass = Model.Highlighted ? "flight-card flight-card--selected" : "flight-card";
+}
+<article class="@cardClass">
+    <div class="flight-card__main">
+        <div class="flight-card__airline">
+            <span class="flight-card__airline-name">
+                @Html.Icon("plane", 20)
+                @flight.AirlineName
+            </span>
+            <span class="flight-card__meta">@flight.FlightNumber · @flight.Aircraft</span>
+            <span class="av-badge av-badge--neutral">@flight.FareName</span>
+        </div>
+
+        <div class="flight-card__time">
+            <strong>@Money.Time(flight.Departure)</strong>
+            <span>@flight.From.Code</span>
+        </div>
+
+        <div class="flight-card__leg">
+            <span class="flight-card__leg-duration">@Money.Duration(flight.Duration)</span>
+            <span class="flight-card__leg-line">@Html.Icon("plane", 14)</span>
+            <span class="flight-card__leg-stop">@flight.Stops</span>
+        </div>
+
+        <div class="flight-card__time av-text-right">
+            <strong>@Money.Time(flight.Arrival)</strong>
+            <span>@flight.To.Code</span>
+        </div>
+
+        <div class="flight-card__price">
+            <strong>@Money.Vnd(flight.PricePerPassenger)</strong>
+            <span>/khách · Đã gồm thuế, phí</span>
+            <a class="av-btn av-btn--primary av-btn--sm"
+               asp-controller="Booking" asp-action="Passengers">Chọn chuyến</a>
+        </div>
+    </div>
+
+    @if (Model.Expanded)
+    {
+        <div class="flight-card__foot">
+            <div class="rules">
+                <span>@Html.Icon("check", 14) @flight.CabinBaggage · @flight.CheckedBaggage</span>
+                <span>Đổi: @Money.Vnd(flight.ChangeFee) + chênh lệch</span>
+                <span>Hoàn: phí @Money.Vnd(flight.RefundFee)</span>
+            </div>
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Điều kiện áp dụng trước giờ bay 3 tiếng</span>
+                    <span>Sau thời hạn trên hoặc không có mặt: không đổi/hoàn. Hành lý mua thêm và phí dịch vụ không hoàn. Xem chi tiết trước khi chọn.</span>
+                </div>
+            </div>
+        </div>
+    }
+</article>

@@ -1,0 +1,191 @@
+@model LookupPageViewModel
+@{
+    ViewData["Title"] = "Tra cứu đặt chỗ";
+    ViewData["CompactNav"] = true;
+    var result = Model.Result;
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Tra cứu đặt chỗ</h1>
+        <p class="av-page-subtitle">
+            Nhập mã đặt chỗ (PNR) và email liên hệ đã dùng khi đặt vé. Không cần đăng nhập.
+        </p>
+    </header>
+
+    <section class="av-card">
+        <div class="av-card__body av-stack av-gap-18">
+            <h2 class="av-card__title">Thông tin tra cứu</h2>
+
+            <form class="lookup-form" method="post" action="/tra-cuu">
+                @Html.AntiForgeryToken()
+
+                <label class="av-field">
+                    <span class="av-label">Mã đặt chỗ (PNR) <span class="req">*</span></span>
+                    <span class="av-control @(Model.ErrorMessage is not null ? "is-invalid" : null)">
+                        <input type="text" name="Pnr" value="@Model.Form.Pnr" autocomplete="off" required />
+                        @Html.Icon("ticket", 17)
+                    </span>
+                </label>
+
+                <label class="av-field">
+                    <span class="av-label">Email liên hệ <span class="req">*</span></span>
+                    <span class="av-control @(Model.ErrorMessage is not null ? "is-invalid" : null)">
+                        <input type="email" name="Email" value="@Model.Form.Email" autocomplete="email" required />
+                        @Html.Icon("mail", 17)
+                    </span>
+                </label>
+
+                <button type="submit" class="av-btn av-btn--primary">Tra cứu đặt chỗ</button>
+            </form>
+
+            <p class="av-micro">
+                Chỉ hiển thị đặt chỗ khi mã PNR và email liên hệ khớp. Nếu không khớp, hệ thống không cung cấp
+                thông tin đặt chỗ; vui lòng kiểm tra lại cả hai trường.
+            </p>
+        </div>
+    </section>
+
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="av-alert av-alert--danger">
+            <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">Không thể tra cứu đặt chỗ</span>
+                <span>@Model.ErrorMessage</span>
+            </div>
+        </div>
+    }
+
+    @if (Model.HasResult && result is not null)
+    {
+        <div class="av-alert av-alert--success">
+            <span class="av-alert__icon">@Html.Icon("check-circle", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">Đã tìm thấy đặt chỗ khớp thông tin tra cứu</span>
+                <span>
+                    PNR @result.Pnr · Email liên hệ đã xác nhận. Một phần thông tin cá nhân được ẩn để bảo vệ hành khách.
+                </span>
+            </div>
+        </div>
+
+        <div class="booking-layout">
+            <div class="booking-main">
+                <section class="av-card">
+                    <div class="av-card__body av-stack av-gap-16">
+                        <h2 class="av-card__title">Chi tiết đặt chỗ · @result.Pnr</h2>
+
+                        <div class="av-row av-gap-8 av-wrap">
+                            <span class="av-badge av-badge--success">Đặt chỗ: Đã xác nhận</span>
+                            <span class="av-badge av-badge--success">Thanh toán: Đã thanh toán</span>
+                            <span class="av-badge av-badge--success">Vé: Đã xuất</span>
+                        </div>
+
+                        <partial name="_JourneyBlock" model="result.Flight" />
+
+                        <hr class="av-divider" />
+
+                        <div class="av-rows">
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">Hành khách</span>
+                                <span class="av-rowline__value">@result.PassengerMasked</span>
+                            </div>
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">Giấy tờ</span>
+                                <span class="av-rowline__value">@result.IdentityMasked</span>
+                            </div>
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">Số điện thoại</span>
+                                <span class="av-rowline__value">@result.PhoneMasked</span>
+                            </div>
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">Email liên hệ</span>
+                                <span class="av-rowline__value">@result.EmailMasked</span>
+                            </div>
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">Ghế / hành lý</span>
+                                <span class="av-rowline__value">@result.SeatCode · @result.BaggageText</span>
+                            </div>
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">Số vé</span>
+                                <span class="av-rowline__value av-num">@result.TicketNumber</span>
+                            </div>
+                            <div class="av-rowline av-rowline--total">
+                                <span class="av-rowline__label">Tổng đã thanh toán</span>
+                                <span class="av-rowline__value">@Money.Vnd(result.Total)</span>
+                            </div>
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">Ngày đặt</span>
+                                <span class="av-rowline__value">@result.BookedAtText</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="av-card">
+                    <div class="av-card__body av-stack av-gap-16">
+                        <h2 class="av-card__title">Quản lý đặt chỗ</h2>
+
+                        <div class="av-row av-gap-12 av-wrap">
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">Gửi yêu cầu đổi vé</a>
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">Gửi yêu cầu hoàn vé</a>
+                            <a class="av-btn av-btn--ghost" href="/ve-cua-toi/yeu-cau">Theo dõi yêu cầu</a>
+                        </div>
+
+                        <p class="av-caption">
+                            Mọi yêu cầu cần kiểm tra điều kiện vé. Gửi yêu cầu không đồng nghĩa đã đổi vé hoặc đã nhận tiền hoàn.
+                        </p>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="booking-aside">
+                <section class="av-card">
+                    <div class="av-card__body av-card__stack">
+                        <h2 class="av-card__title">Điều kiện đổi / hoàn tự nguyện</h2>
+                        <p class="av-body">
+                            Gửi trước giờ bay ít nhất 3 tiếng. Đổi: @Money.Vnd(result.Flight.ChangeFee) + chênh lệch giá.
+                            Hoàn: phí @Money.Vnd(result.Flight.RefundFee).
+                        </p>
+                        <p class="av-caption">
+                            Phí dịch vụ @Money.Vnd(DemoCatalog.ServiceFee) và hành lý mua thêm
+                            @Money.Vnd(DemoCatalog.ExtraBaggageFee) không hoàn. Không đổi/hoàn khi không có mặt.
+                            Số tiền cuối cùng được xác nhận khi xử lý.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="av-card">
+                    <div class="av-card__body av-stack av-gap-12">
+                        <div class="av-row av-gap-10">
+                            <span class="lookup-sidehead__icon">@Html.Icon("mail", 19)</span>
+                            <h2 class="av-card__title">Nhận lại vé điện tử</h2>
+                        </div>
+                        <p class="av-caption">
+                            Yêu cầu gửi lại vé về đúng email liên hệ của đặt chỗ. Không thay đổi người nhận tại bước tra cứu.
+                        </p>
+                        <button type="button" class="av-btn av-btn--outline av-btn--block">Gửi lại vé qua email</button>
+                    </div>
+                </section>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
+                        <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @result.Pnr để được kiểm tra.</span>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    }
+    else if (Model.ErrorMessage is null)
+    {
+        <div class="av-alert av-alert--info">
+            <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">Chưa có thông tin tra cứu</span>
+                <span>Nhập mã đặt chỗ và email liên hệ để xem chi tiết đặt chỗ của bạn.</span>
+            </div>
+        </div>
+    }
+</div>

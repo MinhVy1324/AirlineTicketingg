@@ -1,0 +1,141 @@
+@model ScheduleChangedViewModel
+@{
+    ViewData["Title"] = "Chuyến bay của bạn thay đổi giờ";
+    ViewData["Nav"] = "tickets";
+    var booking = Model.Booking;
+    var flight = booking.Flight;
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Chuyến bay của bạn thay đổi giờ</h1>
+        <p class="av-page-subtitle">Vé của tôi / @booking.Pnr · Thông báo từ @flight.AirlineName</p>
+    </header>
+
+    <div class="av-alert av-alert--warning">
+        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">
+                @flight.FlightNumber ngày @Money.Date(flight.Departure) khởi hành muộn hơn 1 giờ 30 phút
+            </span>
+            <span>
+                @flight.AirlineName thông báo điều chỉnh lịch khai thác lúc 14:00 ngày 10/11/2026.
+                Vui lòng xem giờ mới và lựa chọn phương án phù hợp.
+            </span>
+        </div>
+    </div>
+
+    <div class="booking-layout">
+        <div class="booking-main">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Chi tiết vé · @booking.Pnr</h2>
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành khách</span>
+                            <span class="av-rowline__value">@booking.Passenger.FullName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Số vé</span>
+                            <span class="av-rowline__value av-num">@booking.TicketNumber</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Chuyến bay / tuyến</span>
+                            <span class="av-rowline__value">
+                                @flight.FlightNumber · @flight.From.Code → @flight.To.Code · @Money.Date(flight.Departure)
+                            </span>
+                        </div>
+                    </div>
+
+                    <hr class="av-divider" />
+
+                    <div class="schedule-compare">
+                        <div class="schedule-compare__col">
+                            <span class="schedule-compare__label">@Model.OldScheduleLabel</span>
+                            <strong class="schedule-compare__time">@Model.OldScheduleText</strong>
+                            <span class="av-caption">Khởi hành @flight.From.Code · Đến @flight.To.Code</span>
+                        </div>
+
+                        <div class="schedule-compare__col schedule-compare__col--new">
+                            <span class="schedule-compare__label">@Model.NewScheduleLabel</span>
+                            <strong class="schedule-compare__time">@Model.NewScheduleText</strong>
+                            <span class="schedule-compare__tag">@Model.DelayText</span>
+                        </div>
+                    </div>
+
+                    <p class="av-caption">
+                        Tất cả thời gian theo giờ Việt Nam (UTC+7). Hành trình bay thẳng, thời lượng
+                        @Money.Duration(flight.Duration) không thay đổi.
+                    </p>
+
+                    <hr class="av-divider" />
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hạng / ghế</span>
+                            <span class="av-rowline__value">@flight.FareName · @booking.SeatCode</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành lý</span>
+                            <span class="av-rowline__value">12 kg xách tay + 23 kg ký gửi + thêm 10 kg</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Thanh toán</span>
+                            <span class="av-rowline__value">Đã thanh toán · @Money.Vnd(booking.Price.Total)</span>
+                        </div>
+                    </div>
+
+                    <hr class="av-divider" />
+
+                    <div class="av-stack av-gap-12">
+                        <h3 class="av-title-20">Lựa chọn của bạn</h3>
+                        <p class="av-body">
+                            Chấp nhận lịch mới nếu lịch trình vẫn phù hợp. Nếu cần chuyến khác, gửi yêu cầu
+                            để AeroViet kiểm tra phương án với hãng.
+                        </p>
+
+                        <div class="av-row av-gap-12 av-wrap">
+                            <button type="button" class="av-btn av-btn--primary">Xác nhận lịch mới</button>
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">Yêu cầu hỗ trợ / đổi chuyến</a>
+                        </div>
+
+                        <p class="av-caption">
+                            Chưa xác nhận lịch mới. Việc gửi yêu cầu hỗ trợ không tự động đổi vé.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Thông báo của hãng</h2>
+                    <p class="av-body">@Model.NoticeReason</p>
+                    <p class="av-caption">@Model.NoticeAppliedText</p>
+                    <span class="av-badge av-badge--warning">Chờ khách xác nhận</span>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Thay đổi do hãng hàng không</span>
+                    <span>
+                        Không tự áp phí đổi tự nguyện @Money.Vnd(flight.ChangeFee). Phương án đổi miễn phí hoặc hỗ trợ khác
+                        phụ thuộc thông báo và điều kiện của hãng; AeroViet sẽ xác nhận trước khi thực hiện.
+                    </span>
+                </div>
+            </div>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
+                    <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @booking.Pnr để được kiểm tra.</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>

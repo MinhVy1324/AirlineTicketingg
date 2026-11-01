@@ -9,6 +9,7 @@
 .env
 .env.*
 !.env.example
+**/.figma-token
 
 # IDE and OS files
 .idea/

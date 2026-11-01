@@ -1,0 +1,1566 @@
+/* ==========================================================================
+   AeroViet — customer area (home, search, booking, tickets, auth)
+   ========================================================================== */
+
+/* =========================================================== home / search */
+
+.home-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.home-hero__main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home-hero__title {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 54px;
+  color: var(--av-text);
+}
+
+.home-hero__sub {
+  font-size: var(--av-fs-body);
+  line-height: 21px;
+  color: var(--av-text-muted);
+}
+
+.home-hero__assurance {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text-muted);
+  padding-bottom: 2px;
+}
+
+.home-hero__assurance .icon { color: var(--av-success); width: 20px; height: 20px; }
+
+.search-card {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-card);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.search-card__types {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.search-card__hint {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text-muted);
+  margin-left: auto;
+}
+
+.search-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.search-grid--route {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.search-grid--who {
+  grid-template-columns: 347fr 347fr 347fr 168fr;
+  align-items: end;
+}
+
+.search-grid__note {
+  align-self: end;
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+  padding-bottom: 12px;
+}
+
+.search-grid__note span { display: block; }
+
+.search-submit {
+  height: 46px;
+  align-self: end;
+}
+
+/* promo banner */
+
+.promo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 22px;
+  background: var(--av-navy);
+  border-radius: var(--av-r-card);
+  color: #fff;
+}
+
+.promo__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--av-r-card);
+  background: var(--av-navy-2);
+  color: #A2E4DD;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.promo__icon .icon { width: 26px; height: 26px; }
+
+.promo__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.promo__title { font-size: var(--av-fs-h4); line-height: 27px; color: #fff; }
+.promo__text { font-size: var(--av-fs-sm); line-height: 20px; color: var(--av-text-on-dark-muted); }
+
+/* destinations */
+
+.dest-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.dest-head__main { display: flex; flex-direction: column; gap: 5px; }
+
+.dest-head__title {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 36px;
+}
+
+.dest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.dest-card {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+
+.dest-card:hover {
+  box-shadow: 0 8px 24px rgba(16, 46, 80, .09);
+  transform: translateY(-2px);
+}
+
+.dest-card__media {
+  height: 185px;
+  background: linear-gradient(135deg, #B9CFE9, #DAE5F2);
+  background-size: cover;
+  background-position: center;
+}
+
+.dest-card__body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dest-card__name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dest-card__name strong {
+  font-size: var(--av-fs-xl);
+  font-weight: 400;
+  line-height: 32px;
+}
+
+.dest-card__code { font-size: var(--av-fs-caption); color: var(--av-text-muted); }
+
+.dest-card__price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--av-fs-caption);
+  color: var(--av-text-muted);
+}
+
+.dest-card__price strong {
+  font-size: var(--av-fs-h4);
+  font-weight: 700;
+  line-height: 27px;
+  color: var(--av-primary);
+}
+
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+}
+
+.benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.benefit .icon { width: 24px; height: 24px; color: var(--av-success); margin-top: 1px; }
+
+.benefit__body { display: flex; flex-direction: column; gap: 3px; }
+.benefit__title { font-size: var(--av-fs-body); line-height: 21px; }
+.benefit__text { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-text-muted); }
+
+/* ============================================================= kết quả */
+
+.search-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px;
+  background: var(--av-surface);
+  border-radius: var(--av-r-card);
+}
+
+.search-summary__route {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.search-summary__route > .icon {
+  width: 20px;
+  height: 20px;
+  color: var(--av-primary);
+}
+
+.search-summary__title {
+  font-size: var(--av-fs-lg);
+  font-weight: 700;
+  line-height: 30px;
+}
+
+.search-summary__sub {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text-muted);
+}
+
+.results-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.filters__card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.filters__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-group__title {
+  font-size: var(--av-fs-body);
+  font-weight: 600;
+  line-height: 21px;
+}
+
+.filter-group__meta {
+  font-size: var(--av-fs-sm);
+  color: var(--av-text-muted);
+  line-height: 20px;
+}
+
+.price-track {
+  position: relative;
+  height: 5px;
+  border-radius: var(--av-r-pill);
+  background: var(--av-border);
+}
+
+.price-track__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 82%;
+  border-radius: inherit;
+  background: var(--av-primary);
+}
+
+.price-track__knob {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--av-primary);
+  transform: translate(-50%, -50%);
+}
+
+.results-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.results-head__count {
+  font-size: var(--av-fs-lg);
+  line-height: 30px;
+}
+
+.day-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.day-chip {
+  height: 43px;
+  padding: 11px 18px;
+  border-radius: var(--av-r-control);
+  border: 1px solid var(--av-border);
+  background: #fff;
+  font-size: var(--av-fs-body);
+  line-height: 21px;
+  color: var(--av-text-muted);
+  white-space: nowrap;
+}
+
+.day-chip.is-active {
+  background: var(--av-primary-soft);
+  border-color: var(--av-primary);
+  color: var(--av-primary);
+}
+
+.flight-card {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-card);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.flight-card--selected {
+  border: 2px solid var(--av-primary);
+  padding: 21px;
+}
+
+.flight-card__main {
+  display: grid;
+  grid-template-columns: 190px 82px minmax(0, 1fr) 82px 210px;
+  align-items: center;
+  gap: 22px;
+}
+
+.flight-card__airline {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.flight-card__airline-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--av-fs-body);
+  line-height: 21px;
+}
+
+.flight-card__airline-name .icon { width: 20px; height: 20px; color: var(--av-success); }
+
+.flight-card__meta {
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+}
+
+.flight-card__time {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.flight-card__time strong {
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 38px;
+  letter-spacing: -.4px;
+}
+
+.flight-card__time span {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text-muted);
+}
+
+.flight-card__leg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.flight-card__leg-duration {
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+}
+
+.flight-card__leg-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--av-text-disabled);
+  width: 100%;
+  font-size: var(--av-fs-body);
+  line-height: 21px;
+}
+
+.flight-card__leg-line::before,
+.flight-card__leg-line::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--av-border);
+}
+
+.flight-card__leg-stop {
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+}
+
+.flight-card__price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+}
+
+.flight-card__price strong {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 34px;
+  color: var(--av-text);
+}
+
+.flight-card__price span {
+  font-size: var(--av-fs-micro);
+  line-height: 16px;
+  color: var(--av-text-muted);
+}
+
+.flight-card__price .av-btn { margin-top: 8px; }
+
+.flight-card__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--av-border);
+}
+
+.rules {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+}
+
+.rules span { display: inline-flex; align-items: center; gap: 6px; }
+.rules .icon { color: var(--av-success); width: 14px; height: 14px; }
+
+.rules__note {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text-muted);
+  background: var(--av-page);
+  border-radius: var(--av-r-control);
+  padding: 12px 14px;
+}
+
+.rules__note strong {
+  display: block;
+  color: var(--av-text);
+  font-weight: 600;
+}
+
+.results-more { display: flex; justify-content: center; padding-top: 8px; }
+
+.results-empty__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================== đặt vé */
+
+.booking-title { display: flex; flex-direction: column; gap: 6px; }
+
+.booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 908fr) minmax(0, 380fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.booking-main,
+.booking-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.form-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.passenger-block {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+}
+
+.passenger-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.passenger-block__title {
+  font-size: var(--av-fs-h4);
+  line-height: 27px;
+}
+
+.passenger-block__done {
+  font-size: var(--av-fs-sm);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--av-primary);
+  white-space: nowrap;
+}
+
+.baggage-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.baggage-row__info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.baggage-row__title { font-size: var(--av-fs-body); font-weight: 600; line-height: 21px; }
+.baggage-row__text { font-size: var(--av-fs-sm); line-height: 20px; color: var(--av-text-muted); }
+.baggage-row__select { width: 260px; flex: none; }
+
+/* seat map */
+
+.seat-area {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.seatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 300px;
+}
+
+.seatmap__cols,
+.seatmap__row {
+  display: grid;
+  grid-template-columns: repeat(3, 32px) 20px repeat(3, 32px);
+  gap: 8px;
+  align-items: center;
+}
+
+.seatmap__col {
+  font-size: var(--av-fs-micro);
+  line-height: 16px;
+  color: var(--av-text-muted);
+  text-align: center;
+}
+
+.seatmap__aisle {
+  font-size: 10px;
+  line-height: 15px;
+  color: var(--av-text-muted);
+  text-align: center;
+}
+
+.seat {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--av-r-badge);
+  border: 1px solid var(--av-primary);
+  background: #fff;
+  color: var(--av-primary);
+  font-size: var(--av-fs-micro);
+  line-height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color .12s ease, color .12s ease;
+}
+
+.seat:hover:not(:disabled) { background: var(--av-primary-soft); }
+
+.seat.is-taken {
+  background: var(--av-border);
+  border-color: var(--av-border);
+  color: var(--av-text-disabled);
+  cursor: not-allowed;
+}
+
+.seat.is-selected {
+  background: var(--av-primary);
+  border-color: var(--av-primary);
+  color: #fff;
+}
+
+.seat-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding-top: 4px;
+}
+
+.seat-detail__title { font-size: var(--av-fs-body); line-height: 21px; }
+.seat-detail__text { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-text-muted); }
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-primary);
+  flex-wrap: wrap;
+}
+
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+.legend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid var(--av-primary);
+  display: inline-block;
+}
+
+.legend i.is-filled { background: var(--av-primary); }
+.legend i.is-taken { background: var(--av-border); border-color: var(--av-border); color: var(--av-text-disabled); }
+
+/* step navigation */
+
+.step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* summary / aside */
+
+.summary-flight {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-flight__airline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary-flight__airline-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--av-fs-body);
+  font-weight: 600;
+  line-height: 21px;
+}
+
+.summary-flight__airline-name .icon { width: 20px; height: 20px; color: var(--av-success); }
+
+.summary-flight__date {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text-muted);
+}
+
+.timeline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timeline__point { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.timeline__time {
+  font-size: var(--av-fs-h3);
+  font-weight: 700;
+  line-height: 39px;
+  letter-spacing: -.5px;
+}
+
+.timeline__code { font-size: var(--av-fs-body); font-weight: 600; line-height: 21px; }
+.timeline__place { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-text-muted); }
+
+.timeline__mid {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding-top: 6px;
+  min-width: 90px;
+}
+
+.timeline__mid span { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-text-muted); }
+
+.timeline__line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  color: var(--av-text-disabled);
+}
+
+.timeline__line::before,
+.timeline__line::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--av-border);
+}
+
+.timeline--sm .timeline__time { font-size: var(--av-fs-xl); line-height: 32px; }
+.timeline--sm .timeline__mid { padding-top: 2px; }
+
+.price-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* checkout */
+
+.pay-methods { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.card-brands { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.checkout-terms {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkout-terms .av-check { align-items: flex-start; }
+
+.pay-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* success / ticket */
+
+.success-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding-block: 16px;
+}
+
+.success-hero__check {
+  width: 62px;
+  height: 62px;
+  border-radius: var(--av-r-pill);
+  background: var(--av-success-soft);
+  color: var(--av-success);
+  display: grid;
+  place-items: center;
+}
+
+.success-hero__check .icon { width: 34px; height: 34px; }
+
+.success-hero__title { font-size: 32px; font-weight: 700; line-height: 48px; }
+.success-hero__text { font-size: var(--av-fs-body); line-height: 21px; color: var(--av-text-muted); }
+
+.ticket {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-card);
+  overflow: hidden;
+}
+
+.ticket__head {
+  background: var(--av-navy);
+  color: #fff;
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.ticket__pnr-label {
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: #C8D7E6;
+  letter-spacing: .02em;
+}
+
+.ticket__pnr {
+  font-size: 36px;
+  line-height: 54px;
+  letter-spacing: .5px;
+  color: #fff;
+}
+
+.ticket__status { display: flex; flex-direction: column; gap: 7px; align-items: flex-end; }
+
+.ticket__body {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ticket__passenger {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.ticket__passenger > div { flex: 1 1 260px; display: flex; flex-direction: column; gap: 6px; }
+
+.ticket__kicker {
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+  letter-spacing: .02em;
+}
+
+.ticket__name { font-size: 22px; font-weight: 700; line-height: 33px; }
+.ticket__ticketno { font-size: var(--av-fs-xl); line-height: 32px; }
+
+.ticket__note { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-text-muted); }
+
+.success-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 908fr) minmax(0, 380fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.guide {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.guide__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.guide__icon {
+  display: inline-flex;
+  color: var(--av-primary);
+  margin-top: 1px;
+}
+
+.guide__icon .icon { width: 20px; height: 20px; }
+
+.guide__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.guide__title { font-size: var(--av-fs-body); font-weight: 600; line-height: 21px; }
+.guide__text { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-text-muted); }
+
+.post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================== vé của tôi */
+
+.tickets-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.tickets-toolbar .av-field { flex: 1 1 auto; }
+.tickets-toolbar .av-field--date { flex: 0 0 250px; }
+.tickets-toolbar .av-btn { height: 46px; }
+
+.tickets-layout {
+  display: grid;
+  grid-template-columns: 420px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.tickets-list { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.pnr-card {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+  width: 100%;
+}
+
+.pnr-card:hover { border-color: var(--av-border-strong); }
+
+.pnr-card.is-selected {
+  background: var(--av-primary-soft);
+  border: 2px solid var(--av-primary);
+  padding: 23px;
+}
+
+.pnr-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pnr-card__code { font-size: var(--av-fs-h4); font-weight: 700; line-height: 27px; }
+
+.pnr-card__route { font-size: var(--av-fs-xl); line-height: 32px; }
+.pnr-card__meta { font-size: var(--av-fs-sm); line-height: 20px; color: var(--av-text-muted); }
+
+.pnr-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+}
+
+.pnr-card__foot strong { font-size: var(--av-fs-body); line-height: 21px; }
+
+.pnr-card__link { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-success); }
+
+.ticket-detail { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* ======================================================= trạng thái đặt vé */
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.status-card {
+  background: var(--av-surface);
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.status-card__label { font-size: var(--av-fs-sm); line-height: 20px; color: var(--av-text-muted); }
+.status-card__value { font-size: var(--av-fs-body); font-weight: 600; line-height: 21px; }
+
+.timeline-log { display: flex; flex-direction: column; gap: 24px; }
+
+.timeline-log__item {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 20px;
+}
+
+.timeline-log__time { font-size: var(--av-fs-sm); line-height: 20px; color: var(--av-text-muted); }
+
+.timeline-log__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.timeline-log__title { font-size: var(--av-fs-body); font-weight: 600; line-height: 21px; }
+.timeline-log__text { font-size: var(--av-fs-sm); line-height: 20px; color: var(--av-text-muted); }
+
+/* ---------------------------------------------------- chuyến vừa hết chỗ */
+
+.soldout-layout {
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.soldout-main { min-width: 0; }
+
+.alt-flight {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alt-flight__body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.alt-flight__info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.alt-flight__info .timeline { max-width: 560px; }
+
+.alt-flight__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: none;
+}
+
+.alt-flight__price {
+  font-size: var(--av-fs-h4);
+  font-weight: 700;
+  line-height: 27px;
+  white-space: nowrap;
+}
+
+.alt-flight__price span {
+  font-size: var(--av-fs-sm);
+  font-weight: 400;
+  color: var(--av-text-muted);
+}
+
+/* ---------------------------------------------- chuyến đổi giờ / bị hủy */
+
+.cancelled-layout {
+  display: grid;
+  grid-template-columns: 420px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.cancelled-options { min-width: 0; }
+
+.schedule-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.schedule-compare__col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--av-r-control);
+}
+
+.schedule-compare__col--new { background: var(--av-primary-soft); }
+
+.schedule-compare__label {
+  font-size: var(--av-fs-body);
+  line-height: 21px;
+  color: var(--av-text-muted);
+}
+
+.schedule-compare__col--new .schedule-compare__label {
+  font-weight: 600;
+  color: var(--av-primary);
+}
+
+.schedule-compare__time {
+  font-size: var(--av-fs-h3);
+  font-weight: 400;
+  line-height: 39px;
+}
+
+.schedule-compare__col--new .schedule-compare__time {
+  font-weight: 600;
+  color: var(--av-primary);
+}
+
+.schedule-compare__tag {
+  align-self: flex-start;
+  font-size: var(--av-fs-sm);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--av-primary);
+}
+
+/* ------------------------------------------------------ tra cứu đặt chỗ */
+
+.lookup-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+}
+
+.lookup-form .av-btn { height: 46px; }
+
+.lookup-sidehead__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--av-r-mark);
+  background: var(--av-primary-soft);
+  color: var(--av-primary);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.lookup-sidehead__icon .icon { width: 19px; height: 19px; }
+
+/* ------------------------------------------------------------ vé của tôi */
+
+.pnr-card__link.is-warning { color: var(--av-warning); }
+.pnr-card__link.is-danger { color: var(--av-danger); }
+
+.pnr-card__action { align-self: flex-start; margin-top: -2px; }
+
+.ticket-detail__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cond-text {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text);
+}
+
+/* =========================================================== đổi / hoàn vé */
+
+.request-picker {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+}
+
+.request-picker__action {
+  height: 46px;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+.request-flight {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-card);
+}
+
+.compare-table { display: flex; flex-direction: column; }
+
+.compare-table__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 180px;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--av-border);
+  font-size: var(--av-fs-body);
+  line-height: 21px;
+}
+
+.compare-table__row > span:nth-child(2),
+.compare-table__row > span:nth-child(3) { text-align: right; }
+
+.compare-table__row--head {
+  padding-top: 0;
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+}
+
+.compare-table__row--total { font-weight: 600; border-bottom: 0; }
+.compare-table__row--total > span:last-child { color: var(--av-primary); }
+
+.request-diff {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: var(--av-fs-body);
+}
+
+.request-diff strong {
+  font-size: var(--av-fs-h4);
+  font-weight: 700;
+  line-height: 27px;
+  color: var(--av-primary);
+}
+
+.request-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.request-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  counter-reset: request-step;
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+}
+
+.request-steps li {
+  display: flex;
+  gap: 10px;
+  counter-increment: request-step;
+}
+
+.request-steps li::before {
+  content: counter(request-step) ".";
+  flex: none;
+  color: var(--av-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.request-table tr.is-selected,
+.request-table tr.is-selected:hover { background: var(--av-primary-soft); }
+
+.request-table td { vertical-align: middle; }
+
+/* ================================================================ auth */
+
+
+.auth {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 704px minmax(0, 1fr);
+  background: #fff;
+}
+
+.auth__hero {
+  position: relative;
+  background: var(--av-navy);
+  background-image:
+    linear-gradient(180deg, rgba(16, 46, 80, .55) 0%, rgba(16, 46, 80, .82) 60%, rgba(16, 46, 80, .94) 100%),
+    url('../img/login-hero.png');
+  background-size: cover;
+  background-position: center;
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #fff;
+  overflow: hidden;
+}
+
+.auth__hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 592px;
+  padding-block: 40px;
+}
+
+.auth__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--av-fs-caption);
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: .06em;
+  color: #D8F3F1;
+}
+
+.auth__eyebrow::before {
+  content: '';
+  width: 32px;
+  height: 2px;
+  background: #91DFDB;
+}
+
+.auth__hero-title {
+  font-size: var(--av-fs-display);
+  font-weight: 700;
+  line-height: 72px;
+  color: #fff;
+}
+
+.auth__hero-text {
+  font-size: var(--av-fs-body);
+  line-height: 21px;
+  color: #D8F3F1;
+  max-width: 520px;
+}
+
+.auth__stats {
+  display: flex;
+  gap: 40px;
+  padding-top: 8px;
+}
+
+.auth__stat strong { display: block; font-size: var(--av-fs-h3); font-weight: 700; line-height: 39px; }
+.auth__stat span { font-size: var(--av-fs-caption); line-height: 18px; color: #C8D7E6; }
+
+.auth__hero-foot { font-size: var(--av-fs-caption); line-height: 18px; color: #C8D7E6; }
+
+.auth__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 40px 92px 32px;
+}
+
+.auth__panel-top {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.auth__panel-top .av-link { font-weight: 400; }
+
+.auth__form {
+  width: 100%;
+  max-width: 408px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth__panel-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--av-fs-caption);
+  line-height: 18px;
+  color: var(--av-text-muted);
+  text-align: center;
+}
+
+.auth__panel-bottom span:last-child { font-size: var(--av-fs-micro); line-height: 16px; }
+
+.auth__commitments {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: #fff;
+  flex-wrap: wrap;
+}
+
+.auth__title { font-size: 28px; font-weight: 700; line-height: 42px; }
+.auth__sub { font-size: var(--av-fs-body); line-height: 21px; color: var(--av-text-muted); }
+
+.auth__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.auth__divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--av-fs-caption);
+  color: var(--av-text-muted);
+}
+
+.auth__divider::before,
+.auth__divider::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--av-border);
+}
+
+.auth__foot {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-text-muted);
+  text-align: center;
+}
+
+.auth__error {
+  font-size: var(--av-fs-sm);
+  line-height: 20px;
+  color: var(--av-danger);
+  background: var(--av-danger-soft);
+  border-radius: var(--av-r-control);
+  padding: 10px 12px;
+}
+
+/* ============================================================ responsive */
+
+@media (max-width: 1200px) {
+  .booking-layout { grid-template-columns: minmax(0, 1fr); }
+  .booking-aside { order: -1; }
+  .success-layout { grid-template-columns: minmax(0, 1fr); }
+  .search-grid--route { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search-grid--who { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search-grid__note { grid-column: 1 / -1; padding-bottom: 0; }
+  .auth { grid-template-columns: 1fr; }
+  .auth__hero { display: none; }
+  .auth__panel { padding: 40px 32px 32px; }
+  .soldout-layout,
+  .cancelled-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 1080px) {
+  .results-layout { grid-template-columns: minmax(0, 1fr); }
+  .filters { order: 1; }
+  .flight-card__main {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+  .flight-card__leg { grid-column: 1 / -1; }
+  .tickets-layout { grid-template-columns: minmax(0, 1fr); }
+  .dest-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .benefits { grid-template-columns: 1fr; }
+  .seat-area { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .home-hero { flex-direction: column; align-items: flex-start; }
+  .home-hero__title { font-size: 28px; line-height: 40px; }
+  .search-card { padding: 18px; }
+  .search-grid--route,
+  .search-grid--who { grid-template-columns: minmax(0, 1fr); }
+  .promo { flex-wrap: wrap; }
+  .promo .av-btn { width: 100%; }
+  .dest-grid { grid-template-columns: minmax(0, 1fr); }
+  .search-summary { flex-direction: column; align-items: flex-start; }
+  .form-grid--3,
+  .form-grid--2 { grid-template-columns: minmax(0, 1fr); }
+  .baggage-row { flex-direction: column; align-items: stretch; }
+  .baggage-row__select { width: 100%; }
+  .step-nav { flex-direction: column-reverse; align-items: stretch; }
+  .step-nav .av-btn { width: 100%; }
+  .success-hero__title { font-size: 24px; line-height: 34px; }
+  .tickets-toolbar { flex-direction: column; align-items: stretch; }
+  .tickets-toolbar .av-field--date { flex: 1 1 auto; }
+  .seatmap { width: 100%; }
+  .seatmap__cols,
+  .seatmap__row { grid-template-columns: repeat(3, 1fr) 20px repeat(3, 1fr); }
+  .seat { width: 100%; }
+  .auth__panel { padding: 32px 20px; }
+  .status-grid { grid-template-columns: minmax(0, 1fr); }
+  .alt-flight__body { flex-direction: column; }
+  .alt-flight__side { align-items: flex-start; width: 100%; }
+  .alt-flight__side .av-btn { width: 100%; }
+  .schedule-compare { grid-template-columns: minmax(0, 1fr); }
+  .lookup-form { grid-template-columns: minmax(0, 1fr); }
+  .lookup-form .av-btn { width: 100%; }
+  .timeline-log__item { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
+  .request-picker { grid-template-columns: minmax(0, 1fr); }
+  .request-picker__action { height: auto; justify-self: flex-start; }
+  .compare-table__row { grid-template-columns: minmax(0, 1fr) 100px 110px; gap: 10px; font-size: var(--av-fs-sm); }
+  .request-actions .av-btn { width: 100%; }
+  .request-table { min-width: 640px; }
+}

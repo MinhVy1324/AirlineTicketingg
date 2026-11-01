@@ -1,0 +1,30 @@
+@model FlightTimelineModel
+@{
+    var flight = Model.Flight;
+    var midFooter = Model.MidFooter ?? flight.Stops;
+}
+<div class="timeline @(Model.Compact ? "timeline--sm" : null)">
+    <div class="timeline__point">
+        <span class="timeline__time">@Money.Time(flight.Departure)</span>
+        <span class="timeline__code">@flight.From.Code</span>
+        @if (Model.ShowAirportName)
+        {
+            <span class="timeline__place">@flight.From.Name</span>
+        }
+    </div>
+
+    <div class="timeline__mid">
+        <span>@Money.Duration(flight.Duration)</span>
+        <span class="timeline__line">@Html.Icon("plane", 13)</span>
+        <span>@midFooter</span>
+    </div>
+
+    <div class="timeline__point av-text-right">
+        <span class="timeline__time">@Money.Time(flight.Arrival)</span>
+        <span class="timeline__code">@flight.To.Code</span>
+        @if (Model.ShowAirportName)
+        {
+            <span class="timeline__place">@flight.To.Name</span>
+        }
+    </div>
+</div>

@@ -1,0 +1,175 @@
+@model RequestTrackingViewModel
+@{
+    ViewData["Title"] = "Theo dõi yêu cầu đổi / hoàn";
+    ViewData["Nav"] = "tickets";
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Theo dõi yêu cầu đổi / hoàn</h1>
+        <p class="av-page-subtitle">Vé của tôi / Yêu cầu hỗ trợ · Cập nhật ngày @Model.UpdatedAtText (UTC+7)</p>
+    </header>
+
+    <nav class="av-chips" aria-label="Lọc yêu cầu theo trạng thái">
+        @foreach (var tab in Model.Tabs)
+        {
+            <a class="av-chip @(tab.IsActive ? "is-active" : null)" href="/ve-cua-toi/yeu-cau">
+                @tab.Label (@tab.Count)
+            </a>
+        }
+    </nav>
+
+    <div class="booking-layout">
+        <div class="booking-main">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Yêu cầu của bạn</h2>
+
+                    <div class="av-table-wrap">
+                        <table class="av-table request-table">
+                            <thead>
+                                <tr>
+                                    <th>Yêu cầu / PNR</th>
+                                    <th>Loại / Ngày gửi</th>
+                                    <th>Hành trình</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var request in Model.Requests)
+                                {
+                                    <tr class="@(request.IsSelected ? "is-selected" : null)">
+                                        <td class="cell-strong">@request.Code · @request.Pnr</td>
+                                        <td>@request.TypeText</td>
+                                        <td>@request.RouteText</td>
+                                        <td>
+                                            <span class="av-badge av-badge--@request.StatusTone">@request.StatusText</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-18">
+                    <div class="av-stack av-gap-4">
+                        <div class="av-row av-row--between av-gap-12">
+                            <h2 class="av-card__title">Yêu cầu hoàn · @Model.DetailCode</h2>
+                            <span class="av-badge av-badge--@Model.DetailStatusTone">@Model.DetailStatusText</span>
+                        </div>
+                        <span class="av-caption">
+                            @Model.DetailPnr · @Model.DetailPassenger · Vé @Model.DetailTicketNumber
+                        </span>
+                    </div>
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Chuyến bay</span>
+                            <span class="av-rowline__value">@Model.FlightText</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Lý do</span>
+                            <span class="av-rowline__value">@Model.ReasonText</span>
+                        </div>
+                    </div>
+
+                    <hr class="av-divider" />
+
+                    <div class="timeline-log">
+                        @foreach (var item in Model.Events)
+                        {
+                            <div class="timeline-log__item">
+                                <span class="timeline-log__time">@item.Time</span>
+                                <div class="timeline-log__body">
+                                    <span class="timeline-log__title">@item.Title</span>
+                                    <span class="timeline-log__text">@item.Text</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Bạn chưa nhận được xác nhận đã hoàn tiền</span>
+                    <span>
+                        Trạng thái “Đã duyệt” chỉ xác nhận yêu cầu được chấp thuận. Tiền chưa được ghi nhận hoàn tất;
+                        AeroViet sẽ thông báo khi cổng thanh toán xác nhận.
+                    </span>
+                </div>
+            </div>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <div class="av-stack av-gap-6">
+                        <h2 class="av-card__title">Yêu cầu đổi vé khác · @Model.OtherCode</h2>
+                        <p class="av-body">@Model.OtherText</p>
+                    </div>
+
+                    <div class="av-row av-gap-16 av-wrap">
+                        <span class="av-badge av-badge--warning">@Model.OtherStatusText</span>
+                        <a class="av-link" href="/ve-cua-toi/yeu-cau-doi">
+                            Xem phí yêu cầu đổi
+                            @Html.Icon("arrow-right", 15)
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Tính hoàn tiền dự kiến</h2>
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Tổng đã thanh toán</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(Model.PaidTotal)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Phí hoàn vé</span>
+                            <span class="av-rowline__value av-num">−@Money.Vnd(Model.RefundFee)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Phí dịch vụ không hoàn</span>
+                            <span class="av-rowline__value av-num">−@Money.Vnd(Model.ServiceFee)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành lý thêm không hoàn</span>
+                            <span class="av-rowline__value av-num">−@Money.Vnd(Model.BaggageFee)</span>
+                        </div>
+                        <div class="av-rowline av-rowline--total">
+                            <span class="av-rowline__label">Dự kiến hoàn</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(Model.RefundTotal)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hoàn về nguồn thanh toán</span>
+                            <span class="av-rowline__value">@Model.RefundToText</span>
+                        </div>
+                    </div>
+
+                    <p class="av-micro">7–15 ngày làm việc sau khi được duyệt; phụ thuộc ngân hàng.</p>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
+                    <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @Model.DetailPnr để được kiểm tra.</span>
+                </div>
+            </div>
+
+            <a class="av-link" href="/ve-cua-toi">
+                @Html.Icon("arrow-left", 15)
+                Quay lại vé của tôi
+            </a>
+        </aside>
+    </div>
+</div>

@@ -1,0 +1,95 @@
+@model BookingOutcomeViewModel
+@{
+    ViewData["Title"] = "Đặt chỗ đã hết hạn";
+    ViewData["Nav"] = "book";
+    var booking = Model.Booking;
+    var flight = booking.Flight;
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Đặt chỗ đã hết hạn</h1>
+        <p class="av-page-subtitle">
+            Mã giữ chỗ @booking.Pnr · Cập nhật lúc @Model.UpdatedAtText (UTC+7)
+        </p>
+    </header>
+
+    <div class="av-alert av-alert--warning">
+        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">Chỗ đã được giải phóng lúc 09:45</span>
+            <span>
+                Đã quá thời hạn giữ chỗ và chưa thực hiện thanh toán. Bạn không thể thanh toán cho chỗ và mức giá cũ.
+                Vui lòng tìm lại chuyến để kiểm tra chỗ và giá hiện tại.
+            </span>
+        </div>
+    </div>
+
+    <partial name="_StatusGrid" model="Model.Statuses" />
+
+    <div class="booking-layout">
+        <div class="booking-main">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Hành trình đã giữ</h2>
+
+                    <partial name="_JourneyBlock" model="flight" />
+
+                    <hr class="av-divider" />
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành khách</span>
+                            <span class="av-rowline__value">@booking.Passenger.FullName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Tổng tiền trước khi hết hạn</span>
+                            <span class="av-rowline__value">@Money.Vnd(booking.Price.Total)</span>
+                        </div>
+                    </div>
+
+                    <p class="av-caption">
+                        Số tiền trên chỉ là thông tin của đặt chỗ đã hết hạn, không phải giá đang có hiệu lực.
+                    </p>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <div class="av-stack av-gap-6">
+                        <h2 class="av-card__title">Đặt lại hành trình</h2>
+                        <span class="av-caption">
+                            Chọn lại chuyến phù hợp. Giá và chỗ được xác nhận lại trước khi tạo giữ chỗ mới.
+                        </span>
+                    </div>
+
+                    <label class="av-check">
+                        <input type="checkbox" checked disabled />
+                        <span>Dùng lại thông tin hành khách đã nhập</span>
+                    </label>
+
+                    <p class="av-caption">
+                        Bạn cần kiểm tra lại tên theo giấy tờ, email, số điện thoại và lựa chọn hành lý trước khi tiếp tục.
+                    </p>
+
+                    <div class="av-row av-gap-12 av-wrap">
+                        <a class="av-btn av-btn--primary" href="/chuyen-bay">Tìm lại chuyến SGN → HAN</a>
+                        <a class="av-btn av-btn--outline" href="/">Về trang chủ</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <partial name="_TimelineLog" model="Model" />
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
+                    <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @booking.Pnr để được kiểm tra.</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>

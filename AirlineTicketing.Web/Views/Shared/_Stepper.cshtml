@@ -1,0 +1,25 @@
+@model int
+@{
+    var steps = new[]
+    {
+        "Chọn chuyến bay",
+        "Hành khách & dịch vụ",
+        "Kiểm tra & thanh toán",
+        "Vé điện tử"
+    };
+}
+<nav class="av-stepper" aria-label="Tiến trình đặt vé">
+    @for (var i = 0; i < steps.Length; i++)
+    {
+        var number = i + 1;
+        var state = number < Model ? "is-done" : number == Model ? "is-current" : string.Empty;
+        <div class="av-step @state">
+            <span class="av-step__dot">@(number < Model ? "✓" : number.ToString())</span>
+            <span class="av-step__label" aria-current="@(number == Model ? "step" : null)">@steps[i]</span>
+            @if (i < steps.Length - 1)
+            {
+                <span class="av-step__sep" aria-hidden="true">@Html.Icon("chevron-right", 15)</span>
+            }
+        </div>
+    }
+</nav>

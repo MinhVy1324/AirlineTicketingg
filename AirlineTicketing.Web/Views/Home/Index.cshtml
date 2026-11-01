@@ -1,8 +1,163 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Đặt vé máy bay";
+    ViewData["Nav"] = "book";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="av-page av-container home">
+    <section class="home-hero">
+        <div class="home-hero__main">
+            <span class="av-eyebrow">XIN CHÀO, @Model.CustomerName.ToUpperInvariant()</span>
+            <h1 class="home-hero__title">Hành trình mới bắt đầu từ đây.</h1>
+            <p class="home-hero__sub">Chọn điểm đến, chúng tôi đồng hành cùng bạn.</p>
+        </div>
+        <p class="home-hero__assurance">
+            @Html.Icon("shield-check", 20)
+            <span>Đặt vé an toàn · Giá rõ ràng</span>
+        </p>
+    </section>
+
+    <form class="search-card" method="get" action="/chuyen-bay" role="search" aria-label="Tìm chuyến bay">
+        <div class="search-card__types">
+            <div class="av-toggle">
+                <label class="av-toggle__item is-active">
+                    <input type="radio" name="trip" value="oneway" checked />
+                    <span>Một chiều</span>
+                </label>
+                <label class="av-toggle__item">
+                    <input type="radio" name="trip" value="roundtrip" />
+                    <span>Khứ hồi</span>
+                </label>
+            </div>
+            <span class="search-card__hint">Chuyến bay nội địa &amp; quốc tế</span>
+        </div>
+
+        <div class="search-grid search-grid--route">
+            <label class="av-field">
+                <span class="av-label">Nơi đi</span>
+                <span class="av-control">
+                    <input type="text" name="from" value="@Model.Search.From" autocomplete="off" />
+                    @Html.Icon("plane-takeoff", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">Nơi đến</span>
+                <span class="av-control">
+                    <input type="text" name="to" value="@Model.Search.To" autocomplete="off" />
+                    @Html.Icon("plane-landing", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">Ngày đi</span>
+                <span class="av-control">
+                    <input type="text" name="depart" value="@Model.Search.DepartDate" autocomplete="off" />
+                    @Html.Icon("calendar", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">Ngày về</span>
+                <span class="av-control">
+                    <input type="text" name="return" value="@(string.IsNullOrWhiteSpace(Model.Search.ReturnDate) ? "Không áp dụng · Một chiều" : Model.Search.ReturnDate)" autocomplete="off" />
+                    @Html.Icon("calendar", 17)
+                </span>
+            </label>
+        </div>
+
+        <div class="search-grid search-grid--who">
+            <label class="av-field">
+                <span class="av-label">Hành khách</span>
+                <span class="av-control">
+                    <input type="text" name="passengers" value="@Model.Search.Passengers" autocomplete="off" />
+                    @Html.Icon("users", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">Hạng vé</span>
+                <span class="av-control">
+                    <input type="text" name="cabin" value="@Model.Search.Cabin" autocomplete="off" />
+                    @Html.Icon("chevron-down", 17)
+                </span>
+            </label>
+
+            <p class="search-grid__note">
+                <span>Giá hiển thị đã gồm thuế, phí.</span>
+                <span>Giờ bay theo giờ địa phương.</span>
+            </p>
+
+            <button type="submit" class="av-btn av-btn--primary search-submit">
+                @Html.Icon("search", 17)
+                <span>Tìm chuyến bay</span>
+            </button>
+        </div>
+    </form>
+
+    <section class="promo" id="uu-dai">
+        <span class="promo__icon">@Html.Icon("ticket-percent", 26)</span>
+        <div class="promo__body">
+            <h2 class="promo__title">Thêm một lý do để cất cánh</h2>
+            <p class="promo__text">Giảm 100.000 ₫ phí dịch vụ cho đơn từ 3.000.000 ₫ · Đến 15/11/2026</p>
+        </div>
+        <span class="av-badge av-badge--info">Mã: AERONEW</span>
+        <a class="av-btn av-btn--outline" href="#uu-dai">Xem điều kiện</a>
+    </section>
+
+    <section class="av-stack av-gap-20">
+        <header class="dest-head">
+            <div class="dest-head__main">
+                <h2 class="dest-head__title">Đi gần hơn, khám phá nhiều hơn</h2>
+                <p class="av-page-subtitle">Gợi ý khởi hành từ TP. Hồ Chí Minh</p>
+            </div>
+            <a class="av-link" href="/chuyen-bay">Khám phá điểm đến @Html.Icon("arrow-right", 15)</a>
+        </header>
+
+        <div class="dest-grid">
+            @foreach (var dest in Model.Destinations)
+            {
+                <a class="dest-card" asp-controller="Flights" asp-action="Index"
+                   asp-route-to="@dest.Name" asp-route-depart="20/11/2026">
+                    <span class="dest-card__media" style="background-image:url('/img/@dest.ImageFile')" role="img"
+                          aria-label="Ảnh @dest.Name"></span>
+                    <span class="dest-card__body">
+                        <span class="dest-card__name">
+                            <strong>@dest.Name</strong>
+                            <span class="dest-card__code">@dest.Code</span>
+                        </span>
+                        <span class="dest-card__price">
+                            <span>Một chiều · từ</span>
+                            <strong>@Money.Vnd(dest.FromPrice)</strong>
+                        </span>
+                        <span class="av-micro">Giá tham khảo đã gồm thuế, phí</span>
+                    </span>
+                </a>
+            }
+        </div>
+    </section>
+
+    <section class="benefits" aria-label="Dịch vụ đồng hành">
+        <div class="benefit">
+            @Html.Icon("badge-check", 24)
+            <div class="benefit__body">
+                <span class="benefit__title">Giá vé minh bạch</span>
+                <span class="benefit__text">Xem đủ thuế và phí trước khi thanh toán.</span>
+            </div>
+        </div>
+        <div class="benefit">
+            @Html.Icon("luggage", 24)
+            <div class="benefit__body">
+                <span class="benefit__title">Dịch vụ theo nhu cầu</span>
+                <span class="benefit__text">Chủ động chọn hành lý và chỗ ngồi.</span>
+            </div>
+        </div>
+        <div class="benefit">
+            @Html.Icon("headset", 24)
+            <div class="benefit__body">
+                <span class="benefit__title">Luôn sẵn sàng hỗ trợ</span>
+                <span class="benefit__text">Tổng đài 1900 6868 · 06:00–22:00.</span>
+            </div>
+        </div>
+    </section>
 </div>

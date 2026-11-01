@@ -1,0 +1,40 @@
+@model PriceSummary
+<section class="av-card">
+    <div class="av-card__body av-card__stack">
+        <h2 class="av-card__title">@Model.Title</h2>
+
+        <div class="price-lines">
+            <div class="av-rowline">
+                <span class="av-rowline__label">@Model.BaseFareLabel</span>
+                <span class="av-rowline__value">@Money.Vnd(Model.BaseFare)</span>
+            </div>
+            <div class="av-rowline">
+                <span class="av-rowline__label">Thuế &amp; phí sân bay</span>
+                <span class="av-rowline__value">@Money.Vnd(Model.Taxes)</span>
+            </div>
+            <div class="av-rowline">
+                <span class="av-rowline__label">Phí dịch vụ</span>
+                <span class="av-rowline__value">@Money.Vnd(Model.ServiceFee)</span>
+            </div>
+            @if (Model.BaggageFee > 0)
+            {
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@Model.BaggageLabel</span>
+                    <span class="av-rowline__value">@Money.Vnd(Model.BaggageFee)</span>
+                </div>
+            }
+        </div>
+
+        <hr class="av-divider" />
+
+        <div class="av-rowline av-rowline--total">
+            <span class="av-rowline__label">@Model.TotalLabel</span>
+            <span class="av-rowline__value av-num">@Money.Vnd(Model.Total)</span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Note))
+        {
+            <p class="av-caption">@Model.Note</p>
+        }
+    </div>
+</section>

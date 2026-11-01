@@ -1,0 +1,80 @@
+@model FlightResultsViewModel
+@{
+    var counts = Model.IsEmpty;
+}
+<aside class="filters">
+    <div class="av-card filters__card">
+        <div class="filters__head">
+            <h2 class="av-card__title">Lọc chuyến bay</h2>
+            <a class="av-link" href="/chuyen-bay">Đặt lại</a>
+        </div>
+
+        <div class="filter-group">
+            <span class="filter-group__title">Khoảng giá / khách</span>
+            <span class="filter-group__meta">@Model.Criteria.PriceRangeText</span>
+            <div class="price-track" aria-hidden="true">
+                <span class="price-track__fill" style="@(Model.IsEmpty ? "width:34%" : null)"></span>
+                <span class="price-track__knob" style="left:18%"></span>
+                <span class="price-track__knob" style="@(Model.IsEmpty ? "left:52%" : "left:82%")"></span>
+            </div>
+        </div>
+
+        <hr class="av-divider" />
+
+        <div class="filter-group">
+            <span class="filter-group__title">Hãng hàng không</span>
+            <label class="av-check">
+                <input type="checkbox" checked />
+                <span>Vietnam Airlines@(counts ? "" : " (6)")</span>
+            </label>
+            <label class="av-check">
+                <input type="checkbox" />
+                <span>Vietjet Air@(counts ? "" : " (8)")</span>
+            </label>
+            <label class="av-check">
+                <input type="checkbox" />
+                <span>Bamboo Airways@(counts ? "" : " (4)")</span>
+            </label>
+        </div>
+
+        <hr class="av-divider" />
+
+        <div class="filter-group">
+            <span class="filter-group__title">Giờ khởi hành</span>
+            <label class="av-check">
+                <input type="checkbox" checked="@(counts)" />
+                <span>Sáng · 05:00–12:00</span>
+            </label>
+            <label class="av-check">
+                <input type="checkbox" />
+                <span>Chiều · 12:00–18:00</span>
+            </label>
+            <label class="av-check">
+                <input type="checkbox" />
+                <span>Tối · 18:00–23:59</span>
+            </label>
+        </div>
+
+        <hr class="av-divider" />
+
+        <div class="filter-group">
+            <span class="filter-group__title">Điểm dừng</span>
+            <label class="av-check">
+                <input type="checkbox" checked />
+                <span>Bay thẳng</span>
+            </label>
+            <label class="av-check">
+                <input type="checkbox" />
+                <span>1 điểm dừng</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="av-alert av-alert--info">
+        <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">Giờ Việt Nam (UTC+7)</span>
+            <span>Tất cả giờ bay hiển thị theo giờ địa phương.</span>
+        </div>
+    </div>
+</aside>

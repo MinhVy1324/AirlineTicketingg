@@ -1,0 +1,392 @@
+@model ManagerSchedulesViewModel
+@{
+    ViewData["Title"] = "Lịch bay & tồn chỗ";
+    ViewData["ManagerNav"] = "schedules";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Lịch bay &amp; tồn chỗ</h1>
+            <p class="admin-page-subtitle">@Model.Subtitle</p>
+        </div>
+        <button type="button" class="av-btn av-btn--primary">
+            @Html.Icon("plus", 17)
+            <span>@Model.AddText</span>
+        </button>
+    </header>
+
+    <section class="av-card admin-card">
+        <form class="av-card__body admin-card__body manager-filters" method="get" action="/quan-ly/lich-bay">
+            <label class="av-field">
+                <span class="av-label">@Model.DateLabel</span>
+                <span class="av-control">
+                    <input type="text" value="@Model.DateValue" name="ngay" />
+                    @Html.Icon("calendar", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">@Model.RouteLabel</span>
+                <span class="av-control">
+                    <select name="tuyen">
+                        <option selected>@Model.RouteValue</option>
+                        <option>HAN → SGN</option>
+                        <option>SGN → DAD</option>
+                        <option>SGN → PQC</option>
+                    </select>
+                    @Html.Icon("chevron-down", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">@Model.AirlineStatusLabel</span>
+                <span class="av-control">
+                    <select name="trang-thai">
+                        <option selected>@Model.AirlineStatusValue</option>
+                        <option>Vietnam Airlines</option>
+                        <option>Vietjet Air</option>
+                        <option>Bamboo Airways</option>
+                    </select>
+                    @Html.Icon("chevron-down", 17)
+                </span>
+            </label>
+
+            <button type="submit" class="av-btn av-btn--primary admin-filters__submit">
+                @Model.SearchText
+            </button>
+        </form>
+    </section>
+
+    <section class="av-card admin-card">
+        <div class="av-card__body admin-card__body">
+            <div class="admin-card__head-main">
+                <h2 class="av-card__title">@Model.ListTitle</h2>
+                <span class="av-caption">@Model.ListSubtitle</span>
+            </div>
+
+            <div class="admin-table">
+                <table class="av-table manager-table--schedules">
+                    <thead>
+                        <tr>
+                            <th scope="col">Chuyến / Tàu bay</th>
+                            <th scope="col">Tuyến</th>
+                            <th scope="col">Giờ bay</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Ghế / Bán / Giữ / Trống</th>
+                            <th scope="col">Giá cơ bản từ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            <tr class="@(row.IsSelected ? "is-selected" : null)">
+                                <td class="manager-flight-name">@row.Flight</td>
+                                <td>@row.Route</td>
+                                <td>@row.Time</td>
+                                <td class="admin-table__result admin-table__result--@row.StatusTone">@row.StatusText</td>
+                                <td>@row.Seats</td>
+                                <td>@row.Price</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="av-pagination">
+                <span>@Model.ResultText</span>
+                <span class="av-pagination__links">
+                    <a href="/quan-ly/lich-bay">Trước</a>
+                    <span class="is-current">1</span>
+                    <a href="/quan-ly/lich-bay">Sau</a>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-grid manager-grid--schedule">
+        <article class="av-card admin-card">
+            <form class="av-card__body admin-card__body manager-editor" method="post" action="/quan-ly/lich-bay">
+                @Html.AntiForgeryToken()
+
+                <div class="admin-card__head">
+                    <div class="admin-card__head-main">
+                        <h2 class="av-card__title">@Model.EditorTitle</h2>
+                        <span class="av-caption">@Model.EditorSubtitle</span>
+                    </div>
+                    <div class="manager-editor__tools">
+                        <a class="av-btn av-btn--outline av-btn--sm" href="/quan-ly/lich-bay?hop-thoai=doi-gia">
+                            Đổi giá
+                        </a>
+                        <a class="av-btn av-btn--outline av-btn--sm admin-text-danger" href="/quan-ly/lich-bay?hop-thoai=huy-chuyen">
+                            Hủy chuyến
+                        </a>
+                    </div>
+                </div>
+
+                <div class="manager-editor__row manager-editor__row--three">
+                    <label class="av-field">
+                        <span class="av-label">@Model.EditorDateLabel</span>
+                        <span class="av-control">
+                            <input type="text" value="@Model.EditorDateValue" name="ngay-bay" />
+                        </span>
+                    </label>
+                    <label class="av-field">
+                        <span class="av-label">@Model.EditorTimeLabel</span>
+                        <span class="av-control">
+                            <input type="text" value="@Model.EditorTimeValue" name="gio-bay" />
+                        </span>
+                    </label>
+                    <label class="av-field">
+                        <span class="av-label">@Model.EditorStatusLabel</span>
+                        <span class="av-control">
+                            <select name="trang-thai">
+                                <option selected>@Model.EditorStatusValue</option>
+                                <option>Tạm ngừng mở bán</option>
+                                <option>Đã hủy</option>
+                            </select>
+                            @Html.Icon("chevron-down", 17)
+                        </span>
+                    </label>
+                </div>
+
+                <div class="admin-table manager-fares">
+                    <table class="av-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Hạng ghế</th>
+                                <th scope="col">Sức chứa</th>
+                                <th scope="col">Đã bán</th>
+                                <th scope="col">Cơ bản / khách</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fare in Model.Fares)
+                            {
+                                <tr>
+                                    <td class="manager-flight-name">@fare.Cabin</td>
+                                    <td>@fare.Capacity</td>
+                                    <td>@fare.Sold</td>
+                                    <td>@fare.BasePrice</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="manager-editor__row manager-editor__row--two">
+                    <label class="av-field">
+                        <span class="av-label">@Model.EconomyPriceLabel</span>
+                        <span class="av-control">
+                            <input type="text" value="@Model.EconomyPriceValue" name="gia-pho-thong" />
+                        </span>
+                    </label>
+                    <label class="av-field">
+                        <span class="av-label">@Model.BusinessPriceLabel</span>
+                        <span class="av-control">
+                            <input type="text" value="@Model.BusinessPriceValue" name="gia-thuong-gia" />
+                        </span>
+                    </label>
+                </div>
+
+                <p class="av-caption admin-card__note">@Model.EditorNote</p>
+
+                <div class="admin-editor__actions">
+                    <a class="av-btn av-btn--outline" href="/quan-ly/lich-bay">@Model.CancelEditText</a>
+                    <button type="submit" class="av-btn av-btn--primary">@Model.SaveText</button>
+                </div>
+            </form>
+        </article>
+
+        <aside class="manager-rules">
+            <article class="av-card admin-card">
+                <div class="av-card__body admin-card__body">
+                    <h2 class="av-card__title">@Model.RulesTitle</h2>
+
+                    <div class="av-alert av-alert--warning">
+                        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                        <div class="av-alert__body">
+                            <span class="av-alert__title">@Model.ChangeTitle</span>
+                            <span>@Model.ChangeText</span>
+                        </div>
+                    </div>
+
+                    <label class="av-check">
+                        <input type="checkbox" name="gui-email" checked="@(Model.EmailChecked ? "checked" : null)" />
+                        <span>Gửi email khi lịch bay thay đổi</span>
+                    </label>
+
+                    <label class="av-field">
+                        <span class="av-label">@Model.ReasonLabel</span>
+                        <span class="av-control">
+                            <input type="text" name="ly-do" placeholder="@Model.ReasonPlaceholder" />
+                        </span>
+                    </label>
+
+                    <p class="av-caption admin-card__note">@Model.RulesNote</p>
+
+                    <div class="av-alert av-alert--info">
+                        <span class="av-alert__icon">@Html.Icon("shield-check", 20)</span>
+                        <div class="av-alert__body">
+                            <span class="av-alert__title">@Model.ThresholdTitle</span>
+                            <span>@Model.ThresholdText</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </aside>
+    </section>
+</div>
+
+@if (Model.ShowCancelDialog)
+{
+    var dialog = Model.CancelDialog;
+    <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-flight-title">
+        <a class="av-modal__backdrop" href="@dialog.CancelHref" aria-label="Đóng hộp thoại"></a>
+
+        <form class="av-modal__panel" method="post" action="/quan-ly/lich-bay/huy-chuyen">
+            @Html.AntiForgeryToken()
+
+            <div class="av-modal__head">
+                <div class="admin-modal__head-main">
+                    <h2 class="av-modal__title" id="cancel-flight-title">@dialog.Title</h2>
+                    <p class="av-caption">@dialog.Subtitle</p>
+                </div>
+                <a class="admin-modal__close" href="@dialog.CancelHref" aria-label="Đóng">
+                    @Html.Icon("x", 24)
+                </a>
+            </div>
+
+            <div class="admin-detail-rows admin-detail-rows--dialog">
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">@dialog.FlightLabel</span>
+                    <span class="admin-detail-rows__value">@dialog.FlightValue</span>
+                </div>
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">@dialog.DepartureLabel</span>
+                    <span class="admin-detail-rows__value">@dialog.DepartureValue</span>
+                </div>
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">@dialog.SeatsLabel</span>
+                    <span class="admin-detail-rows__value">@dialog.SeatsValue</span>
+                </div>
+            </div>
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">@dialog.ImpactTitle</span>
+                    <span>@dialog.ImpactText</span>
+                </div>
+            </div>
+
+            <label class="av-field">
+                <span class="av-label">@dialog.ReasonLabel</span>
+                <span class="av-control av-control--area">
+                    <textarea name="ly-do" rows="2" required>@dialog.ReasonValue</textarea>
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">@dialog.MessageLabel</span>
+                <span class="av-control av-control--area">
+                    <textarea name="thong-bao" rows="3" required>@dialog.MessageValue</textarea>
+                </span>
+            </label>
+
+            <label class="av-check">
+                <input type="checkbox" name="gui-email" checked />
+                <span>@dialog.EmailCheckText</span>
+            </label>
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">@dialog.NoteTitle</span>
+                    <span>@dialog.NoteText</span>
+                </div>
+            </div>
+
+            <p class="av-caption admin-modal__note">@dialog.Footnote</p>
+
+            <div class="av-modal__foot">
+                <a class="av-btn av-btn--outline" href="@dialog.CancelHref">@dialog.CancelText</a>
+                <button type="submit" class="av-btn av-btn--danger">@dialog.SubmitText</button>
+            </div>
+        </form>
+    </div>
+}
+
+@if (Model.ShowPriceDialog)
+{
+    var dialog = Model.PriceDialog;
+    <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="change-price-title">
+        <a class="av-modal__backdrop" href="@dialog.CancelHref" aria-label="Đóng hộp thoại"></a>
+
+        <form class="av-modal__panel" method="post" action="/quan-ly/lich-bay/doi-gia">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="hang" value="pho-thong" />
+
+            <div class="av-modal__head">
+                <div class="admin-modal__head-main">
+                    <h2 class="av-modal__title" id="change-price-title">@dialog.Title</h2>
+                    <p class="av-caption">@dialog.Subtitle</p>
+                </div>
+                <a class="admin-modal__close" href="@dialog.CancelHref" aria-label="Đóng">
+                    @Html.Icon("x", 24)
+                </a>
+            </div>
+
+            <div class="manager-price-compare">
+                <div class="manager-price-cell">
+                    <span class="av-label">@dialog.CurrentLabel</span>
+                    <span class="manager-price-cell__value">@dialog.CurrentValue</span>
+                </div>
+                <div class="manager-price-cell manager-price-cell--next">
+                    <span class="av-label">@dialog.NewLabel</span>
+                    <span class="manager-price-cell__value manager-price-cell__value--next">@dialog.NewValue</span>
+                </div>
+            </div>
+
+            <div class="av-rows">
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@dialog.DeltaLabel</span>
+                    <span class="av-rowline__value">@dialog.DeltaValue</span>
+                </div>
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@dialog.ThresholdLabel</span>
+                    <span class="av-rowline__value">@dialog.ThresholdValue</span>
+                </div>
+            </div>
+
+            <span class="av-badge av-badge--success av-badge--lg manager-badge-line">@dialog.WithinText</span>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">@dialog.NoteTitle</span>
+                    <span>@dialog.NoteText</span>
+                </div>
+            </div>
+
+            <label class="av-field">
+                <span class="av-label">@dialog.ReasonLabel</span>
+                <span class="av-control av-control--area">
+                    <textarea name="ly-do" rows="2" required>@dialog.ReasonValue</textarea>
+                </span>
+            </label>
+
+            <p class="av-caption admin-modal__note">@dialog.Footnote</p>
+
+            <label class="av-check">
+                <input type="checkbox" name="xac-nhan" checked required />
+                <span>@dialog.ConfirmCheckText</span>
+            </label>
+
+            <div class="av-modal__foot">
+                <a class="av-btn av-btn--outline" href="@dialog.CancelHref">@dialog.CancelText</a>
+                <button type="submit" class="av-btn av-btn--primary">@dialog.SubmitText</button>
+            </div>
+        </form>
+    </div>
+}

@@ -1,0 +1,17 @@
+@model FlightOffer
+<div class="summary-flight">
+    <div class="summary-flight__airline">
+        <span class="summary-flight__airline-name">
+            @Html.Icon("plane", 20)
+            @Model.AirlineName
+        </span>
+        <span class="av-badge av-badge--info">@Model.FlightNumber</span>
+    </div>
+
+    <span class="summary-flight__date">@Money.LongDate(Model.Departure) · @Model.Stops</span>
+
+    <partial name="_FlightTimeline" model="new FlightTimelineModel(Model, ShowAirportName: true)" />
+
+    <hr class="av-divider" />
+    <span class="av-caption">@Model.FareName · 1 người lớn</span>
+</div>

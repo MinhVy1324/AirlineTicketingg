@@ -1,0 +1,324 @@
+@model ManagerChangeRefundsViewModel
+@{
+    ViewData["Title"] = "Xử lý đổi / hoàn vé";
+    ViewData["ManagerNav"] = "changes";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Xử lý đổi / hoàn vé</h1>
+            <p class="admin-page-subtitle">@Model.Subtitle</p>
+        </div>
+    </header>
+
+    <nav class="admin-tabs" aria-label="Trạng thái yêu cầu">
+        @foreach (var tab in Model.Tabs)
+        {
+            <a class="admin-tab @(tab.IsActive ? "is-active" : null)" href="@tab.Href"
+               aria-current="@(tab.IsActive ? "page" : null)">
+                @tab.Label
+            </a>
+        }
+    </nav>
+
+    <section class="av-card admin-card">
+        <div class="av-card__body admin-card__body">
+            <div class="admin-card__head-main">
+                <h2 class="av-card__title">@Model.QueueTitle</h2>
+                <span class="av-caption">@Model.QueueSubtitle</span>
+            </div>
+
+            <form class="admin-filters manager-filters--refunds" method="get" action="/quan-ly/doi-hoan">
+                @{
+                    var activeHref = Model.Tabs.FirstOrDefault(item => item.IsActive)?.Href ?? string.Empty;
+                    var activeTabQuery = activeHref.Contains("?tab=", StringComparison.Ordinal)
+                        ? activeHref[(activeHref.IndexOf("?tab=", StringComparison.Ordinal) + 5)..]
+                        : string.Empty;
+                }
+                @if (activeTabQuery.Length > 0)
+                {
+                    <input type="hidden" name="tab" value="@activeTabQuery" />
+                }
+                <label class="av-field">
+                    <span class="av-label">@Model.SearchLabel</span>
+                    <span class="av-control">
+                        <input type="search" name="q" placeholder="@Model.SearchPlaceholder" autocomplete="off" />
+                        @Html.Icon("search", 17)
+                    </span>
+                </label>
+
+                <label class="av-field">
+                    <span class="av-label">@Model.TypeLabel</span>
+                    <span class="av-control">
+                        <select name="loai">
+                            <option selected>@Model.TypeValue</option>
+                            <option>Đổi vé</option>
+                            <option>Hoàn vé</option>
+                        </select>
+                        @Html.Icon("chevron-down", 17)
+                    </span>
+                </label>
+
+                <label class="av-field">
+                    <span class="av-label">@Model.DateLabel</span>
+                    <span class="av-control">
+                        <input type="text" name="ngay" value="@Model.DateValue" />
+                        @Html.Icon("calendar", 17)
+                    </span>
+                </label>
+
+                <button type="submit" class="av-btn av-btn--primary admin-filters__submit">@Model.FilterText</button>
+            </form>
+
+            @if (Model.Rows.Count > 0)
+            {
+                <div class="admin-table">
+                    <table class="av-table manager-table--queue">
+                        <thead>
+                            <tr>
+                                <th scope="col">Yêu cầu / PNR</th>
+                                <th scope="col">Khách hàng</th>
+                                <th scope="col">Loại</th>
+                                <th scope="col">Thời điểm gửi</th>
+                                <th scope="col">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Rows)
+                            {
+                                <tr class="@(row.IsSelected ? "is-selected" : null)">
+                                    <td class="manager-flight-name">@row.Request</td>
+                                    <td>@row.Customer</td>
+                                    <td>@row.Type</td>
+                                    <td>@row.Submitted</td>
+                                    <td class="manager-tone--@row.StatusTone">@row.StatusText</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="av-empty">
+                    <span class="av-empty__icon">@Html.Icon("inbox", 28)</span>
+                    <span class="av-empty__title">Chưa có yêu cầu trong nhóm này</span>
+                    <span class="av-empty__text">
+                        Các yêu cầu đổi / hoàn đã xử lý xong sẽ được chuyển sang nhóm Hoàn tất và lưu trong nhật ký.
+                    </span>
+                </div>
+            }
+
+            <div class="av-pagination">
+                <span>@Model.ResultText</span>
+                <span class="av-pagination__links">
+                    <a href="/quan-ly/doi-hoan">Trước</a>
+                    <span class="is-current">1</span>
+                    <a href="/quan-ly/doi-hoan">Sau</a>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    @if (Model.Rows.Count > 0)
+    {
+        <section class="admin-grid manager-grid--refunds">
+            <div class="manager-stack">
+                <article class="av-card admin-card">
+                    <div class="av-card__body admin-card__body">
+                        <div class="admin-card__head-main">
+                            <h2 class="av-card__title">@Model.DetailTitle</h2>
+                            <span class="av-caption">@Model.DetailSubtitle</span>
+                        </div>
+
+                        <div class="admin-detail-rows">
+                            @foreach (var field in Model.DetailFields)
+                            {
+                                <div class="admin-detail-rows__row">
+                                    <span class="admin-detail-rows__label">@field.Label</span>
+                                    <span class="admin-detail-rows__value">@field.Value</span>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="av-alert av-alert--success">
+                            <span class="av-alert__icon">@Html.Icon("check-circle", 20)</span>
+                            <div class="av-alert__body">
+                                <span class="av-alert__title">@Model.EligibleTitle</span>
+                                <span>@Model.EligibleText</span>
+                            </div>
+                        </div>
+
+                        <p class="av-caption admin-card__note">@Model.ConditionText</p>
+                    </div>
+                </article>
+
+                <article class="av-card admin-card">
+                    <form class="av-card__body admin-card__body manager-decision"
+                          method="post" action="/quan-ly/doi-hoan/tu-choi">
+                        @Html.AntiForgeryToken()
+
+                        <h2 class="av-card__title">@Model.DecisionTitle</h2>
+
+                        <label class="av-field">
+                            <span class="av-label">@Model.ReasonLabel</span>
+                            <span class="av-control av-control--area">
+                                <textarea name="ly-do" rows="2" required>@Model.ReasonValue</textarea>
+                            </span>
+                        </label>
+
+                        <p class="av-caption admin-card__note">@Model.DecisionNote</p>
+
+                        <div class="admin-detail-actions">
+                            <button type="submit" class="av-btn av-btn--outline admin-text-danger">
+                                @Model.RejectText
+                            </button>
+                            <a class="av-btn av-btn--primary"
+                               href="/quan-ly/doi-hoan?hop-thoai=duyet-hoan">@Model.ApproveText</a>
+                        </div>
+                    </form>
+                </article>
+
+                <div class="av-alert av-alert--info manager-process-note">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@Model.ProcessTitle</span>
+                        <span>@Model.ProcessText</span>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="manager-stack">
+                <article class="av-card admin-card">
+                    <div class="av-card__body admin-card__body">
+                        <h2 class="av-card__title">@Model.RefundTitle</h2>
+
+                        <div class="av-rows manager-refund-rows">
+                            @foreach (var row in Model.RefundRows)
+                            {
+                                <div class="av-rowline @(row.IsTotal ? "av-rowline--total manager-refund-total" : null)">
+                                    <span class="av-rowline__label">@row.Label</span>
+                                    <span class="av-rowline__value">@row.Value</span>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="admin-detail-rows manager-refund-meta">
+                            <div class="admin-detail-rows__row">
+                                <span class="admin-detail-rows__label">@Model.RefundMethodLabel</span>
+                                <span class="admin-detail-rows__value">@Model.RefundMethodValue</span>
+                            </div>
+                            <div class="admin-detail-rows__row">
+                                <span class="admin-detail-rows__label">@Model.RefundTimeLabel</span>
+                                <span class="admin-detail-rows__value">@Model.RefundTimeValue</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <div class="av-alert av-alert--warning">
+                    <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@Model.WarningTitle</span>
+                        <span>@Model.WarningText</span>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    }
+</div>
+
+@if (Model.ShowApproveDialog)
+{
+    var dialog = Model.ApproveDialog;
+    <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="approve-refund-title">
+        <a class="av-modal__backdrop" href="@dialog.CancelHref" aria-label="Đóng hộp thoại"></a>
+
+        <form class="av-modal__panel" method="post" action="/quan-ly/doi-hoan/duyet">
+            @Html.AntiForgeryToken()
+
+            <div class="av-modal__head">
+                <div class="admin-modal__head-main">
+                    <h2 class="av-modal__title" id="approve-refund-title">@dialog.Title</h2>
+                    <p class="av-caption">@dialog.Subtitle</p>
+                </div>
+                <a class="admin-modal__close" href="@dialog.CancelHref" aria-label="Đóng">
+                    @Html.Icon("x", 24)
+                </a>
+            </div>
+
+            <div class="admin-detail-rows admin-detail-rows--dialog">
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">@dialog.TicketLabel</span>
+                    <span class="admin-detail-rows__value">@dialog.TicketValue</span>
+                </div>
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">@dialog.FlightLabel</span>
+                    <span class="admin-detail-rows__value">@dialog.FlightValue</span>
+                </div>
+            </div>
+
+            <span class="av-badge av-badge--success av-badge--lg manager-badge-line">@dialog.EligibleText</span>
+
+            <div class="av-rows manager-refund-rows">
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@dialog.TotalLabel</span>
+                    <span class="av-rowline__value">@dialog.TotalValue</span>
+                </div>
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@dialog.FeeLabel</span>
+                    <span class="av-rowline__value">@dialog.FeeValue</span>
+                </div>
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@dialog.ServiceLabel</span>
+                    <span class="av-rowline__value">@dialog.ServiceValue</span>
+                </div>
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@dialog.BaggageLabel</span>
+                    <span class="av-rowline__value">@dialog.BaggageValue</span>
+                </div>
+                <div class="av-rowline av-rowline--total manager-refund-total">
+                    <span class="av-rowline__label">@dialog.AmountLabel</span>
+                    <span class="av-rowline__value">@dialog.AmountValue</span>
+                </div>
+            </div>
+
+            <div class="admin-detail-rows manager-refund-meta">
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">@dialog.MethodLabel</span>
+                    <span class="admin-detail-rows__value">@dialog.MethodValue</span>
+                </div>
+                <div class="admin-detail-rows__row">
+                    <span class="admin-detail-rows__label">@dialog.TimeLabel</span>
+                    <span class="admin-detail-rows__value">@dialog.TimeValue</span>
+                </div>
+            </div>
+
+            <label class="av-field">
+                <span class="av-label">@dialog.ReasonLabel</span>
+                <span class="av-control av-control--area">
+                    <textarea name="ly-do" rows="2" required>@dialog.ReasonValue</textarea>
+                </span>
+            </label>
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">@dialog.NoteTitle</span>
+                    <span>@dialog.NoteText</span>
+                </div>
+            </div>
+
+            <label class="av-check">
+                <input type="checkbox" name="xac-nhan" checked required />
+                <span>@dialog.ConfirmCheckText</span>
+            </label>
+
+            <div class="av-modal__foot">
+                <a class="av-btn av-btn--outline" href="@dialog.CancelHref">@dialog.CancelText</a>
+                <button type="submit" class="av-btn av-btn--primary">@dialog.SubmitText</button>
+            </div>
+        </form>
+    </div>
+}

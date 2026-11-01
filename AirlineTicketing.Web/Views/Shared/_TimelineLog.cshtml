@@ -1,0 +1,25 @@
+@model BookingOutcomeViewModel
+<section class="av-card">
+    <div class="av-card__body av-card__stack">
+        <div class="av-stack av-gap-6">
+            <h2 class="av-card__title">@Model.EventsTitle</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.EventsSubtitle))
+            {
+                <span class="av-caption">@Model.EventsSubtitle</span>
+            }
+        </div>
+
+        <div class="timeline-log">
+            @foreach (var item in Model.Events)
+            {
+                <div class="timeline-log__item">
+                    <span class="timeline-log__time">@item.Time</span>
+                    <div class="timeline-log__body">
+                        <span class="timeline-log__title">@item.Title</span>
+                        <span class="timeline-log__text">@item.Text</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

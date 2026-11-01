@@ -1,0 +1,166 @@
+@model AdminOverviewViewModel
+@{
+    ViewData["Title"] = "Tổng quan hệ thống";
+    ViewData["AdminNav"] = "overview";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Tổng quan hệ thống</h1>
+            <p class="admin-page-subtitle">Kiểm soát toàn diện dữ liệu, tài khoản và sức khỏe vận hành.</p>
+        </div>
+    </header>
+
+    <div class="admin-statusbar">
+        <div class="admin-status">
+            @Html.Icon("check-circle", 20)
+            <span class="admin-status__text">@Model.StatusText</span>
+            <span class="admin-status__meta">· @Model.StatusMeta</span>
+        </div>
+        <span class="admin-period">
+            @Html.Icon("calendar", 17)
+            <span>@Model.PeriodText</span>
+        </span>
+    </div>
+
+    <section class="admin-kpis" aria-label="Chỉ số hệ thống">
+        @foreach (var kpi in Model.Kpis)
+        {
+            <article class="admin-kpi">
+                <div class="admin-kpi__head">
+                    <span class="admin-kpi__label">@kpi.Label</span>
+                    @Html.Icon(kpi.Icon, 18)
+                </div>
+                <span class="admin-kpi__value">@kpi.Value</span>
+                <span class="admin-kpi__meta admin-kpi__meta--@kpi.MetaTone">@kpi.Meta</span>
+            </article>
+        }
+    </section>
+
+    <section class="admin-grid admin-grid--main">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head">
+                    <div class="admin-card__head-main">
+                        <h2 class="av-card__title">@Model.RevenueTitle</h2>
+                        <span class="av-caption">@Model.RevenueSubtitle</span>
+                    </div>
+                    <a class="av-link" href="@Model.RevenueLinkHref">@Model.RevenueLinkText</a>
+                </div>
+
+                <div class="admin-chart">
+                    <div class="admin-chart__legend">
+                        <span class="av-micro">@Model.ChartUnitText</span>
+                        <span class="admin-chart__legend-price">@Model.ChartLegendText</span>
+                    </div>
+
+                    <div class="admin-chart__plot" role="img" aria-label="Doanh thu gộp từ tháng 05 đến tháng 10 năm 2026">
+                        @foreach (var point in Model.Revenue)
+                        {
+                            <div class="admin-chart__col">
+                                <span class="admin-chart__value @(point.IsCurrent ? "is-current" : null)">@point.ValueText</span>
+                                <div class="admin-chart__track">
+                                    <span class="admin-chart__bar @(point.IsCurrent ? "is-current" : null)"
+                                          style="height:@Model.HeightPercent(point)%"></span>
+                                </div>
+                                <span class="admin-chart__label">@point.Label</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.HealthTitle</h2>
+                    <span class="av-caption">@Model.HealthSubtitle</span>
+                </div>
+
+                <div class="admin-health">
+                    @foreach (var row in Model.Health)
+                    {
+                        <div class="admin-health__row">
+                            <span class="admin-health__label">@row.Label</span>
+                            <span class="admin-health__value">@row.Value</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="av-alert av-alert--success admin-health__notice">
+                    <span class="av-alert__icon">@Html.Icon("check-circle", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@Model.HealthNoticeTitle</span>
+                        <span>@Model.HealthNoticeText</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="admin-grid admin-grid--main">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head">
+                    <h2 class="av-card__title">@Model.ActivityTitle</h2>
+                    <a class="av-link" href="@Model.ActivityLinkHref">@Model.ActivityLinkText</a>
+                </div>
+
+                <div class="admin-table">
+                    <table class="av-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Thời gian</th>
+                                <th scope="col">Người thực hiện</th>
+                                <th scope="col">Hoạt động</th>
+                                <th scope="col">Kết quả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Activity)
+                            {
+                                <tr>
+                                    <td class="admin-table__time">@row.Time</td>
+                                    <td>@row.Actor</td>
+                                    <td>@row.Action</td>
+                                    <td class="admin-table__result admin-table__result--@row.ResultTone">@row.ResultText</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <h2 class="av-card__title">@Model.AttentionTitle</h2>
+
+                <div class="admin-attention">
+                    @foreach (var item in Model.Attention)
+                    {
+                        <div class="admin-attention__item admin-attention__item--@item.Tone">
+                            <span class="admin-attention__icon">@Html.Icon(item.Icon, 20)</span>
+                            <div class="admin-attention__body">
+                                <span class="admin-attention__title">@item.Title</span>
+                                <span class="admin-attention__text">@item.Text</span>
+                            </div>
+                        </div>
+                    }
+
+                    @{
+                        var action = Model.Attention.FirstOrDefault(item => item.LinkText is not null && item.Href is not null);
+                    }
+                    @if (action is not null)
+                    {
+                        <a class="av-btn av-btn--outline admin-attention__action" href="@action.Href">
+                            @action.LinkText
+                        </a>
+                    }
+                </div>
+            </div>
+        </article>
+    </section>
+</div>

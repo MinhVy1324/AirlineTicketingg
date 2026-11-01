@@ -1,0 +1,32 @@
+@{
+    var nav = ViewData["Nav"] as string ?? "book";
+    string Active(string key) => nav == key ? "is-active" : string.Empty;
+}
+<header class="av-nav">
+    <div class="av-container av-nav__inner">
+        <a class="av-brand" href="/" aria-label="AeroViet · Trang chủ">
+            <span class="av-brand__mark">@Html.Icon("plane", 23)</span>
+            <span class="av-brand__name">AeroViet</span>
+        </a>
+
+        <nav class="av-nav__menu" aria-label="Điều hướng chính">
+            <a class="av-nav__link @Active("book")" href="/" aria-current="@(nav == "book" ? "page" : null)">Đặt vé</a>
+            <a class="av-nav__link @Active("tickets")" href="/ve-cua-toi">Vé của tôi</a>
+            <a class="av-nav__link @Active("offers")" href="/#uu-dai">Ưu đãi</a>
+            <a class="av-nav__link @Active("help")" href="/#tro-giup">Trợ giúp</a>
+        </nav>
+
+        <div class="av-nav__aside">
+            <span class="av-nav__locale">
+                @Html.Icon("globe", 17)
+                <span>VI · VND</span>
+            </span>
+            <span class="av-nav__sep" aria-hidden="true"></span>
+            <a class="av-nav__user" href="/ve-cua-toi" aria-label="Tài khoản của Minh Anh">
+                <span class="av-avatar">@DemoCatalog.CustomerInitials</span>
+                <span>@DemoCatalog.CustomerName</span>
+                @Html.Icon("chevron-down", 14)
+            </a>
+        </div>
+    </div>
+</header>

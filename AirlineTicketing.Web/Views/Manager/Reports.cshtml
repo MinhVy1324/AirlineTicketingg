@@ -1,0 +1,170 @@
+@model ManagerReportsViewModel
+@{
+    ViewData["Title"] = "Báo cáo kinh doanh";
+    ViewData["ManagerNav"] = "reports";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Báo cáo kinh doanh</h1>
+            <p class="admin-page-subtitle">@Model.Subtitle</p>
+        </div>
+    </header>
+
+    <form class="admin-filters manager-filters--reports" method="post" action="/quan-ly/bao-cao">
+        @Html.AntiForgeryToken()
+
+        <label class="av-field">
+            <span class="av-label">@Model.PeriodLabel</span>
+            <span class="av-control">
+                <input type="text" name="ky" value="@Model.PeriodValue" />
+                @Html.Icon("calendar", 17)
+            </span>
+        </label>
+
+        <label class="av-field">
+            <span class="av-label">@Model.AirlineLabel</span>
+            <span class="av-control">
+                <select name="hang">
+                    <option selected>@Model.AirlineValue</option>
+                    <option>Vietnam Airlines</option>
+                    <option>Vietjet Air</option>
+                    <option>Bamboo Airways</option>
+                </select>
+                @Html.Icon("chevron-down", 17)
+            </span>
+        </label>
+
+        <label class="av-field">
+            <span class="av-label">@Model.RouteLabel</span>
+            <span class="av-control">
+                <select name="tuyen">
+                    <option selected>@Model.RouteValue</option>
+                    <option>SGN ↔ HAN</option>
+                    <option>SGN ↔ DAD</option>
+                    <option>HAN ↔ DAD</option>
+                    <option>SGN ↔ PQC</option>
+                </select>
+                @Html.Icon("chevron-down", 17)
+            </span>
+        </label>
+
+        <button type="submit" class="av-btn av-btn--primary admin-filters__submit">@Model.ViewText</button>
+        <button type="submit" class="av-btn av-btn--outline admin-filters__submit"
+                formaction="/quan-ly/bao-cao/xuat">
+            @Html.Icon("download", 17)
+            <span>@Model.ExportText</span>
+        </button>
+    </form>
+
+    <section class="admin-kpis" aria-label="Chỉ số kinh doanh">
+        @foreach (var kpi in Model.Kpis)
+        {
+            <article class="admin-kpi">
+                <div class="admin-kpi__head">
+                    <span class="admin-kpi__label">@kpi.Label</span>
+                    @Html.Icon(kpi.Icon, 18)
+                </div>
+                <span class="admin-kpi__value">@kpi.Value</span>
+                <span class="admin-kpi__meta admin-kpi__meta--@kpi.Tone">@kpi.Meta</span>
+            </article>
+        }
+    </section>
+
+    <section class="admin-grid manager-grid--reports">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.TrendTitle</h2>
+                    <span class="av-caption">@Model.TrendSubtitle</span>
+                </div>
+
+                <div class="admin-chart">
+                    <div class="admin-chart__legend">
+                        <span class="av-micro">@Model.ChartUnit</span>
+                        <span class="manager-chart__legend">@Model.ChartLegend</span>
+                    </div>
+
+                    <div class="admin-chart__plot" role="img"
+                         aria-label="Doanh thu gộp từ tháng 05 đến tháng 10 năm 2026">
+                        @foreach (var bar in Model.Bars)
+                        {
+                            <div class="admin-chart__col">
+                                <span class="admin-chart__value @(bar.IsCurrent ? "is-current" : null)">@bar.ValueText</span>
+                                <div class="admin-chart__track">
+                                    <span class="admin-chart__bar @(bar.IsCurrent ? "is-current" : null)"
+                                          style="height:@Model.HeightPercent(bar)%"></span>
+                                </div>
+                                <span class="admin-chart__label">@bar.Label</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.AirlineTitle</h2>
+                    <span class="av-caption">@Model.AirlineSubtitle</span>
+                </div>
+
+                <div class="manager-airlines">
+                    @foreach (var airline in Model.Airlines)
+                    {
+                        <div class="manager-airline">
+                            <div class="manager-airline__head">
+                                <span>@airline.Name</span>
+                                <span>@airline.Amount</span>
+                            </div>
+                            <div class="manager-share-track">
+                                <span class="manager-share-fill manager-share-fill--@airline.Tone"
+                                      style="width:@airline.Percent%"></span>
+                            </div>
+                            <span class="av-micro">@airline.ShareText</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="av-card admin-card">
+        <div class="av-card__body admin-card__body">
+            <div class="admin-card__head-main">
+                <h2 class="av-card__title">@Model.RoutesTitle</h2>
+                <span class="av-caption">@Model.RoutesSubtitle</span>
+            </div>
+
+            <div class="admin-table">
+                <table class="av-table manager-table--reports">
+                    <thead>
+                        <tr>
+                            <th scope="col">Tuyến bay</th>
+                            <th scope="col">Vé đã xuất</th>
+                            <th scope="col">Doanh thu gộp</th>
+                            <th scope="col">Tiền đã hoàn</th>
+                            <th scope="col">Doanh thu sau hoàn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Routes)
+                        {
+                            <tr class="@(row.IsTotal ? "manager-row--total" : null)">
+                                <td class="manager-flight-name">@row.Route</td>
+                                <td>@row.Tickets</td>
+                                <td>@row.Gross</td>
+                                <td>@row.Refunded</td>
+                                <td>@row.Net</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="av-caption admin-card__note">@Model.Note</p>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,85 @@
+/* ==========================================================================
+   AeroViet — design tokens (trích từ Figma)
+   ========================================================================== */
+
+:root {
+  /* Brand & surface */
+  --av-primary: #1655A1;
+  --av-primary-hover: #124684;
+  --av-primary-active: #0E3A6E;
+  --av-primary-soft: #EDF4FD;
+  --av-navy: #102E50;
+  --av-navy-2: #24496F;
+  --av-navy-3: #1B3E64;
+  --av-surface: #FFFFFF;
+  --av-page: #F4F7FB;
+
+  /* Text */
+  --av-text: #172D46;
+  --av-text-muted: #64758A;
+  --av-text-disabled: #A2B2C4;
+  --av-text-on-dark: #FFFFFF;
+  --av-text-on-dark-muted: #CEDCED;
+
+  /* Lines */
+  --av-border: #DFE6EE;
+  --av-border-strong: #B1C3D6;
+  --av-divider: #DFE6EE;
+
+  /* Feedback */
+  --av-success: #087F83;
+  --av-success-soft: #E7F5F2;
+  --av-warning: #A56612;
+  --av-warning-soft: #FFF5E3;
+  --av-danger: #BB4545;
+  --av-danger-soft: #FCEEEE;
+  --av-info: #1655A1;
+  --av-info-soft: #EDF4FD;
+
+  /* Radius */
+  --av-r-badge: 5px;
+  --av-r-control: 8px;
+  --av-r-mark: 10px;
+  --av-r-card: 12px;
+  --av-r-modal: 20px;
+  --av-r-pill: 100px;
+
+  /* Elevation */
+  --av-shadow-modal: 0 12px 40px rgba(16, 46, 80, .2);
+  --av-shadow-card: 0 1px 2px rgba(16, 46, 80, .04);
+
+  /* Layout */
+  --av-nav-h: 88px;
+  --av-footer-h: 66px;
+  --av-container: 1312px;
+  --av-gutter: 64px;
+  --av-sidebar-w: 224px;
+  --av-toolbar-h: 80px;
+
+  /* Type scale */
+  --av-font: 'Inter', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --av-fs-display: 48px;
+  --av-fs-h1: 30px;
+  --av-fs-h2: 29px;
+  --av-fs-h3: 26px;
+  --av-fs-h4: 18px;
+  --av-fs-xl: 21px;
+  --av-fs-lg: 20px;
+  --av-fs-body: 14px;
+  --av-fs-sm: 13px;
+  --av-fs-caption: 12px;
+  --av-fs-micro: 11px;
+
+  /* Spacing */
+  --av-sp-1: 4px;
+  --av-sp-2: 6px;
+  --av-sp-3: 8px;
+  --av-sp-4: 10px;
+  --av-sp-5: 12px;
+  --av-sp-6: 16px;
+  --av-sp-7: 18px;
+  --av-sp-8: 20px;
+  --av-sp-9: 24px;
+  --av-sp-10: 28px;
+  --av-sp-11: 32px;
+}

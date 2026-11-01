@@ -1,0 +1,199 @@
+@model AdminSettingsViewModel
+@{
+    ViewData["Title"] = "Cấu hình nghiệp vụ";
+    ViewData["AdminNav"] = "settings";
+
+    var bookingPair = Model.BookingFields.Take(2).ToArray();
+    var bookingRest = Model.BookingFields.Skip(2).ToArray();
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Cấu hình nghiệp vụ</h1>
+            <p class="admin-page-subtitle">Chính sách áp dụng cho đơn mới. Đơn đã tạo giữ nguyên điều kiện tại thời điểm đặt.</p>
+        </div>
+    </header>
+
+    <div class="admin-settings-version">
+        <div class="admin-settings-version__main">
+            <span class="av-badge av-badge--success">@Model.VersionText</span>
+            <span class="admin-settings-version__dirty">@Model.DirtyText</span>
+        </div>
+        <span class="admin-settings-version__time">@Model.UpdatedText</span>
+    </div>
+
+    <form class="admin-page__form" method="post" action="/admin/cau-hinh">
+        @Html.AntiForgeryToken()
+
+        <div class="admin-settings">
+            <div class="admin-settings__col">
+                <article class="av-card admin-card">
+                    <div class="av-card__body admin-card__body admin-setting-card">
+                        <div class="admin-card__head-main">
+                            <h2 class="admin-setting-title">@Model.BookingTitle</h2>
+                        </div>
+
+                        <div class="admin-setting-fields--pair">
+                            @foreach (var field in bookingPair)
+                            {
+                                <label class="av-field">
+                                    <span class="av-label">@field.Label</span>
+                                    <span class="av-control">
+                                        <input type="text" value="@field.Value" />
+                                        @if (field.Icon is not null)
+                                        {
+                                            @Html.Icon(field.Icon, 17)
+                                        }
+                                    </span>
+                                    @if (field.Hint is not null)
+                                    {
+                                        <span class="av-field__hint">@field.Hint</span>
+                                    }
+                                </label>
+                            }
+                        </div>
+
+                        @foreach (var field in bookingRest)
+                        {
+                            <label class="av-field">
+                                <span class="av-label">@field.Label</span>
+                                <span class="av-control">
+                                    <input type="text" value="@field.Value" />
+                                    @if (field.Icon is not null)
+                                    {
+                                        @Html.Icon(field.Icon, 17)
+                                    }
+                                </span>
+                                @if (field.Hint is not null)
+                                {
+                                    <span class="av-field__hint">@field.Hint</span>
+                                }
+                            </label>
+                        }
+
+                        <div class="av-alert av-alert--info">
+                            <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                            <div class="av-alert__body">
+                                <span class="av-alert__title">@Model.ExampleTitle</span>
+                                <span>@Model.ExampleText</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="av-card admin-card">
+                    <div class="av-card__body admin-card__body admin-setting-card">
+                        <div class="admin-card__head-main">
+                            <h2 class="admin-setting-title">@Model.PolicyTitle</h2>
+                            <span class="admin-setting-subtitle">@Model.PolicySubtitle</span>
+                        </div>
+
+                        <div class="admin-setting-fields--pair">
+                            @foreach (var field in Model.PolicyFields)
+                            {
+                                <label class="av-field">
+                                    <span class="av-label">@field.Label</span>
+                                    <span class="av-control">
+                                        <input type="text" value="@field.Value" />
+                                    </span>
+                                </label>
+                            }
+                        </div>
+
+                        <ul class="admin-policy-checks">
+                            @foreach (var check in Model.PolicyChecks)
+                            {
+                                <li>@Html.Icon("check", 16)<span>@check</span></li>
+                            }
+                        </ul>
+                    </div>
+                </article>
+            </div>
+
+            <div class="admin-settings__col">
+                <article class="av-card admin-card">
+                    <div class="av-card__body admin-card__body admin-setting-card">
+                        <div class="admin-card__head-main">
+                            <h2 class="admin-setting-title">@Model.PaymentTitle</h2>
+                        </div>
+
+                        <div class="admin-card__head">
+                            <span class="av-strong">@Model.Payment.Name</span>
+                            <span class="av-badge av-badge--@Model.Payment.StatusTone">@Model.Payment.StatusText</span>
+                        </div>
+
+                        <div class="admin-spec-list">
+                            <div class="admin-spec-row">
+                                <span class="admin-spec-row__label">@Model.Payment.EnvironmentLabel</span>
+                                <span class="admin-spec-row__value">@Model.Payment.Environment</span>
+                            </div>
+                        </div>
+
+                        <label class="av-field">
+                            <span class="av-label">@Model.Payment.MerchantLabel</span>
+                            <span class="av-control">
+                                <input type="text" value="@Model.Payment.MerchantId" />
+                            </span>
+                        </label>
+
+                        <label class="av-field">
+                            <span class="av-label">@Model.Payment.SecretLabel</span>
+                            <span class="av-control">
+                                <input type="text" value="@Model.Payment.SecretMasked" readonly />
+                                @Html.Icon("lock", 17)
+                            </span>
+                            <span class="av-field__hint">@Model.Payment.Note</span>
+                        </label>
+
+                        <button type="button" class="av-btn av-btn--outline av-btn--sm">@Model.Payment.CheckText</button>
+                    </div>
+                </article>
+
+                <article class="av-card admin-card">
+                    <div class="av-card__body admin-card__body admin-setting-card">
+                        <div class="admin-card__head-main">
+                            <h2 class="admin-setting-title">@Model.NotificationTitle</h2>
+                        </div>
+
+                        <div class="admin-spec-list">
+                            @foreach (var field in Model.NotificationFields)
+                            {
+                                <div class="admin-spec-row">
+                                    <span class="admin-spec-row__label">@field.Label</span>
+                                    <span class="admin-spec-row__value">@field.Value</span>
+                                </div>
+                            }
+                        </div>
+
+                        <label class="av-field">
+                            <span class="av-label">@Model.EmailSender.Label</span>
+                            <span class="av-control">
+                                <input type="email" value="@Model.EmailSender.Value" />
+                            </span>
+                        </label>
+                    </div>
+                </article>
+
+                <div class="av-alert av-alert--warning">
+                    <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@Model.SaveNoteTitle</span>
+                        <span>@Model.SaveNoteText</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-savebar">
+            <span class="admin-savebar__note">@Model.FooterNote</span>
+            <div class="admin-savebar__actions">
+                <a class="av-btn av-btn--outline" href="/admin/cau-hinh">Hủy thay đổi</a>
+                <button type="submit" class="av-btn av-btn--primary">
+                    @Html.Icon("check", 17)
+                    <span>Lưu cấu hình</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

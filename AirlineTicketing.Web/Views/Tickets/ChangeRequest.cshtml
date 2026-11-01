@@ -1,0 +1,218 @@
+@model ChangeRequestViewModel
+@{
+    ViewData["Title"] = "Gửi yêu cầu đổi vé";
+    ViewData["Nav"] = "tickets";
+    var booking = Model.Booking;
+    var current = booking.Flight;
+    var next = Model.NewFlight;
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Gửi yêu cầu đổi vé</h1>
+        <p class="av-page-subtitle">Vé của tôi / @booking.Pnr / Đổi vé tự nguyện · Chưa gửi yêu cầu</p>
+    </header>
+
+    <form class="booking-layout" method="post" action="/ve-cua-toi/yeu-cau-doi">
+        @Html.AntiForgeryToken()
+
+        <div class="booking-main">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <div class="av-stack av-gap-4">
+                        <h2 class="av-card__title">Vé hiện tại · @booking.Pnr</h2>
+                        <span class="av-caption">@booking.Passenger.FullName · Số vé @booking.TicketNumber</span>
+                    </div>
+
+                    <partial name="_JourneyBlock" model="current" />
+
+                    <hr class="av-divider" />
+
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Ghế / hành lý</span>
+                        <span class="av-rowline__value">@Model.SeatBaggageText</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Chọn chuyến mới</h2>
+
+                    <div class="request-picker">
+                        <label class="av-field">
+                            <span class="av-label">Ngày bay mới <span class="req">*</span></span>
+                            <span class="av-control">
+                                <input type="text" value="@Money.Date(next.Departure)" readonly />
+                                @Html.Icon("calendar", 17)
+                            </span>
+                        </label>
+
+                        <label class="av-field">
+                            <span class="av-label">Tuyến bay</span>
+                            <span class="av-control">
+                                <input type="text" value="@current.From.Code → @current.To.Code" readonly />
+                            </span>
+                        </label>
+
+                        <button type="button" class="av-link request-picker__action">
+                            Kiểm tra chỗ
+                            @Html.Icon("arrow-right", 15)
+                        </button>
+                    </div>
+
+                    <div class="request-flight">
+                        <partial name="_JourneyBlock" model="next" />
+
+                        <span class="av-badge av-badge--success">@Model.AvailabilityText</span>
+
+                        <p class="av-caption">@Model.AvailabilityNote</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">So sánh vé cũ và vé mới</h2>
+
+                    <div class="compare-table">
+                        <div class="compare-table__row compare-table__row--head">
+                            <span>Khoản mục</span>
+                            <span>Vé cũ</span>
+                            <span>Vé mới (dự kiến)</span>
+                        </div>
+
+                        <div class="compare-table__row">
+                            <span>Giá vé cơ bản</span>
+                            <span>@Money.Vnd(booking.Price.BaseFare)</span>
+                            <span>@Money.Vnd(Model.NewBaseFare)</span>
+                        </div>
+                        <div class="compare-table__row">
+                            <span>Thuế &amp; phí sân bay</span>
+                            <span>@Money.Vnd(booking.Price.Taxes)</span>
+                            <span>@Money.Vnd(booking.Price.Taxes)</span>
+                        </div>
+                        <div class="compare-table__row">
+                            <span>Phí dịch vụ</span>
+                            <span>@Money.Vnd(booking.Price.ServiceFee)</span>
+                            <span>@Money.Vnd(booking.Price.ServiceFee)</span>
+                        </div>
+                        <div class="compare-table__row">
+                            <span>Hành lý thêm 10 kg</span>
+                            <span>@Money.Vnd(booking.Price.BaggageFee)</span>
+                            <span>@Money.Vnd(booking.Price.BaggageFee)</span>
+                        </div>
+                        <div class="compare-table__row compare-table__row--total">
+                            <span>Tổng giá trị</span>
+                            <span>@Money.Vnd(booking.Price.Total)</span>
+                            <span>@Money.Vnd(Model.NewTotal)</span>
+                        </div>
+                    </div>
+
+                    <div class="request-diff">
+                        <span class="av-muted">Chênh lệch giá</span>
+                        <strong>@Money.Vnd(Model.PriceDifference)</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Xác nhận trước khi gửi</h2>
+
+                    <label class="av-field">
+                        <span class="av-label">Lý do đổi vé <span class="req">*</span></span>
+                        <span class="av-control">
+                            <select name="reason">
+                                <option selected>@Model.Reason</option>
+                                <option>Công tác thay đổi</option>
+                                <option>Thay đổi hành trình</option>
+                                <option>Lý do khác</option>
+                            </select>
+                            @Html.Icon("chevron-down", 17)
+                        </span>
+                    </label>
+
+                    <label class="av-check">
+                        <input type="checkbox" name="confirm" required />
+                        <span>
+                            Tôi đã đọc điều kiện đổi, đồng ý phí đổi @Money.Vnd(Model.ChangeFee) và chênh lệch dự kiến
+                            @Money.Vnd(Model.PriceDifference). Tôi sẽ xác nhận mức phí cuối cùng trước khi thanh toán thêm.
+                        </span>
+                    </label>
+
+                    <div class="request-actions">
+                        <a class="av-link" href="/ve-cua-toi">Quay lại đặt chỗ</a>
+                        <button type="submit" class="av-btn av-btn--primary">Gửi yêu cầu đổi vé</button>
+                    </div>
+
+                    <p class="av-micro">
+                        Thao tác này chỉ gửi yêu cầu, chưa đổi xong và chưa xuất lại vé. Vé cũ chưa được thay thế tại bước này.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Thanh toán thêm dự kiến</h2>
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Chênh lệch giá vé</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(Model.PriceDifference)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Phí đổi vé</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(Model.ChangeFee)</span>
+                        </div>
+                        <div class="av-rowline av-rowline--total">
+                            <span class="av-rowline__label">Tổng cần thanh toán thêm</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(Model.TotalExtra)</span>
+                        </div>
+                    </div>
+
+                    <p class="av-caption">
+                        Chưa thu tiền tại bước gửi yêu cầu. Chỉ thanh toán sau khi còn chỗ và được xác nhận mức phí cuối cùng.
+                    </p>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Điều kiện đổi / hoàn tự nguyện</h2>
+                    <p class="cond-text">
+                        Gửi trước giờ bay ít nhất 3 tiếng. Đổi: @Money.Vnd(Model.ChangeFee) + chênh lệch giá.
+                        Hoàn: phí @Money.Vnd(current.RefundFee).
+                    </p>
+                    <p class="av-caption">
+                        Phí dịch vụ @Money.Vnd(booking.Price.ServiceFee) và hành lý mua thêm
+                        @Money.Vnd(booking.Price.BaggageFee) không hoàn. Không đổi/hoàn khi không có mặt.
+                        Số tiền cuối cùng được xác nhận khi xử lý.
+                    </p>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Quy trình xử lý</h2>
+                    <ol class="request-steps">
+                        <li>Tiếp nhận và kiểm tra chỗ</li>
+                        <li>Gửi mức phí để bạn xác nhận</li>
+                        <li>Thanh toán thêm theo xác nhận</li>
+                        <li>Xuất lại vé và gửi qua email</li>
+                    </ol>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
+                    <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @booking.Pnr để được kiểm tra.</span>
+                </div>
+            </div>
+        </aside>
+    </form>
+</div>

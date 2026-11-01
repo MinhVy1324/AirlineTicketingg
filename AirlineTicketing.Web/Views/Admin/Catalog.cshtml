@@ -1,0 +1,191 @@
+@model AdminCatalogViewModel
+@{
+    ViewData["Title"] = "Danh mục hệ thống";
+    ViewData["AdminNav"] = "catalog";
+
+    var activeTab = Model.Tabs.FirstOrDefault(tab => tab.IsActive);
+    var tabQuery = activeTab?.Key switch
+    {
+        "airlines" => "hang-bay",
+        "routes" => "tuyen-bay",
+        "aircraft" => "tau-bay",
+        "cabin" => "hang-ghe",
+        _ => ""
+    };
+    Func<string, string> statusTone = status => status is "Tạm dừng" or "Bảo trì" ? "warning" : "success";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Danh mục hệ thống</h1>
+            <p class="admin-page-subtitle">Quản lý dữ liệu nền dùng chung cho tìm kiếm, đặt vé và lịch khai thác.</p>
+        </div>
+        <button type="button" class="av-btn av-btn--primary">
+            @Html.Icon("plus", 17)
+            <span>@Model.AddText</span>
+        </button>
+    </header>
+
+    <nav class="admin-tabs" aria-label="Nhóm dữ liệu danh mục">
+        @foreach (var tab in Model.Tabs)
+        {
+            <a class="admin-tab @(tab.IsActive ? "is-active" : null)" href="@tab.Href"
+               aria-current="@(tab.IsActive ? "page" : null)">
+                @tab.Label (@tab.CountText)
+            </a>
+        }
+    </nav>
+
+    <div class="av-alert av-alert--info">
+        <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">@Model.NoteTitle</span>
+            <span>@Model.NoteText</span>
+        </div>
+    </div>
+
+    <section class="admin-grid admin-grid--catalog">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body admin-catalog--list">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.SectionTitle</h2>
+                    <span class="av-caption">@Model.SectionSubtitle</span>
+                </div>
+
+                <form class="admin-filters admin-filters--catalog" method="get" action="/admin/danh-muc">
+                    <input type="hidden" name="tab" value="@tabQuery" />
+                    <label class="av-field">
+                        <span class="av-label">@Model.SearchLabel</span>
+                        <span class="av-control">
+                            <input type="search" name="q" placeholder="@Model.SearchPlaceholder" autocomplete="off" />
+                            @Html.Icon("search", 17)
+                        </span>
+                    </label>
+
+                    <label class="av-field">
+                        <span class="av-label">@Model.StatusLabel</span>
+                        <span class="av-control">
+                            <select name="trang-thai">
+                                <option selected>@Model.StatusFilter</option>
+                                <option>Hoạt động</option>
+                                <option>Tạm dừng</option>
+                                <option>Bảo trì</option>
+                            </select>
+                            @Html.Icon("chevron-down", 17)
+                        </span>
+                    </label>
+                </form>
+
+                <div class="admin-table">
+                    <table class="av-table admin-table--catalog">
+                        <thead>
+                            <tr>
+                                <th scope="col">@Model.Columns.Code</th>
+                                <th scope="col">@Model.Columns.Title</th>
+                                <th scope="col">@Model.Columns.Meta</th>
+                                <th scope="col">@Model.Columns.Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Rows)
+                            {
+                                <tr class="@(row.IsSelected ? "is-selected" : null)">
+                                    <td class="admin-catalog-code">@row.Code</td>
+                                    <td>
+                                        <span class="admin-catalog-name">@row.Title</span>
+                                        @if (!string.IsNullOrWhiteSpace(row.Subtitle))
+                                        {
+                                            <span class="admin-catalog-sub">@row.Subtitle</span>
+                                        }
+                                    </td>
+                                    <td>@row.Meta</td>
+                                    <td class="admin-table__result admin-table__result--@statusTone(row.StatusText)">@row.StatusText</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="av-pagination">
+                    <span>@Model.ResultText</span>
+                    <span class="av-pagination__links">
+                        <a href="@(activeTab?.Href ?? "/admin/danh-muc")">Trước</a>
+                        <span class="is-current">1</span>
+                        <a href="@(activeTab?.Href ?? "/admin/danh-muc")">Sau</a>
+                    </span>
+                </div>
+            </div>
+        </article>
+
+        <aside class="admin-editor-aside">
+            <article class="av-card admin-card">
+                <form class="av-card__body admin-card__body admin-editor" method="post" action="/admin/danh-muc">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="tab" value="@tabQuery" />
+
+                    <div class="admin-card__head-main">
+                        <h2 class="av-card__title">@Model.EditorTitle</h2>
+                        <span class="av-caption">@Model.EditorSubtitle</span>
+                    </div>
+
+                    <div class="admin-editor__fields">
+                        @for (var i = 0; i < Model.EditorFields.Count; i++)
+                        {
+                            var field = Model.EditorFields[i];
+                            var isPair = field.Label == "Quốc gia"
+                                && i + 1 < Model.EditorFields.Count
+                                && Model.EditorFields[i + 1].Label == "Múi giờ";
+
+                            if (isPair)
+                            {
+                                var second = Model.EditorFields[i + 1];
+                                <div class="admin-editor__row">
+                                    <label class="av-field">
+                                        <span class="av-label">@field.Label</span>
+                                        <span class="av-control">
+                                            <input type="text" value="@field.Value" />
+                                        </span>
+                                    </label>
+                                    <label class="av-field">
+                                        <span class="av-label">@second.Label</span>
+                                        <span class="av-control">
+                                            <input type="text" value="@second.Value" />
+                                        </span>
+                                    </label>
+                                </div>
+                                i++;
+                            }
+                            else
+                            {
+                                <label class="av-field">
+                                    <span class="av-label">@field.Label</span>
+                                    <span class="av-control">
+                                        <input type="text" value="@field.Value" />
+                                        @if (field.Icon is not null)
+                                        {
+                                            @Html.Icon(field.Icon, 17)
+                                        }
+                                    </span>
+                                    @if (field.Hint is not null)
+                                    {
+                                        <span class="av-field__hint">@field.Hint</span>
+                                    }
+                                </label>
+                            }
+                        }
+                    </div>
+
+                    <p class="admin-editor__note">@Model.EditorNote</p>
+
+                    <div class="admin-editor__actions">
+                        <a class="av-btn av-btn--outline" href="@(activeTab?.Href ?? "/admin/danh-muc")">Hủy</a>
+                        <button type="submit" class="av-btn av-btn--primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </article>
+
+            <span class="av-badge av-badge--neutral admin-editor__status">@Model.EditorUpdated</span>
+        </aside>
+    </section>
+</div>

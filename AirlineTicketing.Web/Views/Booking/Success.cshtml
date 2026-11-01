@@ -1,0 +1,145 @@
+@model BookingViewModel
+@{
+    ViewData["Title"] = "Đặt vé thành công";
+    ViewData["Nav"] = "tickets";
+    var flight = Model.Flight;
+}
+
+<div class="av-page av-container">
+    <partial name="_Stepper" model="4" />
+
+    <section class="success-hero">
+        <span class="success-hero__check">@Html.Icon("check-circle", 34)</span>
+        <h1 class="success-hero__title">Đặt vé thành công. Hẹn gặp bạn trên mây!</h1>
+        <p class="success-hero__text">Vé điện tử đã được gửi đến @Model.Passenger.Email.</p>
+    </section>
+
+    <div class="success-layout">
+        <article class="ticket">
+            <div class="ticket__head">
+                <div class="av-stack av-gap-3">
+                    <span class="ticket__pnr-label">MÃ ĐẶT CHỖ (PNR)</span>
+                    <strong class="ticket__pnr">@Model.Pnr</strong>
+                </div>
+                <div class="ticket__status">
+                    <span class="av-badge av-badge--success">Đã thanh toán</span>
+                    <span class="av-badge av-badge--success">Đã xuất vé</span>
+                </div>
+            </div>
+
+            <div class="ticket__body">
+                <div class="summary-flight">
+                    <div class="summary-flight__airline">
+                        <span class="summary-flight__airline-name">
+                            @Html.Icon("plane", 20)
+                            @flight.AirlineName
+                        </span>
+                        <span class="av-badge av-badge--info">@flight.FlightNumber</span>
+                    </div>
+                    <span class="summary-flight__date">@Money.LongDate(flight.Departure) · @flight.Stops</span>
+
+                    <partial name="_FlightTimeline" model="new FlightTimelineModel(flight, ShowAirportName: true)" />
+
+                    <hr class="av-divider" />
+                    <span class="av-caption">@flight.FareName · 1 người lớn</span>
+                </div>
+
+                <hr class="av-divider" />
+
+                <div class="ticket__passenger">
+                    <div>
+                        <span class="ticket__kicker">HÀNH KHÁCH</span>
+                        <strong class="ticket__name">@Model.Passenger.FullName</strong>
+                        <span class="av-caption">Người lớn · Ghế @Model.SeatCode · @Model.SeatPosition</span>
+                    </div>
+                    <div>
+                        <span class="ticket__kicker">SỐ VÉ ĐIỆN TỬ</span>
+                        <span class="ticket__ticketno">@Model.TicketNumber</span>
+                        <span class="av-caption">Xuất vé: @Model.IssuedAtText</span>
+                    </div>
+                </div>
+
+                <hr class="av-divider" />
+
+                <div class="av-rows">
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Hành lý ký gửi</span>
+                        <span class="av-rowline__value">23 kg + mua thêm 10 kg</span>
+                    </div>
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Thanh toán</span>
+                        <span class="av-rowline__value">Thẻ @Model.CardBrand · •••• @Model.CardLast4</span>
+                    </div>
+                    <div class="av-rowline av-rowline--total">
+                        <span class="av-rowline__label">Tổng đã thanh toán</span>
+                        <span class="av-rowline__value av-num">@Money.Vnd(Model.Price.Total)</span>
+                    </div>
+                </div>
+
+                <p class="av-caption">
+                    Giao dịch @Model.TransactionCode · @Model.PaidAtText (UTC+7)
+                </p>
+            </div>
+        </article>
+
+        <aside class="booking-aside">
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Trước khi đến sân bay</h2>
+
+                    <ul class="guide">
+                        <li class="guide__item">
+                            <span class="guide__icon">@Html.Icon("clock", 20)</span>
+                            <div class="guide__body">
+                                <span class="guide__title">Có mặt trước giờ bay 2 tiếng</span>
+                                <span class="guide__text">Làm thủ tục tại sân bay @flight.From.Name.</span>
+                            </div>
+                        </li>
+                        <li class="guide__item">
+                            <span class="guide__icon">@Html.Icon("id-card", 20)</span>
+                            <div class="guide__body">
+                                <span class="guide__title">Mang giấy tờ tùy thân hợp lệ</span>
+                                <span class="guide__text">Thông tin phải trùng với vé điện tử.</span>
+                            </div>
+                        </li>
+                        <li class="guide__item">
+                            <span class="guide__icon">@Html.Icon("luggage", 20)</span>
+                            <div class="guide__body">
+                                <span class="guide__title">Kiểm tra hành lý của bạn</span>
+                                <span class="guide__text">12 kg xách tay · Tổng 33 kg ký gửi.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Đây là vé điện tử</span>
+                    <span>Không phải thẻ lên máy bay. Bạn cần làm thủ tục trước chuyến bay.</span>
+                </div>
+            </div>
+
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Hỗ trợ hành trình</h2>
+                    <span class="av-body">1900 6868 · 06:00–22:00</span>
+                    <p class="av-caption">Cung cấp PNR @Model.Pnr để được hỗ trợ.</p>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <div class="post-actions">
+        <button type="button" class="av-btn av-btn--primary">
+            @Html.Icon("download", 17)
+            <span>Tải vé điện tử (PDF)</span>
+        </button>
+        <a class="av-btn av-btn--outline" href="/ve-cua-toi">
+            @Html.Icon("ticket", 17)
+            <span>Xem đặt chỗ của tôi</span>
+        </a>
+        <a class="av-btn av-btn--outline" href="/">Về trang chủ</a>
+    </div>
+</div>

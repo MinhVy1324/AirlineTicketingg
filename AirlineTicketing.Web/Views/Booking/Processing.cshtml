@@ -1,0 +1,99 @@
+@model BookingOutcomeViewModel
+@{
+    ViewData["Title"] = "Đã thanh toán, đang xuất vé";
+    ViewData["Nav"] = "book";
+    var booking = Model.Booking;
+    var flight = booking.Flight;
+    var card = $"{booking.CardBrand} ••••{booking.CardLast4}";
+}
+
+<div class="av-page av-container">
+    <partial name="_Stepper" model="3" />
+
+    <header class="booking-title">
+        <h1 class="av-page-title">Đã thanh toán, đang xuất vé</h1>
+        <p class="av-page-subtitle">
+            Mã đặt chỗ @booking.Pnr · Cập nhật lúc @Model.UpdatedAtText (UTC+7)
+        </p>
+    </header>
+
+    <div class="av-alert av-alert--success">
+        <span class="av-alert__icon">@Html.Icon("check-circle", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">Giao dịch thanh toán thành công · @Money.Vnd(booking.Price.Total)</span>
+            <span>
+                Cổng thanh toán đã xác nhận giao dịch @booking.TransactionCode qua @card lúc 09:42.
+                Không thanh toán lại cho đặt chỗ này.
+            </span>
+        </div>
+    </div>
+
+    <partial name="_StatusGrid" model="Model.Statuses" />
+
+    <div class="booking-layout">
+        <div class="booking-main">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <div class="av-stack av-gap-6">
+                        <h2 class="av-card__title">Đặt chỗ · @booking.Pnr</h2>
+                        <span class="av-caption">Tạo lúc @booking.CreatedAtText (UTC+7)</span>
+                    </div>
+
+                    <partial name="_JourneyBlock" model="flight" />
+
+                    <hr class="av-divider" />
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành khách</span>
+                            <span class="av-rowline__value">@booking.Passenger.FullName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Ghế / hành lý</span>
+                            <span class="av-rowline__value">@booking.SeatCode · 12 kg xách tay + 33 kg ký gửi</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Email nhận thông báo</span>
+                            <span class="av-rowline__value">@booking.Email</span>
+                        </div>
+                        <div class="av-rowline av-rowline--total">
+                            <span class="av-rowline__label">Tổng đã thanh toán</span>
+                            <span class="av-rowline__value">@Money.Vnd(booking.Price.Total)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Chưa phải xác nhận đã có vé</span>
+                    <span>
+                        Đặt chỗ đã được thanh toán nhưng vé chưa được phát hành. Chưa có số vé và chưa thể tải vé điện tử.
+                        Vé sẽ gửi đến email của bạn sau khi xuất thành công.
+                    </span>
+                </div>
+            </div>
+
+            <div class="av-row av-gap-12 av-wrap">
+                <a class="av-btn av-btn--primary" href="/ve-cua-toi">Kiểm tra đặt chỗ</a>
+                <a class="av-btn av-btn--outline" href="tel:19006868">Liên hệ hỗ trợ</a>
+            </div>
+        </div>
+
+        <aside class="booking-aside">
+            <partial name="_TimelineLog" model="Model" />
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Nếu chờ quá 15 phút</span>
+                    <span>
+                        Kiểm tra lại đặt chỗ. Nếu vẫn chưa có vé, gọi 1900 6868 và cung cấp @booking.Pnr cùng mã giao dịch.
+                        Không thực hiện thanh toán lần nữa.
+                    </span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>

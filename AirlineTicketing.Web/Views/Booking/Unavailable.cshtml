@@ -1,0 +1,114 @@
+@model SoldOutViewModel
+@{
+    ViewData["Title"] = "Chuyến bạn chọn vừa hết chỗ";
+    ViewData["Nav"] = "book";
+    var criteria = Model.Criteria;
+    var selected = Model.SelectedFlight;
+}
+
+<div class="av-page av-container">
+    <partial name="_Stepper" model="1" />
+
+    <header class="booking-title">
+        <h1 class="av-page-title">Chuyến bạn chọn vừa hết chỗ</h1>
+        <p class="av-page-subtitle">
+            @criteria.OriginCode → @criteria.DestinationCode · @criteria.DepartDateText ·
+            @criteria.Passengers người lớn · Bước chọn chuyến
+        </p>
+    </header>
+
+    <div class="av-alert av-alert--warning">
+        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">Không còn chỗ khi xác nhận chuyến @selected.FlightNumber</span>
+            <span>
+                Số chỗ đã thay đổi trong lúc bạn chọn chuyến. Chưa trừ tiền, chưa tạo đặt chỗ và chưa tạo vé.
+                Vui lòng chọn chuyến khác hoặc quay về kết quả.
+            </span>
+        </div>
+    </div>
+
+    <div class="soldout-layout">
+        <aside class="av-card">
+            <div class="av-card__body av-stack av-gap-16">
+                <h2 class="av-card__title">Chuyến đã chọn</h2>
+
+                <div class="summary-flight">
+                    <div class="summary-flight__airline">
+                        <span class="summary-flight__airline-name">
+                            @Html.Icon("plane", 20)
+                            @selected.AirlineName
+                        </span>
+                        <span class="av-badge av-badge--info">@selected.FlightNumber</span>
+                    </div>
+
+                    <span class="summary-flight__date">@Money.LongDate(selected.Departure) · @selected.Stops</span>
+
+                    <partial name="_FlightTimeline" model="new FlightTimelineModel(selected, ShowAirportName: true)" />
+
+                    <hr class="av-divider" />
+                    <span class="av-caption">@selected.FareName · 1 người lớn</span>
+                </div>
+
+                <span class="av-badge av-badge--danger">Hết chỗ</span>
+
+                <p class="av-caption">
+                    Giá đã xem: @Money.Vnd(Model.SelectedPrice)/khách, gồm thuế và phí.
+                    Không thể tiếp tục với lựa chọn này.
+                </p>
+
+                <a class="av-btn av-btn--ghost" href="/chuyen-bay">
+                    @Html.Icon("arrow-left", 17)
+                    <span>Quay về kết quả</span>
+                </a>
+            </div>
+        </aside>
+
+        <section class="soldout-main av-stack av-gap-16" aria-label="Các chuyến thay thế">
+            <h2 class="av-section-title">Các chuyến thay thế cùng ngày</h2>
+
+            @for (var i = 0; i < Model.Alternatives.Count; i++)
+            {
+                var alt = Model.Alternatives[i];
+                <article class="av-card alt-flight">
+                    <div class="alt-flight__body">
+                        <div class="alt-flight__info">
+                            <div class="summary-flight__airline">
+                                <span class="summary-flight__airline-name">
+                                    @Html.Icon("plane", 20)
+                                    @alt.AirlineName
+                                </span>
+                                <span class="av-badge av-badge--info">@alt.FlightNumber</span>
+                            </div>
+
+                            <span class="summary-flight__date">@Money.LongDate(alt.Departure) · @alt.Stops</span>
+
+                            <partial name="_FlightTimeline" model="new FlightTimelineModel(alt, ShowAirportName: false)" />
+
+                            <span class="av-caption">@alt.FareName · 1 người lớn</span>
+                        </div>
+
+                        <div class="alt-flight__side">
+                            <strong class="alt-flight__price">
+                                @Money.Vnd(alt.PricePerPassenger)
+                                <span>/ khách</span>
+                            </strong>
+                            <a class="av-btn av-btn--outline" href="/dat-ve/hanh-khach">Chọn @alt.FlightNumber</a>
+                        </div>
+                    </div>
+
+                    <p class="av-micro">
+                        @if (i == Model.Alternatives.Count - 1)
+                        {
+                            <span>Đã gồm thuế, phí · Chỗ sẽ được kiểm tra lại khi xác nhận.</span>
+                        }
+                        else
+                        {
+                            <span>Đã gồm thuế, phí · 12 kg xách tay + 23 kg ký gửi. Chưa gồm hành lý mua thêm.</span>
+                        }
+                    </p>
+                </article>
+            }
+        </section>
+    </div>
+</div>

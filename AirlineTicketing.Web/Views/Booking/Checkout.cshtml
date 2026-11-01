@@ -1,0 +1,178 @@
+@model BookingViewModel
+@{
+    ViewData["Title"] = "Kiểm tra & thanh toán";
+    ViewData["Nav"] = "book";
+    var flight = Model.Flight;
+    var passengerName = Model.Passenger.FullName;
+}
+
+<div class="av-page av-container">
+    <partial name="_Stepper" model="3" />
+
+    <header class="booking-title">
+        <h1 class="av-page-title">Kiểm tra &amp; thanh toán</h1>
+        <p class="av-page-subtitle">Vui lòng kiểm tra lần cuối trước khi hoàn tất đặt vé.</p>
+    </header>
+
+    <div class="av-alert av-alert--warning">
+        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">
+                Giữ chỗ đến @Model.HoldUntilText (UTC+7) · @Model.HoldRemainingText
+            </span>
+            <span>Giá và chỗ chỉ được đảm bảo sau khi thanh toán thành công. Mã giữ chỗ: @Model.Pnr.</span>
+        </div>
+    </div>
+
+    <form class="booking-layout" method="post" asp-controller="Booking" asp-action="Checkout">
+        @Html.AntiForgeryToken()
+
+        <div class="booking-main">
+            <section class="av-card passenger-block">
+                <div class="passenger-block__head">
+                    <h2 class="passenger-block__title">Hành trình &amp; hành khách</h2>
+                    <a class="av-link" href="/dat-ve/hanh-khach">Chỉnh sửa</a>
+                </div>
+
+                <div class="av-row av-row--between av-gap-16">
+                    <div class="av-stack av-gap-6">
+                        <span class="av-title-20">@Model.Criteria.ShortRouteText</span>
+                        <span class="av-caption">
+                            @flight.FlightNumber · @Model.Criteria.DepartDateText ·
+                            @Money.Time(flight.Departure)–@Money.Time(flight.Arrival) · UTC+7
+                        </span>
+                    </div>
+                    <span class="av-badge av-badge--info">@flight.FareName</span>
+                </div>
+
+                <hr class="av-divider" />
+
+                <div class="av-rows">
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Hành khách</span>
+                        <span class="av-rowline__value">@passengerName</span>
+                    </div>
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Chỗ ngồi / hành lý</span>
+                        <span class="av-rowline__value">@Model.SeatCode · 23 kg + thêm 10 kg</span>
+                    </div>
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Email nhận vé</span>
+                        <span class="av-rowline__value">@Model.Passenger.Email</span>
+                    </div>
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Số điện thoại</span>
+                        <span class="av-rowline__value">@Model.Passenger.Phone</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="av-card passenger-block">
+                <div class="av-card__head-main">
+                    <h2 class="passenger-block__title">Phương thức thanh toán</h2>
+                    <p class="av-page-subtitle">Giao diện minh họa · Không thu thập thông tin thẻ thật.</p>
+                </div>
+
+                <div class="pay-methods">
+                    <label class="av-chip is-active">
+                        <input type="radio" name="payment" value="card" checked class="av-visually-hidden" />
+                        <span>◉ Thẻ ngân hàng</span>
+                    </label>
+                    <label class="av-chip">
+                        <input type="radio" name="payment" value="transfer" class="av-visually-hidden" />
+                        <span>○ Chuyển khoản / QR</span>
+                    </label>
+                </div>
+
+                <div class="card-brands">
+                    <span class="av-badge av-badge--info">VISA</span>
+                    <span class="av-badge av-badge--neutral">Mastercard</span>
+                    <span class="av-badge av-badge--neutral">Nội địa NAPAS</span>
+                </div>
+
+                <label class="av-field">
+                    <span class="av-label">Số thẻ</span>
+                    <span class="av-control">
+                        <input type="text" name="cardNumber" value="•••• •••• •••• @Model.CardLast4" inputmode="numeric" autocomplete="cc-number" />
+                        @Html.Icon("credit-card", 17)
+                    </span>
+                </label>
+
+                <div class="form-grid form-grid--3">
+                    <label class="av-field">
+                        <span class="av-label">Tên chủ thẻ</span>
+                        <span class="av-control">
+                            <input type="text" name="cardHolder" value="@passengerName" autocomplete="cc-name" />
+                        </span>
+                    </label>
+                    <label class="av-field">
+                        <span class="av-label">Ngày hết hạn</span>
+                        <span class="av-control">
+                            <input type="text" name="cardExpiry" value="12/28" autocomplete="cc-exp" />
+                        </span>
+                    </label>
+                    <label class="av-field">
+                        <span class="av-label">CVV</span>
+                        <span class="av-control">
+                            <input type="password" name="cardCvv" value="123" autocomplete="cc-csc" />
+                            @Html.Icon("lock", 17)
+                        </span>
+                    </label>
+                </div>
+
+                <p class="av-caption">
+                    Thanh toán được xử lý qua cổng VNPay. Không lưu số thẻ hoặc mã bảo mật tại AeroViet.
+                </p>
+            </section>
+
+            <div class="checkout-terms">
+                <label class="av-check">
+                    <input type="checkbox" name="acceptTerms" value="true" required />
+                    <span>
+                        Tôi đã kiểm tra thông tin hành khách, đồng ý điều kiện vé, điều kiện vận chuyển và
+                        chính sách bảo mật của AeroViet.
+                    </span>
+                </label>
+
+                <div class="pay-actions">
+                    <a class="av-btn av-btn--outline" href="/dat-ve/hanh-khach">
+                        @Html.Icon("arrow-left", 17)
+                        <span>Quay lại hành khách</span>
+                    </a>
+                    <button type="submit" class="av-btn av-btn--primary av-btn--lg">
+                        @Html.Icon("lock", 17)
+                        <span>Thanh toán @Money.Vnd(Model.Price.Total)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <aside class="booking-aside">
+            <partial name="_PriceSummary" model="Model.Price" />
+
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Điều kiện vé</h2>
+                    <div class="av-rows">
+                        <p class="av-caption">
+                            Đổi vé: phí @Money.Vnd(flight.ChangeFee)/khách + chênh lệch giá. Hoàn vé: phí
+                            @Money.Vnd(flight.RefundFee)/khách.
+                        </p>
+                        <p class="av-caption">
+                            Yêu cầu trước giờ bay ít nhất 3 tiếng. Không đổi/hoàn khi không có mặt.
+                        </p>
+                        <p class="av-micro">Phí dịch vụ và hành lý mua thêm không hoàn. Số tiền cuối cùng được xác nhận khi xử lý.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Cần hỗ trợ thanh toán?</span>
+                    <span>Gọi 1900 6868 và cung cấp mã @Model.Pnr.</span>
+                </div>
+            </div>
+        </aside>
+    </form>
+</div>

@@ -1,0 +1,113 @@
+@model BookingOutcomeViewModel
+@{
+    ViewData["Title"] = "Thanh toán chưa thành công";
+    ViewData["Nav"] = "book";
+    var booking = Model.Booking;
+    var flight = booking.Flight;
+    var card = $"{booking.CardBrand} ••••{booking.CardLast4}";
+}
+
+<div class="av-page av-container">
+    <partial name="_Stepper" model="3" />
+
+    <header class="booking-title">
+        <h1 class="av-page-title">Thanh toán chưa thành công</h1>
+        <p class="av-page-subtitle">
+            Mã đặt chỗ @booking.Pnr · Cập nhật lúc @Model.UpdatedAtText (UTC+7)
+        </p>
+    </header>
+
+    <div class="av-alert av-alert--danger">
+        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">Ngân hàng từ chối giao dịch</span>
+            <span>
+                Thanh toán bằng @card không được chấp nhận. Trong giao dịch này, tiền chưa bị trừ.
+                Bạn có thể kiểm tra với ngân hàng hoặc chọn phương thức khác.
+            </span>
+        </div>
+    </div>
+
+    <partial name="_StatusGrid" model="Model.Statuses" />
+
+    <div class="av-alert av-alert--warning">
+        <span class="av-alert__icon">@Html.Icon("clock", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">
+                Giữ chỗ đến @booking.HoldUntilText (UTC+7) · @booking.HoldRemainingText
+            </span>
+            <span>
+                Chỗ và mức giá đã chốt được giữ đến thời hạn trên. Chỉ thử lại khi vẫn còn thời gian giữ chỗ;
+                hết hạn cần tìm lại chuyến.
+            </span>
+        </div>
+    </div>
+
+    <div class="booking-layout">
+        <div class="booking-main">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Hành trình &amp; hành khách</h2>
+
+                    <partial name="_JourneyBlock" model="flight" />
+
+                    <hr class="av-divider" />
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành khách</span>
+                            <span class="av-rowline__value">@booking.Passenger.FullName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Chỗ ngồi / hành lý</span>
+                            <span class="av-rowline__value">@booking.SeatCode · 12 kg xách tay + 33 kg ký gửi</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Liên hệ</span>
+                            <span class="av-rowline__value">@booking.Email</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <div class="av-stack av-gap-6">
+                        <h2 class="av-card__title">Thử lại thanh toán</h2>
+                        <span class="av-caption">Không tạo thêm đặt chỗ khi thử lại trong thời hạn giữ chỗ.</span>
+                    </div>
+
+                    <label class="av-field">
+                        <span class="av-label">Phương thức vừa sử dụng</span>
+                        <span class="av-control">
+                            <input type="text" value="@booking.PaymentMethod · @card" readonly />
+                            @Html.Icon("credit-card", 17)
+                        </span>
+                    </label>
+
+                    <p class="av-caption">
+                        Kiểm tra hạn mức thanh toán trực tuyến hoặc liên hệ ngân hàng phát hành.
+                        Bạn cũng có thể chuyển sang chuyển khoản / QR.
+                    </p>
+
+                    <div class="av-row av-gap-12 av-wrap">
+                        <a class="av-btn av-btn--primary" href="/dat-ve/thanh-toan">Thử lại thanh toán</a>
+                        <a class="av-btn av-btn--outline" href="/dat-ve/thanh-toan">Chọn phương thức khác</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <partial name="_PriceSummary" model="booking.Price" />
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
+                    <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @booking.Pnr để được kiểm tra.</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>

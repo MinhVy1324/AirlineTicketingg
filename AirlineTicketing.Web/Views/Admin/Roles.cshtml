@@ -1,0 +1,112 @@
+@model AdminRolesViewModel
+@{
+    ViewData["Title"] = "Vai trò & phân quyền";
+    ViewData["AdminNav"] = "roles";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Vai trò &amp; phân quyền</h1>
+            <p class="admin-page-subtitle">Phân tách trách nhiệm rõ ràng giữa quản trị, vận hành và khách hàng.</p>
+        </div>
+    </header>
+
+    <section class="admin-roles" aria-label="Các vai trò trong hệ thống">
+        @foreach (var role in Model.Roles)
+        {
+            <article class="admin-role">
+                <div class="admin-role__head">
+                    <h2 class="admin-role__name">@role.Name</h2>
+                    <span class="av-badge av-badge--info">@role.AccountCount</span>
+                </div>
+                <p class="admin-role__desc">@role.Description</p>
+            </article>
+        }
+    </section>
+
+    <section class="av-card admin-card">
+        <div class="av-card__body admin-card__body">
+            <div class="admin-card__head">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">Ma trận quyền truy cập</h2>
+                    <span class="av-caption">@Model.PermissionLegend</span>
+                </div>
+                <span class="av-link">@Model.PolicyVersion</span>
+            </div>
+
+            <div class="admin-table">
+                <table class="av-table admin-matrix">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nhóm nghiệp vụ</th>
+                            <th scope="col">Admin</th>
+                            <th scope="col">Manager</th>
+                            <th scope="col">Khách hàng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Permissions)
+                        {
+                            <tr>
+                                <td>@row.Group</td>
+                                <td>@row.Admin</td>
+                                <td>@row.Manager</td>
+                                <td>@row.Customer</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="admin-matrix-note">@Model.PermissionFootnote</p>
+        </div>
+    </section>
+
+    <section class="admin-grid admin-grid--roles">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body admin-limit-card">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.LimitsTitle</h2>
+                </div>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@Model.LimitTitle</span>
+                        <span>@Model.LimitText</span>
+                    </div>
+                </div>
+
+                <p class="admin-limit-note">@Model.LimitNote</p>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <h2 class="av-card__title">@Model.ControlTitle</h2>
+
+                <div class="admin-detail-rows">
+                    <div class="admin-detail-rows__row">
+                        <span class="admin-detail-rows__label">@Model.ControlStatusLabel</span>
+                        <span class="admin-detail-rows__value">@Model.ControlStatus</span>
+                    </div>
+                    <div class="admin-detail-rows__row">
+                        <span class="admin-detail-rows__label">@Model.ControlUpdatedLabel</span>
+                        <span class="admin-detail-rows__value">@Model.ControlUpdated</span>
+                    </div>
+                    <div class="admin-detail-rows__row">
+                        <span class="admin-detail-rows__label">@Model.ControlActorLabel</span>
+                        <span class="admin-detail-rows__value">@Model.ControlActor</span>
+                    </div>
+                </div>
+
+                <form class="admin-control-actions" method="post" action="/admin/vai-tro">
+                    @Html.AntiForgeryToken()
+                    <a class="av-btn av-btn--outline" href="/admin/vai-tro">Hủy thay đổi</a>
+                    <button type="submit" class="av-btn av-btn--primary">Lưu phân quyền</button>
+                </form>
+            </div>
+        </article>
+    </section>
+</div>

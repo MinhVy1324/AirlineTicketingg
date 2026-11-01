@@ -1,0 +1,178 @@
+@model RefundRequestViewModel
+@{
+    ViewData["Title"] = "Gửi yêu cầu hoàn vé";
+    ViewData["Nav"] = "tickets";
+    var booking = Model.Booking;
+    var flight = booking.Flight;
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Gửi yêu cầu hoàn vé</h1>
+        <p class="av-page-subtitle">Vé của tôi / @booking.Pnr / Hoàn vé tự nguyện · Chưa gửi yêu cầu</p>
+    </header>
+
+    <div class="av-alert av-alert--info">
+        <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">Kiểm tra điều kiện và số tiền trước khi gửi</span>
+            <span>
+                Vé đã thanh toán, chưa sử dụng. Yêu cầu hoàn được kiểm tra trước khi duyệt;
+                gửi yêu cầu không đồng nghĩa tiền đã hoàn.
+            </span>
+        </div>
+    </div>
+
+    <form class="booking-layout" method="post" action="/ve-cua-toi/yeu-cau-hoan">
+        @Html.AntiForgeryToken()
+
+        <div class="booking-main">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-18">
+                    <div class="av-stack av-gap-4">
+                        <h2 class="av-card__title">Vé đề nghị hoàn · @booking.Pnr</h2>
+                        <span class="av-caption">@booking.Passenger.FullName · Số vé @booking.TicketNumber</span>
+                    </div>
+
+                    <partial name="_JourneyBlock" model="flight" />
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Ghế / hành lý</span>
+                            <span class="av-rowline__value">@Model.SeatBaggageText</span>
+                        </div>
+                        <div class="av-rowline av-rowline--total">
+                            <span class="av-rowline__label">Tổng đã thanh toán</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(booking.Price.Total)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Điều kiện hoàn tự nguyện</h2>
+
+                    <span class="av-badge av-badge--success">Đủ điều kiện gửi yêu cầu</span>
+
+                    <p class="cond-text">@Model.DeadlineText</p>
+                    <p class="cond-text">
+                        Phí hoàn vé: @Money.Vnd(Model.RefundFee)/khách. Không hoàn phí dịch vụ
+                        @Money.Vnd(Model.ServiceFee) và hành lý thêm @Money.Vnd(Model.BaggageFee).
+                    </p>
+                    <p class="av-caption">
+                        Số tiền cuối cùng được xác nhận sau khi kiểm tra điều kiện vé.
+                        Hoàn về phương thức thanh toán ban đầu.
+                    </p>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Lý do và xác nhận</h2>
+
+                    <label class="av-field">
+                        <span class="av-label">Lý do hoàn vé <span class="req">*</span></span>
+                        <span class="av-control">
+                            <select name="reason">
+                                <option selected>@Model.Reason</option>
+                                <option>Công tác thay đổi</option>
+                                <option>Thay đổi hành trình</option>
+                                <option>Lý do khác</option>
+                            </select>
+                            @Html.Icon("chevron-down", 17)
+                        </span>
+                    </label>
+
+                    <label class="av-field">
+                        <span class="av-label">Thông tin bổ sung</span>
+                        <span class="av-control av-control--area">
+                            <textarea name="note" rows="3">@Model.AdditionalInfo</textarea>
+                        </span>
+                    </label>
+
+                    <div class="av-stack av-gap-10">
+                        <label class="av-check">
+                            <input type="checkbox" name="confirmFees" required />
+                            <span>
+                                Tôi hiểu phí hoàn @Money.Vnd(Model.RefundFee); phí dịch vụ @Money.Vnd(Model.ServiceFee)
+                                và hành lý thêm @Money.Vnd(Model.BaggageFee) không được hoàn.
+                                Số tiền dự kiến nhận lại là @Money.Vnd(Model.RefundTotal).
+                            </span>
+                        </label>
+                        <label class="av-check">
+                            <input type="checkbox" name="confirmAccount" required />
+                            <span>
+                                Tôi đồng ý gửi yêu cầu để kiểm tra và hoàn về @Model.RefundToText,
+                                không nhận hoàn qua tài khoản khác.
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="request-actions">
+                        <a class="av-link" href="/ve-cua-toi">Quay lại đặt chỗ</a>
+                        <button type="submit" class="av-btn av-btn--primary">Gửi yêu cầu hoàn vé</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <section class="av-card">
+                <div class="av-card__body av-stack av-gap-16">
+                    <h2 class="av-card__title">Tính hoàn tiền dự kiến</h2>
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Tổng đã thanh toán</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(booking.Price.Total)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Phí hoàn vé</span>
+                            <span class="av-rowline__value av-num">−@Money.Vnd(Model.RefundFee)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Phí dịch vụ không hoàn</span>
+                            <span class="av-rowline__value av-num">−@Money.Vnd(Model.ServiceFee)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành lý thêm không hoàn</span>
+                            <span class="av-rowline__value av-num">−@Money.Vnd(Model.BaggageFee)</span>
+                        </div>
+                        <div class="av-rowline av-rowline--total">
+                            <span class="av-rowline__label">Dự kiến hoàn</span>
+                            <span class="av-rowline__value av-num">@Money.Vnd(Model.RefundTotal)</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hoàn về nguồn thanh toán</span>
+                            <span class="av-rowline__value">@Model.RefundToText</span>
+                        </div>
+                    </div>
+
+                    <p class="av-micro">7–15 ngày làm việc sau khi được duyệt; phụ thuộc ngân hàng.</p>
+                </div>
+            </section>
+
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Sau khi gửi yêu cầu</h2>
+                    <p class="cond-text">
+                        Bạn sẽ nhận mã yêu cầu để theo dõi tiếp nhận, kiểm tra, phê duyệt và hoàn tiền.
+                    </p>
+                    <p class="av-caption">
+                        Sau khi được duyệt, thời gian dự kiến nhận tiền là 7–15 ngày làm việc, tùy ngân hàng.
+                        Chỉ ghi nhận “Đã hoàn tiền” khi cổng thanh toán xác nhận hoàn tất.
+                    </p>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
+                    <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @booking.Pnr để được kiểm tra.</span>
+                </div>
+            </div>
+        </aside>
+    </form>
+</div>

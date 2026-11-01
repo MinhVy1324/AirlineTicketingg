@@ -1,0 +1,103 @@
+@model FlightResultsViewModel
+@{
+    ViewData["Title"] = "Kết quả tìm chuyến";
+    ViewData["Nav"] = "book";
+    var criteria = Model.Criteria;
+}
+
+<div class="av-page av-container">
+    @if (Model.IsEmpty)
+    {
+        <div class="av-stack av-gap-6">
+            <h1 class="av-page-title">Kết quả tìm chuyến</h1>
+            <p class="av-page-subtitle">
+                @criteria.RouteText · @criteria.SummaryText
+            </p>
+        </div>
+    }
+
+    <section class="search-summary" aria-label="Tìm kiếm hiện tại">
+        <div class="search-summary__route">
+            @Html.Icon("plane-takeoff", 20)
+            <div class="av-stack av-gap-6">
+                <h2 class="search-summary__title">@criteria.RouteText</h2>
+                <p class="search-summary__sub">
+                    @if (Model.IsEmpty)
+                    {
+                        <text>@criteria.DepartDateText · @criteria.Passengers người lớn · @criteria.Cabin</text>
+                    }
+                    else
+                    {
+                        <text>@criteria.SummaryText</text>
+                    }
+                </p>
+            </div>
+        </div>
+        <a class="av-btn av-btn--outline" href="/">
+            @Html.Icon("sliders", 17)
+            <span>Chỉnh sửa tìm kiếm</span>
+        </a>
+    </section>
+
+    <div class="results-layout">
+        <partial name="_FilterPanel" model="Model" />
+
+        <section class="results-main">
+            <div class="results-head">
+                <h2 class="results-head__count">
+                    @(Model.IsEmpty ? 0 : (Model.TotalCount > 0 ? Model.TotalCount : Model.ResultCount)) chuyến phù hợp
+                </h2>
+                <span class="av-badge av-badge--info">Sắp xếp: Đề xuất @Html.Icon("chevron-down", 14)</span>
+            </div>
+
+            <div class="day-chips" aria-label="Giá theo ngày">
+                @foreach (var day in Model.DayPrices)
+                {
+                    <span class="day-chip @(day.IsActive ? "is-active" : null)">
+                        @day.DateText · @Money.Vnd(day.Price)
+                    </span>
+                }
+            </div>
+
+            @if (Model.IsEmpty)
+            {
+                <div class="av-card results-empty">
+                    <div class="av-empty">
+                        <span class="av-empty__icon">@Html.Icon("search", 26)</span>
+                        <h3 class="av-empty__title">@Model.EmptyTitle</h3>
+                        <p class="av-empty__text">@Model.EmptyText</p>
+                        <div class="results-empty__actions">
+                            <a class="av-btn av-btn--primary" href="/chuyen-bay">Bỏ tất cả bộ lọc</a>
+                            <a class="av-btn av-btn--outline" href="/">Đổi ngày bay</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">Vẫn muốn bay ngày @criteria.DepartDateText?</span>
+                        <span>
+                            Bỏ bộ lọc để xem các chuyến khác trên tuyến @criteria.OriginCode → @criteria.DestinationCode.
+                            Giá hiển thị theo từng ngày đã gồm thuế, phí; cần kiểm tra lại chỗ khi chọn.
+                        </span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var flight in Model.Flights)
+                {
+                    <partial name="_FlightCard" model="flight" />
+                }
+
+                <div class="results-more">
+                    <button type="button" class="av-btn av-btn--outline">
+                        @Html.Icon("chevron-down", 17)
+                        <span>Xem thêm 3 chuyến</span>
+                    </button>
+                </div>
+            }
+        </section>
+    </div>
+</div>

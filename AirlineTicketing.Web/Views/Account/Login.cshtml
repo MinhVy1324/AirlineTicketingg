@@ -1,0 +1,101 @@
+@model LoginViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="auth">
+    <aside class="auth__hero">
+        <a class="av-brand av-brand--light" href="/">
+            <span class="av-brand__mark">@Html.Icon("plane", 23)</span>
+            <span class="av-brand__name">AeroViet</span>
+        </a>
+
+        <div class="auth__hero-content">
+            <span class="auth__eyebrow">BAY AN TÂM. ĐI TRỌN VẸN.</span>
+            <h1 class="auth__hero-title">Mỗi chuyến bay, một khởi đầu mới.</h1>
+            <p class="auth__hero-text">
+                Tìm hành trình phù hợp, đặt vé dễ dàng và quản lý mọi chuyến đi cùng AeroViet.
+            </p>
+            <div class="auth__commitments">
+                <span>✓ Giá vé minh bạch</span>
+                <span>✓ Hỗ trợ tận tâm</span>
+            </div>
+        </div>
+
+        <p class="auth__hero-foot">AeroViet · Kết nối hành trình Việt</p>
+    </aside>
+
+    <section class="auth__panel">
+        <div class="auth__panel-top">
+            <button type="button" class="av-link av-muted" aria-label="Chọn ngôn ngữ">
+                @Html.Icon("globe", 16)
+                <span>Tiếng Việt</span>
+                @Html.Icon("chevron-down", 14)
+            </button>
+        </div>
+
+        <form class="auth__form" method="post" asp-controller="Account" asp-action="Login">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+
+            <div class="av-stack av-gap-8">
+                <span class="av-eyebrow">CHÀO MỪNG TRỞ LẠI</span>
+                <h1 class="auth__title">Đăng nhập AeroViet</h1>
+                <p class="auth__sub">Một tài khoản cho mọi hành trình của bạn.</p>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <p class="auth__error" role="alert">@Model.ErrorMessage</p>
+            }
+
+            <label class="av-field">
+                <span class="av-label">Địa chỉ email</span>
+                <span class="av-control">
+                    <input type="email" name="email" value="@Model.Email" autocomplete="email" required />
+                    @Html.Icon("mail", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">Mật khẩu</span>
+                <span class="av-control">
+                    <input type="password" name="password" value="@Model.Password" autocomplete="current-password" required />
+                    @Html.Icon("eye-off", 17)
+                </span>
+            </label>
+
+            <div class="auth__row">
+                <label class="av-check">
+                    <input type="checkbox" name="rememberMe" value="true" checked="@Model.RememberMe" />
+                    <span>Ghi nhớ đăng nhập</span>
+                </label>
+                <a class="av-link" href="/dang-nhap">Quên mật khẩu?</a>
+            </div>
+
+            <button type="submit" class="av-btn av-btn--primary av-btn--lg av-btn--block">Đăng nhập</button>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Truy cập đúng khu vực của bạn</span>
+                    <span>
+                        Sau khi đăng nhập, hệ thống chuyển đến khu vực Khách hàng, Manager hoặc Admin theo quyền
+                        đã được cấp. Không tự chọn vai trò.
+                    </span>
+                </div>
+            </div>
+
+            <p class="auth__foot">
+                Bạn chưa có tài khoản?
+                <a class="av-link" href="/dang-ky">Đăng ký khách hàng</a>
+            </p>
+        </form>
+
+        <div class="auth__panel-bottom">
+            <span>Cần hỗ trợ? 1900 6868 · support@aeroviet.vn</span>
+            <span>© 2026 AeroViet · Điều khoản sử dụng · Bảo mật</span>
+        </div>
+    </section>
+</div>

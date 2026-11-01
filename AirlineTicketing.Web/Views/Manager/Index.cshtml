@@ -1,0 +1,172 @@
+@model ManagerOverviewViewModel
+@{
+    ViewData["Title"] = "Tổng quan vận hành";
+    ViewData["ManagerNav"] = "overview";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Tổng quan vận hành</h1>
+            <p class="admin-page-subtitle">@Model.Subtitle</p>
+        </div>
+    </header>
+
+    <div class="admin-statusbar">
+        <span class="manager-shift">@Model.ShiftText</span>
+        <span class="manager-updated">@Model.UpdatedText</span>
+    </div>
+
+    <section class="admin-kpis" aria-label="Chỉ số vận hành">
+        @foreach (var kpi in Model.Kpis)
+        {
+            <article class="admin-kpi">
+                <div class="admin-kpi__head">
+                    <span class="admin-kpi__label">@kpi.Label</span>
+                    @Html.Icon(kpi.Icon, 18)
+                </div>
+                <span class="admin-kpi__value">@kpi.Value</span>
+                <span class="admin-kpi__meta admin-kpi__meta--@kpi.Tone">@kpi.Meta</span>
+            </article>
+        }
+    </section>
+
+    <div class="av-alert av-alert--warning">
+        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+        <div class="av-alert__body">
+            <span class="av-alert__title">@Model.AttentionTitle</span>
+            <span>@Model.AttentionText</span>
+        </div>
+    </div>
+
+    <section class="admin-grid manager-grid--overview">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head">
+                    <div class="admin-card__head-main">
+                        <h2 class="av-card__title">@Model.FlightsTitle</h2>
+                        <span class="av-caption">@Model.FlightsSubtitle</span>
+                    </div>
+                    <a class="av-link" href="@Model.FlightsLinkHref">@Model.FlightsLinkText</a>
+                </div>
+
+                <div class="admin-table">
+                    <table class="av-table manager-table--flights">
+                        <thead>
+                            <tr>
+                                <th scope="col">Chuyến / Tuyến</th>
+                                <th scope="col">Giờ bay</th>
+                                <th scope="col">Tồn chỗ</th>
+                                <th scope="col">Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Flights)
+                            {
+                                <tr>
+                                    <td class="manager-flight-name">@row.Flight</td>
+                                    <td>@row.Time</td>
+                                    <td>@row.Seats</td>
+                                    <td class="manager-tone--@row.Tone">@row.Condition</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="av-caption admin-card__note">@Model.FlightsNote</p>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <h2 class="av-card__title">@Model.WorkloadTitle</h2>
+
+                <div class="manager-workload">
+                    @foreach (var row in Model.Workload)
+                    {
+                        <div class="manager-workload__row">
+                            <div class="manager-workload__head">
+                                <span class="manager-workload__label">@row.Label</span>
+                                <span class="av-badge av-badge--@row.Tone">@row.BadgeText</span>
+                            </div>
+                            <div class="manager-progress manager-progress--@row.Tone" role="presentation">
+                                <span style="width:@row.Percent%"></span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="manager-detail-line">
+                    <span>@Model.WorkloadDetailLabel</span>
+                    <strong>@Model.WorkloadDetailValue</strong>
+                </div>
+
+                <a class="av-btn av-btn--outline" href="@Model.WorkloadButtonHref">
+                    @Model.WorkloadButtonText
+                </a>
+            </div>
+        </article>
+    </section>
+
+    <section class="admin-grid manager-grid--overview">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head">
+                    <h2 class="av-card__title">@Model.HoldsTitle</h2>
+                    <a class="av-link" href="@Model.HoldsLinkHref">@Model.HoldsLinkText</a>
+                </div>
+
+                <div class="admin-table">
+                    <table class="av-table manager-table--holds">
+                        <thead>
+                            <tr>
+                                <th scope="col">PNR</th>
+                                <th scope="col">Khách hàng</th>
+                                <th scope="col">Tổng tiền</th>
+                                <th scope="col">Giữ chỗ đến</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Holds)
+                            {
+                                <tr>
+                                    <td class="manager-pnr">@row.Pnr</td>
+                                    <td>@row.Customer</td>
+                                    <td>@row.Total</td>
+                                    <td>@row.Expires</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.ChecklistTitle</h2>
+                </div>
+
+                <ul class="manager-checklist">
+                    @foreach (var item in Model.Checklist)
+                    {
+                        <li class="manager-checklist__item @(item.IsDone ? "is-done" : null)">
+                            @Html.Icon(item.IsDone ? "check-circle" : "circle", 18)
+                            <span>@item.Text</span>
+                        </li>
+                    }
+                </ul>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@Model.SafetyTitle</span>
+                        <span>@Model.SafetyText</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </section>
+</div>

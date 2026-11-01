@@ -1,0 +1,183 @@
+@model TicketsViewModel
+@{
+    ViewData["Title"] = "Vé của tôi";
+    ViewData["Nav"] = "tickets";
+    var detail = Model.Detail;
+}
+
+<div class="av-page av-container">
+    <header class="av-stack av-gap-6">
+        <span class="av-eyebrow">QUẢN LÝ HÀNH TRÌNH</span>
+        <h1 class="av-page-title">Vé của tôi</h1>
+        <p class="av-page-subtitle">Xem thông tin đặt chỗ, vé điện tử và các yêu cầu hỗ trợ của bạn.</p>
+    </header>
+
+    <nav class="av-chips" aria-label="Lọc đặt chỗ theo trạng thái">
+        <a class="av-chip @(Model.Tabs.Count > 0 && Model.Tabs[0].IsActive ? "is-active" : null)"
+           href="/ve-cua-toi">@Model.Tabs[0].Label (@Model.Tabs[0].Count)</a>
+        <a class="av-chip @(Model.Tabs.Count > 1 && Model.Tabs[1].IsActive ? "is-active" : null)"
+           href="/ve-cua-toi?tab=done">@Model.Tabs[1].Label (@Model.Tabs[1].Count)</a>
+        <a class="av-chip @(Model.Tabs.Count > 2 && Model.Tabs[2].IsActive ? "is-active" : null)"
+           href="/ve-cua-toi?tab=cancelled">@Model.Tabs[2].Label (@Model.Tabs[2].Count)</a>
+    </nav>
+
+    <form class="tickets-toolbar" method="get" action="/ve-cua-toi" role="search">
+        <label class="av-field">
+            <span class="av-label">Tìm đặt chỗ</span>
+            <span class="av-control">
+                <input type="search" name="q" placeholder="Nhập mã PNR hoặc điểm đến" autocomplete="off" />
+                @Html.Icon("search", 17)
+            </span>
+        </label>
+
+        <label class="av-field av-field--date">
+            <span class="av-label">Ngày khởi hành</span>
+            <span class="av-control">
+                <select name="date">
+                    <option selected>Tất cả thời gian</option>
+                    <option>Sắp tới</option>
+                    <option>Đã qua</option>
+                </select>
+                @Html.Icon("calendar", 17)
+            </span>
+        </label>
+
+        <button type="submit" class="av-btn av-btn--primary">Tìm kiếm</button>
+    </form>
+
+    <div class="tickets-layout">
+        <section class="tickets-list" aria-label="Danh sách đặt chỗ">
+            @foreach (var ticket in Model.Tickets)
+            {
+                <article class="pnr-card @(ticket.IsSelected ? "is-selected" : null)">
+                    <div class="pnr-card__head">
+                        <strong class="pnr-card__code">@ticket.Pnr</strong>
+                        <span class="av-badge av-badge--@ticket.StatusTone">@ticket.StatusText</span>
+                    </div>
+
+                    <span class="pnr-card__route">@ticket.RouteText</span>
+                    <span class="pnr-card__meta">@ticket.ScheduleText</span>
+
+                    <hr class="av-divider" />
+
+                    <div class="pnr-card__foot">
+                        <span class="av-muted">@ticket.PassengerText</span>
+                        <strong class="av-num">@ticket.PriceText</strong>
+                    </div>
+
+                    <span class="pnr-card__link @(ticket.NoteTone == "warning" ? "is-warning" : null)">
+                        @ticket.NoteText
+                    </span>
+
+                    @if (!string.IsNullOrWhiteSpace(ticket.ActionText) && !string.IsNullOrWhiteSpace(ticket.ActionHref))
+                    {
+                        <a class="av-btn av-btn--outline av-btn--sm pnr-card__action" href="@ticket.ActionHref">
+                            @ticket.ActionText
+                        </a>
+                    }
+                </article>
+            }
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Bạn cần đổi lịch trình?</span>
+                    <span>Chọn đặt chỗ và gửi yêu cầu đổi/hoàn. Bộ phận vận hành sẽ kiểm tra điều kiện vé.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="ticket-detail" aria-label="Chi tiết đặt chỗ">
+            <article class="av-card">
+                <div class="av-card__body av-stack av-gap-18">
+                    <div class="av-row av-row--between av-gap-12">
+                        <h2 class="av-card__title">Chi tiết đặt chỗ · @detail.Pnr</h2>
+                        <button type="button" class="av-link">
+                            Tải vé PDF
+                            @Html.Icon("download", 15)
+                        </button>
+                    </div>
+
+                    <div class="summary-flight">
+                        <div class="summary-flight__airline">
+                            <span class="summary-flight__airline-name">
+                                @Html.Icon("plane", 20)
+                                @detail.Flight.AirlineName
+                            </span>
+                            <span class="av-badge av-badge--info">@detail.Flight.FlightNumber</span>
+                        </div>
+                        <span class="summary-flight__date">@Money.LongDate(detail.Flight.Departure) · @detail.Flight.Stops</span>
+
+                        <partial name="_FlightTimeline" model="new FlightTimelineModel(detail.Flight, ShowAirportName: true)" />
+
+                        <hr class="av-divider" />
+                        <span class="av-caption">@detail.Flight.FareName · 1 người lớn</span>
+                    </div>
+
+                    <hr class="av-divider" />
+
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành khách / ghế</span>
+                            <span class="av-rowline__value">@detail.PassengerName · @detail.SeatCode</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Số vé</span>
+                            <span class="av-rowline__value av-num">@detail.TicketNumber</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành lý</span>
+                            <span class="av-rowline__value">@detail.BaggageText</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Thanh toán</span>
+                            <span class="av-rowline__value">@detail.PaymentText</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Ngày đặt</span>
+                            <span class="av-rowline__value">@detail.BookedAtText</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Điều kiện đổi / hoàn</h2>
+                    <p class="cond-text">
+                        Đổi vé trước giờ bay 3 tiếng: phí @Money.Vnd(detail.ChangeFee) + chênh lệch giá.
+                        Hoàn vé: phí @Money.Vnd(detail.RefundFee); phí dịch vụ @Money.Vnd(detail.ServiceFee)
+                        và hành lý thêm @Money.Vnd(detail.ExtraBaggageFee) không hoàn.
+                    </p>
+                    <p class="av-caption">
+                        Yêu cầu chỉ được thực hiện sau khi xác nhận phí. Không đổi/hoàn khi không có mặt.
+                        Hoàn về phương thức thanh toán ban đầu.
+                    </p>
+
+                    @if (detail.CanManage)
+                    {
+                        <div class="av-row av-gap-12 av-wrap">
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">
+                                @Html.Icon("refresh", 17)
+                                <span>Yêu cầu đổi vé</span>
+                            </a>
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">
+                                @Html.Icon("undo", 17)
+                                <span>Yêu cầu hoàn vé</span>
+                            </a>
+                        </div>
+                        <a class="av-link" href="/ve-cua-toi/yeu-cau">
+                            Theo dõi yêu cầu đã gửi
+                            @Html.Icon("arrow-right", 15)
+                        </a>
+                    }
+                </div>
+            </article>
+
+            <div class="ticket-detail__foot">
+                <span class="av-caption">Hỗ trợ: 1900 6868 · support@aeroviet.vn</span>
+                <a class="av-link" href="#dieu-kien">Xem chính sách đầy đủ @Html.Icon("arrow-right", 15)</a>
+            </div>
+        </section>
+    </div>
+</div>

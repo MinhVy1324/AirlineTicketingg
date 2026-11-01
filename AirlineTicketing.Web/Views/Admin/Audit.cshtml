@@ -1,0 +1,177 @@
+@model AdminAuditViewModel
+@{
+    ViewData["Title"] = "Nhật ký hoạt động";
+    ViewData["AdminNav"] = "audit";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">Nhật ký hoạt động</h1>
+            <p class="admin-page-subtitle">Truy vết ai đã làm gì, thời điểm thực hiện và kết quả xử lý.</p>
+        </div>
+    </header>
+
+    <form class="av-card admin-card" method="get" action="/admin/nhat-ky">
+        <div class="av-card__body admin-card__body">
+            <div class="admin-filters admin-filters--audit">
+                <label class="av-field">
+                    <span class="av-label">Thời gian</span>
+                    <span class="av-control">
+                        <input type="text" name="tu-ngay" value="@Model.FromDate – @Model.ToDate" />
+                        @Html.Icon("calendar", 17)
+                    </span>
+                </label>
+
+                <label class="av-field">
+                    <span class="av-label">Người thực hiện</span>
+                    <span class="av-control">
+                        <select name="nguoi-thuc-hien">
+                            <option selected>@Model.ActorFilter</option>
+                            <option>Trần Hoàng Tùng / Admin</option>
+                            <option>Lê Quốc Long / Manager</option>
+                            <option>Cổng VNPay / Hệ thống</option>
+                        </select>
+                        @Html.Icon("chevron-down", 17)
+                    </span>
+                </label>
+
+                <label class="av-field">
+                    <span class="av-label">Loại thao tác</span>
+                    <span class="av-control">
+                        <select name="loai-thao-tac">
+                            <option selected>@Model.TypeFilter</option>
+                            <option>Cập nhật cấu hình</option>
+                            <option>Xuất vé</option>
+                            <option>Thanh toán</option>
+                            <option>Đăng nhập</option>
+                        </select>
+                        @Html.Icon("chevron-down", 17)
+                    </span>
+                </label>
+
+                <button type="submit" class="av-btn av-btn--primary admin-filters__submit">
+                    @Html.Icon("search", 17)
+                    <span>@Model.FilterText</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <section class="av-card admin-card">
+        <div class="av-card__body admin-card__body">
+            <div class="admin-card__head">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">Sự kiện hệ thống</h2>
+                    <span class="av-caption">Giờ Việt Nam (UTC+7) · Chỉ đọc, không sửa hoặc xóa</span>
+                </div>
+                <a class="av-link" href="/admin/nhat-ky">
+                    @Html.Icon("download", 15)
+                    <span>@Model.ExportText</span>
+                </a>
+            </div>
+
+            <div class="admin-table">
+                <table class="av-table admin-table--audit">
+                    <thead>
+                        <tr>
+                            <th scope="col">Thời điểm</th>
+                            <th scope="col">Người thực hiện</th>
+                            <th scope="col">Thao tác</th>
+                            <th scope="col">Đối tượng</th>
+                            <th scope="col">Kết quả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            var timeParts = row.Time.Split(" / ", 2);
+                            var actorParts = row.Actor.Split(" / ", 2);
+
+                            <tr>
+                                <td>
+                                    <span class="admin-audit-time">@timeParts[0]</span>
+                                    @if (timeParts.Length > 1)
+                                    {
+                                        <span class="admin-audit-time">@timeParts[1]</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="admin-audit-actor">@actorParts[0]</span>
+                                    @if (actorParts.Length > 1)
+                                    {
+                                        <span class="admin-audit-actor">@actorParts[1]</span>
+                                    }
+                                </td>
+                                <td>@row.Action</td>
+                                <td>@row.Target</td>
+                                <td class="admin-table__result admin-table__result--@row.ResultTone">@row.ResultText</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="av-pagination">
+                <span>@Model.ResultText</span>
+                <span class="av-pagination__links">
+                    <a href="/admin/nhat-ky">Trước</a>
+                    <span class="is-current">1</span>
+                    <a href="/admin/nhat-ky">Sau</a>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-grid admin-grid--audit">
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body admin-audit-detail">
+                <div class="admin-card__head-main">
+                    <h2 class="av-card__title">@Model.Detail.Title</h2>
+                    <span class="av-caption">@Model.Detail.Subtitle</span>
+                </div>
+
+                <div class="admin-audit-columns">
+                    <div class="admin-detail-rows">
+                        @foreach (var field in Model.Detail.Left)
+                        {
+                            <div class="admin-detail-rows__row">
+                                <span class="admin-detail-rows__label">@field.Label</span>
+                                <span class="admin-detail-rows__value">@field.Value</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="admin-detail-rows">
+                        @foreach (var field in Model.Detail.Right)
+                        {
+                            <div class="admin-detail-rows__row">
+                                <span class="admin-detail-rows__label">@field.Label</span>
+                                <span class="admin-detail-rows__value">@field.Value</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <p class="admin-audit-content">@Model.Detail.Content</p>
+            </div>
+        </article>
+
+        <article class="av-card admin-card">
+            <div class="av-card__body admin-card__body admin-integrity">
+                <h2 class="av-card__title">@Model.IntegrityTitle</h2>
+                <span class="av-badge av-badge--success">@Model.IntegrityStatus</span>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@Model.IntegrityNoteTitle</span>
+                        <span>@Model.IntegrityNoteText</span>
+                    </div>
+                </div>
+
+                <span class="admin-integrity__code">@Model.IntegrityCode</span>
+            </div>
+        </article>
+    </section>
+</div>
