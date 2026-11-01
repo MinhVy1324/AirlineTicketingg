@@ -1,0 +1,172 @@
+@{
+    ViewData["Title"] = "Báo cáo doanh thu & Thống kê";
+    var overview = ViewBag.Overview as ThongKeDoanhThuDTO;
+    var daily = ViewBag.DailyRevenue as IReadOnlyList<DoanhThuTheoNgayDTO> ?? new List<DoanhThuTheoNgayDTO>();
+    var flights = ViewBag.FlightRevenue as IReadOnlyList<DoanhThuTheoChuyenBayDTO> ?? new List<DoanhThuTheoChuyenBayDTO>();
+    var transactions = ViewBag.Transactions as IReadOnlyList<ThanhToanDTO> ?? new List<ThanhToanDTO>();
+    var refunds = ViewBag.Refunds as IReadOnlyList<HoanTienDTO> ?? new List<HoanTienDTO>();
+    var tuNgay = ViewBag.TuNgay as string;
+    var denNgay = ViewBag.DenNgay as string;
+    var preset = ViewBag.Preset as string;
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-0 text-dark">Báo Cáo Doanh Thu & Đối Soát Tài Chính</h2>
+            <small class="text-muted">Doanh thu thuần được chuẩn hóa: <code>Doanh Thu Thuần = Tổng Tiền Đã Thu - Tổng Tiền Đã Hoàn</code> (Đồng nhất đơn vị @overview?.DonViTienTe)</small>
+        </div>
+        <div>
+            <button type="button" onclick="window.print();" class="btn btn-outline-dark btn-sm">
+                🖨️ Xuất / In Báo Cáo
+            </button>
+        </div>
+    </div>
+
+    <!-- Bộ lọc thời gian -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="btn-group w-100" role="group">
+                        <a asp-action="Index" asp-route-preset="today" class="btn btn-sm @(preset == "today" ? "btn-primary" : "btn-outline-primary")">Hôm nay</a>
+                        <a asp-action="Index" asp-route-preset="week" class="btn btn-sm @(preset == "week" ? "btn-primary" : "btn-outline-primary")">7 ngày qua</a>
+                        <a asp-action="Index" asp-route-preset="month" class="btn btn-sm @(preset == "month" ? "btn-primary" : "btn-outline-primary")">Tháng này</a>
+                        <a asp-action="Index" asp-route-preset="year" class="btn btn-sm @(preset == "year" ? "btn-primary" : "btn-outline-primary")">Năm nay</a>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Từ ngày</span>
+                        <input type="date" name="tuNgay" value="@tuNgay" class="form-control" />
+                        <span class="input-group-text">Đến ngày</span>
+                        <input type="date" name="denNgay" value="@denNgay" class="form-control" />
+                        <button type="submit" class="btn btn-dark">Áp dụng</button>
+                    </div>
+                </div>
+
+                <div class="col-md-2 text-end text-muted small">
+                    Kỳ báo cáo: <strong>@tuNgay</strong> đến <strong>@denNgay</strong>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3 Thẻ chỉ số cốt lõi -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-success text-white p-3">
+                <div class="small text-uppercase fw-semibold opacity-75">1. Tổng Tiền Đã Thu (@overview?.DonViTienTe)</div>
+                <h2 class="fw-bold my-2">+@(overview?.TongTienDaThu.ToString("N0") ?? "0") <small style="font-size: 0.5em">@overview?.DonViTienTe</small></h2>
+                <div class="small opacity-75">Số giao dịch thanh toán thành công: <strong>@(overview?.SoGiaoDichThanhCong ?? 0)</strong></div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-danger text-white p-3">
+                <div class="small text-uppercase fw-semibold opacity-75">2. Tổng Tiền Đã Hoàn (@overview?.DonViTienTe)</div>
+                <h2 class="fw-bold my-2">-@(overview?.TongTienDaHoan.ToString("N0") ?? "0") <small style="font-size: 0.5em">@overview?.DonViTienTe</small></h2>
+                <div class="small opacity-75">Số lượt hoàn tiền thành công: <strong>@(overview?.SoGiaoDichHoanTien ?? 0)</strong></div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-primary text-white p-3">
+                <div class="small text-uppercase fw-semibold opacity-75">3. Doanh Thu Thuần Thực Nhận (Net Revenue)</div>
+                <h2 class="fw-bold my-2">@(overview?.DoanhThuThuan.ToString("N0") ?? "0") <small style="font-size: 0.5em">@overview?.DonViTienTe</small></h2>
+                <div class="small opacity-75">Bằng: Tổng Thu trừ đi Tổng Hoàn</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Chi tiết doanh thu theo ngày -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0">Biến Động Doanh Thu Từng Ngày Trong Kỳ</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th class="text-end">Tiền Thu</th>
+                                    <th class="text-end">Tiền Hoàn</th>
+                                    <th class="text-end">Doanh Thu Thuần</th>
+                                    <th class="text-center">Số GD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (daily.Any(x => x.SoGiaoDich > 0))
+                                {
+                                    foreach (var d in daily.Where(x => x.SoGiaoDich > 0))
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@d.Ngay.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end text-success">+@d.TienDaThu.ToString("N0")</td>
+                                            <td class="text-end text-danger">-@d.TienDaHoan.ToString("N0")</td>
+                                            <td class="text-end fw-bold text-primary">@d.DoanhThuThuan.ToString("N0") đ</td>
+                                            <td class="text-center">@d.SoGiaoDich</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">Không có biến động giao dịch trong khoảng thời gian này.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doanh thu theo chuyến bay -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0">Doanh Thu Theo Chuyến Bay</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Chuyến Bay</th>
+                                    <th>Tuyến Bay</th>
+                                    <th class="text-center">Vé Bán</th>
+                                    <th class="text-end">Doanh Thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (flights.Any())
+                                {
+                                    foreach (var f in flights)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-primary">@f.SoHieu</td>
+                                            <td>@f.TuyenBay</td>
+                                            <td class="text-center"><span class="badge bg-secondary">@f.SoVeDaBan</span></td>
+                                            <td class="text-end fw-bold text-success">@f.DoanhThu.ToString("N0") đ</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">Chưa có vé nào được bán cho các chuyến bay.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

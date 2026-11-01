@@ -1,0 +1,79 @@
+@model CapNhatHoSoDTO
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    var taiKhoan = ViewBag.TaiKhoan as TaiKhoanDTO;
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Thông Tin Hồ Sơ Cá Nhân</h5>
+                <span class="badge bg-primary">Vai trò: @taiKhoan?.VaiTro</span>
+            </div>
+            <div class="card-body p-4">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div asp-validation-summary="All" class="text-danger mb-0"></div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <div class="row mb-3 bg-light p-3 rounded">
+                    <div class="col-sm-4 text-muted">Tên đăng nhập:</div>
+                    <div class="col-sm-8 fw-bold">@taiKhoan?.TenDangNhap</div>
+
+                    <div class="col-sm-4 text-muted mt-2">Trạng thái:</div>
+                    <div class="col-sm-8 mt-2">
+                        <span class="badge @(taiKhoan?.TrangThai == "HoatDong" ? "bg-success" : "bg-danger")">
+                            @(taiKhoan?.TrangThai == "HoatDong" ? "Đang hoạt động" : "Bị khóa")
+                        </span>
+                    </div>
+
+                    <div class="col-sm-4 text-muted mt-2">Ngày tham gia:</div>
+                    <div class="col-sm-8 mt-2">@taiKhoan?.NgayTao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+
+                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Cập nhật thông tin liên hệ</h6>
+
+                <form asp-action="Profile" method="post">
+                    <div class="mb-3">
+                        <label asp-for="HoTen" class="form-label fw-semibold">Họ và tên</label>
+                        <input asp-for="HoTen" class="form-control" />
+                        <span asp-validation-for="HoTen" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold">Email</label>
+                        <input asp-for="Email" type="email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
+                        <input asp-for="SoDienThoai" class="form-control" />
+                        <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a asp-action="ChangePassword" class="btn btn-outline-secondary">Đổi mật khẩu</a>
+                        <button type="submit" class="btn btn-primary fw-semibold px-4">Lưu Thay Đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

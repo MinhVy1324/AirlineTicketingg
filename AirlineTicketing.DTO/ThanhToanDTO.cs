@@ -5,6 +5,8 @@ namespace AirlineTicketing.DTO;
 public sealed record ThanhToanDTO
 {
     public int Id { get; init; }
+    public int DatVeId { get; init; }
+    public string? MaDatVe { get; init; }
     public decimal SoTien { get; init; }
     public string DonViTienTe { get; init; } = "VND";
     public string PhuongThuc { get; init; } = string.Empty;
@@ -28,4 +30,29 @@ public sealed record TaoThanhToanDTO
 
     [Required, StringLength(50)]
     public string NhaCungCap { get; init; } = "NoiBo";
+}
+
+public sealed record KetQuaThanhToanDTO
+{
+    public bool IsSuccess { get; init; }
+    public string Message { get; init; } = string.Empty;
+    public int ThanhToanId { get; init; }
+    public string? MaGiaoDich { get; init; }
+    public string? MaDatVe { get; init; }
+    public string TrangThai { get; init; } = string.Empty;
+    public decimal SoTien { get; init; }
+    public string DonViTienTe { get; init; } = "VND";
+    public DateTimeOffset? NgayHoanTat { get; init; }
+}
+
+public sealed record TaoHoanTienDTO
+{
+    [Required]
+    public int ThanhToanId { get; init; }
+
+    [Range(typeof(decimal), "0.01", "9999999999.99", ErrorMessage = "Số tiền hoàn phải lớn hơn 0")]
+    public decimal SoTien { get; init; }
+
+    [StringLength(300, ErrorMessage = "Lý do hoàn tối đa 300 ký tự")]
+    public string? LyDo { get; init; }
 }

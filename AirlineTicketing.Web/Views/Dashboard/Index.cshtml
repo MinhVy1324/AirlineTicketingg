@@ -1,0 +1,230 @@
+@{
+    ViewData["Title"] = "Dashboard Quản Trị";
+    var stats = ViewBag.Stats as DashboardStatsDTO;
+    var monthly = ViewBag.MonthlyRevenue as IReadOnlyList<DoanhThuTheoThangDTO> ?? new List<DoanhThuTheoThangDTO>();
+    var topFlights = ViewBag.TopFlights as IReadOnlyList<DoanhThuTheoChuyenBayDTO> ?? new List<DoanhThuTheoChuyenBayDTO>();
+    var recentPayments = ViewBag.RecentPayments as IReadOnlyList<ThanhToanDTO> ?? new List<ThanhToanDTO>();
+    decimal maxRevenue = monthly.Any() ? Math.Max(monthly.Max(m => m.DoanhThuThuan), 1) : 1;
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-0 text-dark">Dashboard Quản Trị Hệ Thống</h2>
+            <small class="text-muted">Tổng quan tình hình kinh doanh, doanh thu vé máy bay và vận hành</small>
+        </div>
+        <div>
+            <a asp-controller="BaoCao" asp-action="Index" class="btn btn-outline-primary btn-sm me-2">
+                <i class="bi bi-graph-up"></i> Báo Cáo Chi Tiết
+            </a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="QuanLyTaiKhoan" asp-action="Index" class="btn btn-outline-dark btn-sm">
+                    <i class="bi bi-people"></i> Quản Lý Tài Khoản
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- 4 Thẻ KPI chính -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-primary text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase small fw-semibold opacity-75">Doanh Thu Thuần</div>
+                        <h3 class="fw-bold my-1">@(stats?.TongDoanhThuThuan.ToString("N0") ?? "0") <small style="font-size: 0.6em">VND</small></h3>
+                        <small class="opacity-75">Tháng này: @(stats?.DoanhThuThangNay.ToString("N0") ?? "0") VND</small>
+                    </div>
+                    <div style="font-size: 2.5rem; opacity: 0.4;">💰</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-success text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase small fw-semibold opacity-75">Tổng Tiền Thu / Hoàn</div>
+                        <h4 class="fw-bold my-1">Thu: @(stats?.TongTienDaThu.ToString("N0") ?? "0") <small style="font-size: 0.6em">VND</small></h4>
+                        <small class="opacity-75">Đã hoàn: @(stats?.TongTienDaHoan.ToString("N0") ?? "0") VND</small>
+                    </div>
+                    <div style="font-size: 2.5rem; opacity: 0.4;">💳</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-info text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase small fw-semibold opacity-75">Vé & Lượt Đặt Chỗ</div>
+                        <h3 class="fw-bold my-1">@(stats?.TongVeDaBan ?? 0) <span style="font-size: 0.5em; font-weight: normal;">vé đã phát hành</span></h3>
+                        <small class="opacity-75">Tổng: @(stats?.TongDatVe ?? 0) lượt đặt</small>
+                    </div>
+                    <div style="font-size: 2.5rem; opacity: 0.4;">🎫</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-3 bg-secondary text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase small fw-semibold opacity-75">Hành Khách & Chuyến Bay</div>
+                        <h3 class="fw-bold my-1">@(stats?.TongKhachHang ?? 0) <span style="font-size: 0.5em; font-weight: normal;">khách</span></h3>
+                        <small class="opacity-75">Khai thác: @(stats?.TongChuyenBay ?? 0) chuyến bay</small>
+                    </div>
+                    <div style="font-size: 2.5rem; opacity: 0.4;">✈️</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Biểu đồ phân bổ doanh thu theo tháng -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Biểu Đồ Doanh Thu Thuần Năm @DateTime.UtcNow.Year (VND)</h5>
+                    <span class="badge bg-light text-dark border">12 Tháng</span>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        @foreach (var m in monthly)
+                        {
+                            var heightPercent = maxRevenue > 0 && m.DoanhThuThuan > 0 
+                                ? Math.Max((int)((m.DoanhThuThuan / maxRevenue) * 100), 4) 
+                                : 4;
+                            <div class="col px-1 d-flex flex-column align-items-center justify-content-end" style="height: 180px;">
+                                <div class="w-100 bg-primary rounded-top" style="height: @(heightPercent)%; min-height: 4px;" title="Tháng @m.Thang: @m.DoanhThuThuan.ToString("N0") VND"></div>
+                                <span class="small text-muted mt-2 fw-semibold" style="font-size: 0.75rem;">T@(m.Thang)</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm table-striped align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tháng</th>
+                                    <th class="text-end">Tiền đã thu</th>
+                                    <th class="text-end">Tiền hoàn</th>
+                                    <th class="text-end">Doanh thu thuần</th>
+                                    <th class="text-center">Số giao dịch</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var m in monthly.Where(x => x.SoGiaoDich > 0 || x.Thang == DateTime.UtcNow.Month))
+                                {
+                                    <tr>
+                                        <td class="fw-bold">Tháng @m.Thang/@m.Nam</td>
+                                        <td class="text-end text-success">@m.TienDaThu.ToString("N0") đ</td>
+                                        <td class="text-end text-danger">@m.TienDaHoan.ToString("N0") đ</td>
+                                        <td class="text-end fw-bold text-primary">@m.DoanhThuThuan.ToString("N0") đ</td>
+                                        <td class="text-center">@m.SoGiaoDich</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top chuyến bay doanh thu cao nhất -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="fw-bold mb-0">Top Chuyến Bay Bán Chạy</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (topFlights.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var f in topFlights)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-primary">@f.SoHieu</h6>
+                                        <small class="text-muted">@f.TuyenBay | @f.GioKhoiHanh.ToLocalTime().ToString("dd/MM HH:mm")</small>
+                                        <div class="small text-secondary">Đã bán: <strong>@f.SoVeDaBan</strong> vé</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-success-subtle text-success fs-6 fw-bold">@f.DoanhThu.ToString("N0") đ</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">Chưa có vé nào được phát hành.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Giao dịch thanh toán gần nhất -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0">Giao Dịch Thanh Toán Gần Nhất</h5>
+            <a asp-controller="ThanhToan" asp-action="LichSu" class="btn btn-sm btn-outline-secondary">Xem Tất Cả Giao Dịch</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã Giao Dịch</th>
+                            <th>Mã Đặt Chỗ</th>
+                            <th>Phương Thức / Cổng</th>
+                            <th>Số Tiền</th>
+                            <th>Trạng Thái</th>
+                            <th>Thời Gian</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (recentPayments.Any())
+                        {
+                            foreach (var p in recentPayments)
+                            {
+                                <tr>
+                                    <td class="fw-semibold"><code>@p.MaGiaoDich</code></td>
+                                    <td><span class="badge bg-light text-dark border">@p.MaDatVe</span></td>
+                                    <td>@p.PhuongThuc (@p.NhaCungCap)</td>
+                                    <td class="fw-bold text-primary">@p.SoTien.ToString("N0") @p.DonViTienTe</td>
+                                    <td>
+                                        @if (p.TrangThai == "ThanhCong")
+                                        {
+                                            <span class="badge bg-success">Thành công</span>
+                                        }
+                                        else if (p.TrangThai == "ChoXuLy")
+                                        {
+                                            <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Thất bại</span>
+                                        }
+                                    </td>
+                                    <td class="small text-muted">@p.NgayTao.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <a asp-controller="ThanhToan" asp-action="KetQua" asp-route-id="@p.Id" class="btn btn-sm btn-outline-info">Hóa đơn</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Chưa có giao dịch thanh toán nào được ghi nhận.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

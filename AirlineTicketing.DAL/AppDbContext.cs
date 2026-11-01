@@ -15,6 +15,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Ve> Ves => Set<Ve>();
     public DbSet<ThanhToan> ThanhToans => Set<ThanhToan>();
     public DbSet<HoanTien> HoanTiens => Set<HoanTien>();
+    public DbSet<TaiKhoan> TaiKhoans => Set<TaiKhoan>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

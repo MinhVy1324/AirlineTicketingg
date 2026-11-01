@@ -1,8 +1,109 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Trang chủ";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="p-5 mb-4 bg-primary text-white rounded-4 shadow-sm">
+    <div class="container-fluid py-3">
+        <h1 class="display-5 fw-bold">Hệ Thống Bán Vé Máy Bay</h1>
+        <p class="col-md-9 fs-5 opacity-90">
+            Nền tảng bán vé máy bay trực tuyến hiện đại được xây dựng trên công nghệ ASP.NET Core MVC, Entity Framework Core và PostgreSQL.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-light btn-lg fw-bold text-primary px-4">
+                    Vào Dashboard Quản Trị
+                </a>
+                <a asp-controller="BaoCao" asp-action="Index" class="btn btn-outline-light btn-lg px-4">
+                    Xem Báo Cáo Doanh Thu
+                </a>
+                <a asp-controller="ThanhToan" asp-action="Index" asp-route-datVeId="3" class="btn btn-warning btn-lg fw-bold px-4">
+                    Thử Cổng Thanh Toán (Demo)
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn btn-light btn-lg fw-bold text-primary px-4">
+                    Đăng Nhập Ngay
+                </a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg px-4">
+                    Đăng Ký Tài Khoản Khách Hàng
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-3 p-3">
+            <div class="card-body">
+                <div class="text-primary mb-3" style="font-size: 2.5rem;">🔐</div>
+                <h5 class="fw-bold">Xác Thực & Phân Quyền</h5>
+                <p class="text-muted small">
+                    Hệ thống phân quyền 3 cấp độ: <strong>Admin (Quản trị viên)</strong>, <strong>Nhân viên CSKH/Bán vé</strong>, và <strong>Khách hàng</strong>. Mật khẩu được mã hóa an toàn bằng PBKDF2 (RFC 2898) với muối ngẫu nhiên (salt) 16 bytes và 100.000 vòng lặp.
+                </p>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="QuanLyTaiKhoan" asp-action="Index" class="btn btn-sm btn-outline-primary">Quản lý tài khoản &rarr;</a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-3 p-3">
+            <div class="card-body">
+                <div class="text-success mb-3" style="font-size: 2.5rem;">💳</div>
+                <h5 class="fw-bold">Cổng Thanh Toán & Sổ Cái Hoàn Tiền</h5>
+                <p class="text-muted small">
+                    Mô phỏng cổng thanh toán VNPAY, MoMo, Thẻ quốc tế với cơ chế xử lý an toàn (idempotency), tự động phát hành vé điện tử khi thành công và cho phép nhân viên hoàn tiền (toàn phần / một phần).
+                </p>
+                <a asp-controller="ThanhToan" asp-action="LichSu" class="btn btn-sm btn-outline-success">Sổ cái giao dịch &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-3 p-3">
+            <div class="card-body">
+                <div class="text-info mb-3" style="font-size: 2.5rem;">📊</div>
+                <h5 class="fw-bold">Báo Cáo Doanh Thu Thuần</h5>
+                <p class="text-muted small">
+                    Báo cáo chuẩn xác tuyệt đối theo nguyên tắc: <code>Doanh thu thuần = Tiền thu thành công - Tiền hoàn thành công</code> (cùng loại tiền tệ). Thống kê chi tiết theo ngày, tháng, năm và theo chuyến bay.
+                </p>
+                <a asp-controller="BaoCao" asp-action="Index" class="btn btn-sm btn-outline-info">Xem báo cáo &rarr;</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-3 bg-white p-4">
+    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Tài Khoản Kiểm Thử Mẫu Sẵn Có (Seed Data)</h5>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded border">
+                <span class="badge bg-danger mb-2">Vai trò: Admin</span>
+                <div>Username: <code>admin</code></div>
+                <div>Password: <code>Admin@123456</code></div>
+                <small class="text-muted">Quản trị toàn bộ hệ thống, phân quyền, xem mọi báo cáo</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded border">
+                <span class="badge bg-info text-dark mb-2">Vai trò: Nhân viên</span>
+                <div>Username: <code>nhanvien</code></div>
+                <div>Password: <code>Staff@123456</code></div>
+                <small class="text-muted">Quản lý bán vé, hoàn tiền, tra cứu và xem báo cáo kinh doanh</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-light rounded border">
+                <span class="badge bg-success mb-2">Vai trò: Khách hàng</span>
+                <div>Username: <code>khachhang</code></div>
+                <div>Password: <code>Customer@123456</code></div>
+                <small class="text-muted">Xem thông tin đặt chỗ cá nhân, thanh toán vé và quản lý hồ sơ</small>
+            </div>
+        </div>
+    </div>
 </div>

@@ -1,0 +1,111 @@
+@model ThanhToanDTO
+@{
+    ViewData["Title"] = "Kết quả thanh toán";
+    var datVe = ViewBag.DatVe as DatVe;
+    bool isSuccess = Model.TrangThai == "ThanhCong";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="p-4 text-center @(isSuccess ? "bg-success text-white" : "bg-danger text-white")">
+                    <div style="font-size: 3.5rem;">
+                        @(isSuccess ? "✓" : "✕")
+                    </div>
+                    <h3 class="fw-bold mb-1">
+                        @(isSuccess ? "Thanh Toán Thành Công!" : "Giao Dịch Thất Bại")
+                    </h3>
+                    <p class="mb-0 opacity-75">
+                        @(isSuccess 
+                            ? "Vé máy bay điện tử đã được xác nhận và phát hành chính thức." 
+                            : "Giao dịch không thể hoàn tất hoặc đã bị hủy bỏ bởi người dùng.")
+                    </p>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4 bg-light p-3 rounded-3">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Mã Đặt Chỗ (PNR):</small>
+                            <span class="fs-5 fw-bold text-primary">@datVe?.MaDatVe</span>
+                        </div>
+                        <div class="col-sm-6 text-sm-end">
+                            <small class="text-muted d-block">Mã Giao Dịch:</small>
+                            <code>@Model.MaGiaoDich</code>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Cổng Thanh Toán:</small>
+                            <strong>@Model.NhaCungCap (@Model.PhuongThuc)</strong>
+                        </div>
+                        <div class="col-sm-6 text-sm-end">
+                            <small class="text-muted d-block">Số Tiền Thanh Toán:</small>
+                            <span class="fs-5 fw-bold text-danger">@Model.SoTien.ToString("N0") @Model.DonViTienTe</span>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted d-block">Thời Gian Hoàn Tất:</small>
+                            <span>@(Model.NgayHoanTat?.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss") ?? Model.NgayTao.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"))</span>
+                        </div>
+                    </div>
+
+                    @if (isSuccess && datVe?.Ves != null && datVe.Ves.Any())
+                    {
+                        <h5 class="fw-bold mb-3 border-bottom pb-2">Danh Sách Vé Điện Tử Được Phát Hành</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light small">
+                                    <tr>
+                                        <th>Mã Vé Điện Tử</th>
+                                        <th>Hành Khách</th>
+                                        <th>Số Ghế</th>
+                                        <th>Chuyến Bay</th>
+                                        <th>Hạng Vé</th>
+                                        <th>Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ve in datVe.Ves)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-primary"><code>@ve.MaVe</code></td>
+                                            <td>@ve.HanhKhach?.HoTen</td>
+                                            <td><span class="badge bg-primary">@ve.SoGhe</span></td>
+                                            <td>@(ve.ChuyenBay?.SoHieu ?? "-")</td>
+                                            <td>@ve.HangVe</td>
+                                            <td><span class="badge bg-success">Đã Phát Hành</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                            Về Trang Chủ
+                        </a>
+                        <div>
+                            @if (!isSuccess && datVe != null)
+                            {
+                                <a asp-action="Index" asp-route-datVeId="@datVe.Id" class="btn btn-warning fw-semibold">
+                                    Thử Thanh Toán Lại
+                                </a>
+                            }
+                            else
+                            {
+                                <button type="button" onclick="window.print();" class="btn btn-outline-dark me-2">
+                                    In Vé / Hóa Đơn
+                                </button>
+                                @if (User.IsInRole("Admin") || User.IsInRole("NhanVien"))
+                                {
+                                    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary fw-semibold">
+                                        Về Dashboard
+                                    </a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

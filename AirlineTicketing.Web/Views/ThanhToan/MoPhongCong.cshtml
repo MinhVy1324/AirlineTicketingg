@@ -1,0 +1,65 @@
+@model ThanhToanDTO
+@{
+    ViewData["Title"] = "Cổng thanh toán giả lập";
+    var datVe = ViewBag.DatVe as DatVe;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow border-0 rounded-4 overflow-hidden">
+                <!-- Gateway Header -->
+                <div class="p-3 text-white text-center @(Model.NhaCungCap == "MoMo" ? "bg-danger" : "bg-primary")">
+                    <div class="fw-bold fs-5">MÔ PHỎNG CỔNG THANH TOÁN: @Model.NhaCungCap</div>
+                    <small class="opacity-75">Sandbox Testing Gateway - AirlineTicketing</small>
+                </div>
+
+                <div class="card-body p-4 text-center">
+                    <div class="badge bg-light text-dark border px-3 py-2 mb-3">
+                        Mã Giao Dịch: <code>@Model.MaGiaoDich</code>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block text-uppercase fw-semibold">Số tiền cần thanh toán</small>
+                        <h2 class="fw-bold text-danger my-1">@Model.SoTien.ToString("N0") @Model.DonViTienTe</h2>
+                        <small class="text-secondary">Đơn đặt chỗ: <strong>@datVe?.MaDatVe</strong></small>
+                    </div>
+
+                    <!-- Giả lập QR Code -->
+                    <div class="my-4 p-3 bg-light rounded-3 d-inline-block border">
+                        <div style="width: 160px; height: 160px; background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 50% / 20px 20px;" class="mx-auto rounded shadow-sm"></div>
+                        <div class="small text-muted mt-2">Mã QR Thanh Toán Giả Lập</div>
+                    </div>
+
+                    <div class="alert alert-info py-2 small mb-4 text-start">
+                        <strong>Lưu ý kiểm thử:</strong> Đây là môi trường thử nghiệm thanh toán nội bộ. Bạn có thể chọn xác nhận thành công để hệ thống phát hành vé, hoặc thử nghiệm trường hợp khách hủy / giao dịch thất bại.
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <!-- Xác nhận thành công -->
+                        <form asp-action="XacNhanGiaLap" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="thanhCong" value="true" />
+                            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold shadow-sm">
+                                ✓ Xác Nhận Thanh Toán Thành Công
+                            </button>
+                        </form>
+
+                        <!-- Thử nghiệm thất bại -->
+                        <form asp-action="XacNhanGiaLap" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="thanhCong" value="false" />
+                            <button type="submit" class="btn btn-outline-danger w-100 fw-semibold">
+                                ✕ Giả Lập Thanh Toán Thất Bại / Hủy Bỏ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light text-center small text-muted py-3">
+                    Đảm bảo tính Idempotency: Giao dịch một khi đã hoàn tất sẽ không bị trừ trùng hoặc phát hành vé lặp lại.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
