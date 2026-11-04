@@ -10,11 +10,22 @@
             <h1 class="admin-page-title">Lịch bay &amp; tồn chỗ</h1>
             <p class="admin-page-subtitle">@Model.Subtitle</p>
         </div>
-        <button type="button" class="av-btn av-btn--primary">
+        <a class="av-btn av-btn--primary" href="/quan-ly/lich-bay?tao-moi=1&ngay=@Model.DateValue">
             @Html.Icon("plus", 17)
             <span>@Model.AddText</span>
-        </button>
+        </a>
     </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check" : "info", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@(Model.MessageTone == "success" ? "Đã cập nhật" : "Không thể lưu")</span>
+                <span>@Model.Message</span>
+            </div>
+        </div>
+    }
 
     <section class="av-card admin-card">
         <form class="av-card__body admin-card__body manager-filters" method="get" action="/quan-ly/lich-bay">
@@ -30,10 +41,10 @@
                 <span class="av-label">@Model.RouteLabel</span>
                 <span class="av-control">
                     <select name="tuyen">
-                        <option selected>@Model.RouteValue</option>
-                        <option>HAN → SGN</option>
-                        <option>SGN → DAD</option>
-                        <option>SGN → PQC</option>
+                        @foreach (var option in Model.RouteOptions)
+                        {
+                            <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                        }
                     </select>
                     @Html.Icon("chevron-down", 17)
                 </span>
@@ -43,10 +54,10 @@
                 <span class="av-label">@Model.AirlineStatusLabel</span>
                 <span class="av-control">
                     <select name="trang-thai">
-                        <option selected>@Model.AirlineStatusValue</option>
-                        <option>Vietnam Airlines</option>
-                        <option>Vietjet Air</option>
-                        <option>Bamboo Airways</option>
+                        @foreach (var option in Model.StatusOptions)
+                        {
+                            <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                        }
                     </select>
                     @Html.Icon("chevron-down", 17)
                 </span>
@@ -81,7 +92,16 @@
                         @foreach (var row in Model.Rows)
                         {
                             <tr class="@(row.IsSelected ? "is-selected" : null)">
-                                <td class="manager-flight-name">@row.Flight</td>
+                                <td class="manager-flight-name">
+                                    @if (!string.IsNullOrWhiteSpace(row.Href))
+                                    {
+                                        <a class="av-link" href="@row.Href">@row.Flight</a>
+                                    }
+                                    else
+                                    {
+                                        @row.Flight
+                                    }
+                                </td>
                                 <td>@row.Route</td>
                                 <td>@row.Time</td>
                                 <td class="admin-table__result admin-table__result--@row.StatusTone">@row.StatusText</td>
@@ -108,6 +128,14 @@
         <article class="av-card admin-card">
             <form class="av-card__body admin-card__body manager-editor" method="post" action="/quan-ly/lich-bay">
                 @Html.AntiForgeryToken()
+                <input type="hidden" name="chuyen-bay-id" value="@Model.SelectedFlightId" />
+                <input type="hidden" name="ngay" value="@Model.DateValue" />
+                @if (!Model.EditorIsNew)
+                {
+                    <input type="hidden" name="tuyen-bay-id" value="@Model.EditorRouteId" />
+                    <input type="hidden" name="may-bay-id" value="@Model.EditorAircraftId" />
+                    <input type="hidden" name="so-hieu" value="@Model.EditorFlightNumber" />
+                }
 
                 <div class="admin-card__head">
                     <div class="admin-card__head-main">
@@ -115,14 +143,55 @@
                         <span class="av-caption">@Model.EditorSubtitle</span>
                     </div>
                     <div class="manager-editor__tools">
-                        <a class="av-btn av-btn--outline av-btn--sm" href="/quan-ly/lich-bay?hop-thoai=doi-gia">
-                            Đổi giá
-                        </a>
-                        <a class="av-btn av-btn--outline av-btn--sm admin-text-danger" href="/quan-ly/lich-bay?hop-thoai=huy-chuyen">
-                            Hủy chuyến
-                        </a>
+                        @if (!Model.EditorIsNew)
+                        {
+                            <a class="av-btn av-btn--outline av-btn--sm"
+                               href="/quan-ly/lich-bay?ngay=@Model.DateValue&chon=@Model.SelectedFlightId&hop-thoai=doi-gia">
+                                Đổi giá
+                            </a>
+                            <a class="av-btn av-btn--outline av-btn--sm admin-text-danger"
+                               href="/quan-ly/lich-bay?ngay=@Model.DateValue&chon=@Model.SelectedFlightId&hop-thoai=huy-chuyen">
+                                Hủy chuyến
+                            </a>
+                        }
                     </div>
                 </div>
+
+                @if (Model.EditorIsNew)
+                {
+                    <div class="manager-editor__row manager-editor__row--three">
+                        <label class="av-field">
+                            <span class="av-label">Số hiệu chuyến bay *</span>
+                            <span class="av-control">
+                                <input type="text" name="so-hieu" placeholder="Ví dụ VN210" required />
+                            </span>
+                        </label>
+                        <label class="av-field">
+                            <span class="av-label">Tuyến bay *</span>
+                            <span class="av-control">
+                                <select name="tuyen-bay-id" required>
+                                    @foreach (var option in Model.EditorRouteOptions)
+                                    {
+                                        <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                                    }
+                                </select>
+                                @Html.Icon("chevron-down", 17)
+                            </span>
+                        </label>
+                        <label class="av-field">
+                            <span class="av-label">Tàu bay *</span>
+                            <span class="av-control">
+                                <select name="may-bay-id" required>
+                                    @foreach (var option in Model.EditorAircraftOptions)
+                                    {
+                                        <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                                    }
+                                </select>
+                                @Html.Icon("chevron-down", 17)
+                            </span>
+                        </label>
+                    </div>
+                }
 
                 <div class="manager-editor__row manager-editor__row--three">
                     <label class="av-field">
@@ -246,6 +315,8 @@
 
         <form class="av-modal__panel" method="post" action="/quan-ly/lich-bay/huy-chuyen">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="chuyen-bay-id" value="@Model.SelectedFlightId" />
+            <input type="hidden" name="ngay" value="@Model.DateValue" />
 
             <div class="av-modal__head">
                 <div class="admin-modal__head-main">
@@ -326,6 +397,8 @@
         <form class="av-modal__panel" method="post" action="/quan-ly/lich-bay/doi-gia">
             @Html.AntiForgeryToken()
             <input type="hidden" name="hang" value="pho-thong" />
+            <input type="hidden" name="chuyen-bay-id" value="@Model.SelectedFlightId" />
+            <input type="hidden" name="ngay" value="@Model.DateValue" />
 
             <div class="av-modal__head">
                 <div class="admin-modal__head-main">
@@ -347,6 +420,13 @@
                     <span class="manager-price-cell__value manager-price-cell__value--next">@dialog.NewValue</span>
                 </div>
             </div>
+
+            <label class="av-field">
+                <span class="av-label">Giá cơ bản mới / khách (VND) *</span>
+                <span class="av-control">
+                    <input type="number" name="gia-moi" min="0" step="1000" value="@dialog.NewAmount" required />
+                </span>
+            </label>
 
             <div class="av-rows">
                 <div class="av-rowline">

@@ -169,14 +169,18 @@ public sealed record AdminCatalogRow(
     string? Subtitle,
     string Meta,
     string StatusText,
-    bool IsSelected = false);
+    bool IsSelected = false,
+    int Id = 0,
+    string? Href = null);
 
 public sealed record AdminEditorField(
     string Label,
     string Value,
     string? Hint = null,
     string? Icon = null,
-    bool IsRequired = false);
+    bool IsRequired = false,
+    string? Name = null,
+    IReadOnlyList<string>? Options = null);
 
 public sealed class AdminCatalogViewModel
 {
@@ -205,6 +209,12 @@ public sealed class AdminCatalogViewModel
         "có thể ngừng sử dụng cho chuyến mới.";
     public string EditorUpdated { get; init; } = "Cập nhật: 20/10/2026 · Admin";
     public string AddText { get; init; } = "Thêm sân bay";
+
+    /// <summary>Id bản ghi đang sửa; 0 nghĩa là tạo mới.</summary>
+    public int EditorId { get; init; }
+    public string EditorTabKey { get; init; } = "airports";
+    public string? Message { get; set; }
+    public string MessageTone { get; set; } = "info";
 }
 
 // ---------------------------------------------------------- 12 · cấu hình

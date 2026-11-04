@@ -90,9 +90,13 @@ public sealed record ManagerScheduleRow(
     string StatusTone,
     string Seats,
     string Price,
-    bool IsSelected = false);
+    bool IsSelected = false,
+    int Id = 0,
+    string? Href = null);
 
 public sealed record ManagerFareRow(string Cabin, string Capacity, string Sold, string BasePrice);
+
+public sealed record ManagerSelectOption(string Value, string Label, bool IsSelected = false);
 
 public sealed class ManagerSchedulesViewModel
 {
@@ -146,11 +150,24 @@ public sealed class ManagerSchedulesViewModel
     public string ThresholdText { get; init; } =
         "Phổ thông: 900.000–3.500.000 ₫. Ngoài ngưỡng cần Admin phê duyệt.";
 
-    public bool ShowCancelDialog { get; init; }
-    public ManagerCancelFlightDialogViewModel CancelDialog { get; init; } = new();
+    public bool ShowCancelDialog { get; set; }
+    public ManagerCancelFlightDialogViewModel CancelDialog { get; set; } = new();
 
-    public bool ShowPriceDialog { get; init; }
-    public ManagerPriceDialogViewModel PriceDialog { get; init; } = new();
+    public bool ShowPriceDialog { get; set; }
+    public ManagerPriceDialogViewModel PriceDialog { get; set; } = new();
+
+    public IReadOnlyList<ManagerSelectOption> RouteOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> StatusOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> EditorRouteOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> EditorAircraftOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+
+    public bool EditorIsNew { get; init; }
+    public int SelectedFlightId { get; init; }
+    public int EditorRouteId { get; init; }
+    public int EditorAircraftId { get; init; }
+    public string EditorFlightNumber { get; init; } = string.Empty;
+    public string? Message { get; init; }
+    public string MessageTone { get; init; } = "info";
 }
 
 public sealed class ManagerCancelFlightDialogViewModel
@@ -195,6 +212,7 @@ public sealed class ManagerPriceDialogViewModel
     public string CurrentValue { get; init; } = "1.500.000 VND";
     public string NewLabel { get; init; } = "Giá cơ bản mới / khách";
     public string NewValue { get; init; } = "1.650.000 VND";
+    public decimal NewAmount { get; init; } = 1_650_000m;
     public string DeltaLabel { get; init; } = "Mức tăng";
     public string DeltaValue { get; init; } = "+150.000 VND / khách (+10%)";
     public string ThresholdLabel { get; init; } = "Ngưỡng giá được cấp";
