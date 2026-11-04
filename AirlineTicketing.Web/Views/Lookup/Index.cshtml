@@ -76,9 +76,9 @@
                         <h2 class="av-card__title">Chi tiết đặt chỗ · @result.Pnr</h2>
 
                         <div class="av-row av-gap-8 av-wrap">
-                            <span class="av-badge av-badge--success">Đặt chỗ: Đã xác nhận</span>
-                            <span class="av-badge av-badge--success">Thanh toán: Đã thanh toán</span>
-                            <span class="av-badge av-badge--success">Vé: Đã xuất</span>
+                            <span class="av-badge av-badge--success">Đặt chỗ: @result.BookingStatus</span>
+                            <span class="av-badge av-badge--success">Thanh toán: @result.PaymentStatus</span>
+                            <span class="av-badge av-badge--success">Vé: @result.TicketStatus</span>
                         </div>
 
                         <partial name="_JourneyBlock" model="result.Flight" />
@@ -127,9 +127,7 @@
                         <h2 class="av-card__title">Quản lý đặt chỗ</h2>
 
                         <div class="av-row av-gap-12 av-wrap">
-                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">Gửi yêu cầu đổi vé</a>
-                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">Gửi yêu cầu hoàn vé</a>
-                            <a class="av-btn av-btn--ghost" href="/ve-cua-toi/yeu-cau">Theo dõi yêu cầu</a>
+                            <a class="av-btn av-btn--outline" href="/quan-ly-dat-ve">Đổi hoặc hủy vé</a>
                         </div>
 
                         <p class="av-caption">

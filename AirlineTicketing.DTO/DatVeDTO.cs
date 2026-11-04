@@ -8,6 +8,7 @@ public sealed record DatVeDTO
     public string MaDatVe { get; init; } = string.Empty;
     public KhachHangDTO KhachHang { get; init; } = new();
     public DateTimeOffset NgayDat { get; init; }
+    public DateTimeOffset HetHanGiuCho { get; init; }
     public string TrangThai { get; init; } = string.Empty;
     public decimal TongTien { get; init; }
     public string DonViTienTe { get; init; } = "VND";
@@ -17,14 +18,32 @@ public sealed record DatVeDTO
 
 public sealed record TaoDatVeDTO
 {
-    [Range(1, int.MaxValue)]
-    public int KhachHangId { get; init; }
-
-    [Required, StringLength(3, MinimumLength = 3)]
-    public string DonViTienTe { get; init; } = "VND";
+    [Required]
+    public KhachHangDTO NguoiLienHe { get; init; } = new();
 
     [Required, MinLength(1), MaxLength(9)]
     public IReadOnlyList<TaoVeDTO> Ves { get; init; } = Array.Empty<TaoVeDTO>();
+}
+
+public sealed record XuLyThanhToanDTO
+{
+    [Required, StringLength(30)]
+    public string MaDatVe { get; init; } = string.Empty;
+
+    [Required, StringLength(50)]
+    public string NhaCungCap { get; init; } = string.Empty;
+
+    [Required, StringLength(100)]
+    public string MaGiaoDich { get; init; } = string.Empty;
+
+    public bool ThanhCong { get; init; }
+}
+
+public sealed record KetQuaThanhToanDTO
+{
+    public bool DaXacNhan { get; init; }
+    public bool DaXuLyTruocDo { get; init; }
+    public DatVeDTO DatVe { get; init; } = new();
 }
 
 public sealed record TaoVeDTO

@@ -1,0 +1,50 @@
+@model ManageReservationViewModel
+@using AirlineTicketing.Web.Infrastructure
+@{
+    ViewData["Title"] = "Tra cứu và quản lý đặt chỗ";
+}
+
+<div class="av-page av-container">
+    <header class="booking-title"><h1 class="av-page-title">Tra cứu và quản lý đặt chỗ</h1></header>
+    <section class="av-card"><div class="av-card__body">
+        <form method="post" class="lookup-form">
+            @Html.AntiForgeryToken()
+            <label class="av-field"><span class="av-label">Mã đặt chỗ</span><input asp-for="MaDatVe" required /></label>
+            <label class="av-field"><span class="av-label">Email xác minh</span><input asp-for="Email" required /></label>
+            <button class="av-btn av-btn--primary" type="submit">Tra cứu</button>
+        </form>
+    </div></section>
+
+    @if (Model.Loi is not null) { <div class="av-alert av-alert--danger">@Model.Loi</div> }
+    @if (Model.KetQua is { } booking)
+    {
+        <section class="av-card"><div class="av-card__body av-stack av-gap-16">
+            <h2 class="av-card__title">@booking.MaDatVe · @booking.TrangThai</h2>
+            <p>Tổng tiền: <strong>@Money.Vnd(booking.TongTien)</strong></p>
+            @foreach (var ticket in booking.Ves)
+            {
+                <div class="av-rowline"><span>@ticket.MaVe · @ticket.HanhKhach.HoTen · ghế @ticket.SoGhe</span><strong>@ticket.TrangThai</strong></div>
+                @if (ticket.TrangThai == "DaPhatHanh")
+                {
+                    <form method="post" action="/quan-ly-dat-ve/doi" class="av-stack av-gap-8">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="veId" value="@ticket.Id" />
+                        <input type="hidden" name="email" value="@Model.Email" />
+                        <label class="av-field"><span class="av-label">ID chuyến mới</span><input type="number" name="chuyenBayMoiId" min="1" required /></label>
+                        <label class="av-field"><span class="av-label">Ghế mới</span><input name="soGheMoi" maxlength="5" required /></label>
+                        <label class="av-field"><span class="av-label">Hạng vé</span><select name="hangVeMoi"><option value="PhoThong">Phổ thông</option><option value="ThuongGia">Thương gia</option></select></label>
+                        <label class="av-field"><span class="av-label">Lý do đổi</span><input name="lyDo" maxlength="300" required /></label>
+                        <button class="av-btn av-btn--outline" type="submit">Đổi chuyến/ghế</button>
+                    </form>
+                    <form method="post" action="/quan-ly-dat-ve/huy">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="maVe" value="@ticket.MaVe" />
+                        <input type="hidden" name="email" value="@Model.Email" />
+                        <label class="av-field"><span class="av-label">Lý do hủy</span><input name="lyDo" required maxlength="300" /></label>
+                        <button class="av-btn av-btn--outline" type="submit">Hủy vé và giải phóng ghế</button>
+                    </form>
+                }
+            }
+        </div></section>
+    }
+</div>

@@ -1,186 +1,48 @@
-@model ManagerBookingsViewModel
+@model BookingAdminViewModel
+@using AirlineTicketing.Web.Infrastructure
 @{
-    ViewData["Title"] = "Quản lý đặt vé";
-    ViewData["ManagerNav"] = "bookings";
+    ViewData["Title"] = "Quản lý khách hàng, đặt chỗ và vé";
 }
 
-<div class="admin-page">
-    <header class="admin-page-head">
-        <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Quản lý đặt vé</h1>
-            <p class="admin-page-subtitle">@Model.Subtitle</p>
-        </div>
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Khách hàng, đặt chỗ và vé</h1>
+        <p class="av-page-subtitle">Dữ liệu được đọc trực tiếp từ hệ thống đặt vé.</p>
     </header>
 
-    <form class="admin-filters manager-filters--bookings" method="get" action="/quan-ly/dat-ve">
-        <label class="av-field">
-            <span class="av-label">@Model.SearchLabel</span>
-            <span class="av-control">
-                <input type="search" name="q" placeholder="@Model.SearchPlaceholder" autocomplete="off" />
-                @Html.Icon("search", 17)
-            </span>
-        </label>
+    <section class="av-card"><div class="av-card__body">
+        <form method="get" class="lookup-form">
+            <label class="av-field">
+                <span class="av-label">Mã đặt chỗ, mã vé, tên hoặc email</span>
+                <input name="q" value="@Model.TuKhoa" autocomplete="off" />
+            </label>
+            <button type="submit" class="av-btn av-btn--primary">Tìm kiếm</button>
+        </form>
+    </div></section>
 
-        <label class="av-field">
-            <span class="av-label">@Model.DateLabel</span>
-            <span class="av-control">
-                <input type="text" name="ngay" value="@Model.DateValue" />
-                @Html.Icon("calendar", 17)
-            </span>
-        </label>
-
-        <label class="av-field">
-            <span class="av-label">@Model.StatusLabel</span>
-            <span class="av-control">
-                <select name="trang-thai">
-                    <option selected>@Model.StatusValue</option>
-                    <option>Chờ thanh toán</option>
-                    <option>Đã thanh toán</option>
-                    <option>Đã xuất vé</option>
-                </select>
-                @Html.Icon("chevron-down", 17)
-            </span>
-        </label>
-
-        <button type="submit" class="av-btn av-btn--primary admin-filters__submit">@Model.SearchText</button>
-    </form>
-
-    <section class="av-card admin-card">
-        <div class="av-card__body admin-card__body">
-            <div class="admin-card__head">
-                <h2 class="av-card__title">@Model.ListTitle</h2>
-                <span class="manager-card-meta">@Model.ListMeta</span>
-            </div>
-
-            <div class="admin-table">
-                <table class="av-table manager-table--bookings">
-                    <thead>
-                        <tr>
-                            <th scope="col">PNR / Khách hàng</th>
-                            <th scope="col">Chuyến / Ngày bay</th>
-                            <th scope="col">Giữ chỗ</th>
-                            <th scope="col">Thanh toán</th>
-                            <th scope="col">Vé</th>
-                            <th scope="col">Tổng tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in Model.Rows)
-                        {
-                            <tr class="@(row.IsSelected ? "is-selected" : null)">
-                                <td class="manager-flight-name">@row.Pnr</td>
-                                <td>@row.FlightDate</td>
-                                <td class="manager-tone--@row.HoldTone">@row.HoldText</td>
-                                <td class="manager-tone--@row.PaymentTone">@row.PaymentText</td>
-                                <td class="manager-tone--@row.TicketTone">@row.TicketText</td>
-                                <td>@row.Total</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="av-pagination">
-                <span>@Model.ResultText</span>
-                <span class="av-pagination__links">
-                    <a href="/quan-ly/dat-ve">Trước</a>
-                    <span class="is-current">1</span>
-                    <a href="/quan-ly/dat-ve">Sau</a>
-                </span>
-            </div>
-        </div>
-    </section>
-
-    <section class="admin-grid manager-grid--bookings">
-        <article class="av-card admin-card">
-            <div class="av-card__body admin-card__body">
-                <div class="admin-card__head-main">
-                    <h2 class="av-card__title">@Model.DetailTitle</h2>
-                    <span class="av-caption">@Model.DetailSubtitle</span>
+    @if (Model.DatVes.Count == 0)
+    {
+        <div class="av-alert av-alert--info">Không có đặt chỗ phù hợp.</div>
+    }
+    else
+    {
+        @foreach (var booking in Model.DatVes)
+        {
+            <section class="av-card"><div class="av-card__body av-stack av-gap-12">
+                <div class="av-row av-row--between av-wrap">
+                    <h2 class="av-card__title">@booking.MaDatVe · @booking.TrangThai</h2>
+                    <strong>@Money.Vnd(booking.TongTien)</strong>
                 </div>
-
-                <div class="manager-badges">
-                    @foreach (var badge in Model.Statuses)
-                    {
-                        <span class="av-badge av-badge--@badge.Tone">@badge.Text</span>
-                    }
-                </div>
-
-                <div class="admin-detail-rows">
-                    @foreach (var field in Model.Fields)
-                    {
-                        <div class="admin-detail-rows__row">
-                            <span class="admin-detail-rows__label">@field.Label</span>
-                            <span class="admin-detail-rows__value">@field.Value</span>
-                        </div>
-                    }
-
-                    <div class="admin-detail-rows__row manager-detail-total">
-                        <span class="admin-detail-rows__label">@Model.TotalLabel</span>
-                        <span class="admin-detail-rows__value">@Model.TotalValue</span>
+                <p>@booking.KhachHang.HoTen · @booking.KhachHang.Email · @booking.KhachHang.SoDienThoai</p>
+                <p class="av-caption">Đặt lúc @booking.NgayDat.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Hạn giữ @booking.HetHanGiuCho.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                @foreach (var ticket in booking.Ves)
+                {
+                    <div class="av-rowline">
+                        <span>@ticket.MaVe · @ticket.HanhKhach.HoTen · @ticket.SoHieuChuyenBay · ghế @ticket.SoGhe</span>
+                        <strong>@ticket.TrangThai · @Money.Vnd(ticket.GiaVe)</strong>
                     </div>
-                </div>
-
-                <div class="admin-detail-actions">
-                    <button type="button" class="av-btn av-btn--outline">@Model.PrimaryActionText</button>
-                    <button type="button" class="av-btn av-btn--outline">@Model.SecondaryActionText</button>
-                </div>
-
-                <div class="av-alert av-alert--info">
-                    <span class="av-alert__icon">@Html.Icon("lock", 20)</span>
-                    <div class="av-alert__body">
-                        <span class="av-alert__title">@Model.SafeTitle</span>
-                        <span>@Model.SafeText</span>
-                    </div>
-                </div>
-            </div>
-        </article>
-
-        <div class="manager-stack">
-            <article class="av-card admin-card">
-                <div class="av-card__body admin-card__body">
-                    <h2 class="av-card__title">@Model.TimelineTitle</h2>
-
-                    <ol class="manager-timeline">
-                        @foreach (var item in Model.Timeline)
-                        {
-                            <li class="manager-timeline__item">
-                                <span class="manager-timeline__time">@item.Time</span>
-                                <span class="manager-timeline__dot" aria-hidden="true"></span>
-                                <span class="manager-timeline__body">
-                                    <span class="manager-timeline__title">@item.Title</span>
-                                    <span class="manager-timeline__text">@item.Text</span>
-                                </span>
-                            </li>
-                        }
-                    </ol>
-
-                    <div class="manager-timeline__foot">
-                        <span class="av-micro">@Model.TransactionCode</span>
-                        <span class="manager-tone--success">@Html.Icon("check-circle", 15) @Model.TransactionConfirmed</span>
-                    </div>
-                </div>
-            </article>
-
-            <article class="av-card admin-card">
-                <div class="av-card__body admin-card__body">
-                    <h2 class="av-card__title">@Model.ConditionsTitle</h2>
-
-                    <ul class="manager-checklist manager-checklist--compact">
-                        @foreach (var item in Model.Conditions)
-                        {
-                            <li class="manager-checklist__item @(item.IsDone ? "is-done" : null)">
-                                @Html.Icon(item.IsDone ? "check-circle" : "circle", 18)
-                                <span>@item.Text</span>
-                            </li>
-                        }
-                    </ul>
-
-                    <span class="av-badge av-badge--success av-badge--lg">@Model.IssuedText</span>
-
-                    <p class="av-caption admin-card__note">@Model.ConditionsNote</p>
-                </div>
-            </article>
-        </div>
-    </section>
+                }
+            </div></section>
+        }
+    }
 </div>

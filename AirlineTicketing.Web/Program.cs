@@ -68,6 +68,7 @@
 // app.Run();
 using AirlineTicketing.DAL;
 using AirlineTicketing.DAL.Repositories;
+using AirlineTicketing.BUS;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
@@ -98,6 +99,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton(new DatVeOptions
+{
+    ThoiHanGiuCho = TimeSpan.FromMinutes(
+        builder.Configuration.GetValue<int?>("Booking:HoldMinutes") ?? 15)
+});
+builder.Services.AddScoped<DatVeBUS>();
+builder.Services.AddScoped<VeBUS>();
 
 var app = builder.Build();
 

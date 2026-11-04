@@ -1,0 +1,31 @@
+@model ReservationConfirmationViewModel
+@using AirlineTicketing.Web.Infrastructure
+@{
+    ViewData["Title"] = "Xác nhận đặt chỗ";
+    var booking = Model.DatVe;
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Đã giữ chỗ</h1>
+        <p class="av-page-subtitle">Mã đặt chỗ <strong>@booking.MaDatVe</strong></p>
+    </header>
+    <div class="av-alert av-alert--success">
+        Ghế được giữ đến @booking.HetHanGiuCho.ToLocalTime().ToString("dd/MM/yyyy HH:mm").
+        Thanh toán sau thời điểm này sẽ bị từ chối.
+    </div>
+    <section class="av-card">
+        <div class="av-card__body av-stack av-gap-16">
+            <h2 class="av-card__title">Thông tin do máy chủ xác nhận</h2>
+            <div class="av-rows">
+                <div class="av-rowline"><span>Trạng thái</span><strong>@booking.TrangThai</strong></div>
+                @foreach (var ticket in booking.Ves)
+                {
+                    <div class="av-rowline"><span>@ticket.HanhKhach.HoTen · @ticket.SoHieuChuyenBay · ghế @ticket.SoGhe</span><strong>@Money.Vnd(ticket.GiaVe)</strong></div>
+                }
+                <div class="av-rowline av-rowline--total"><span>Tổng tiền</span><strong>@Money.Vnd(booking.TongTien)</strong></div>
+            </div>
+            <p class="av-caption">Bước thanh toán sẽ gọi cổng thanh toán phía server. Trang này không gửi giá hoặc trạng thái thanh toán từ trình duyệt.</p>
+        </div>
+    </section>
+</div>

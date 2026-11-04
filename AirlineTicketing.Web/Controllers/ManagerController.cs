@@ -1,9 +1,11 @@
 using AirlineTicketing.Web.Demo;
+using AirlineTicketing.BUS;
+using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
-public class ManagerController : Controller
+public class ManagerController(DatVeBUS datVeBUS) : Controller
 {
     [HttpGet("/quan-ly")]
     public IActionResult Index() => View(DemoCatalog.ManagerOverview());
@@ -25,7 +27,12 @@ public class ManagerController : Controller
     public IActionResult ChangePrice(IFormCollection form) => RedirectToAction(nameof(Schedules));
 
     [HttpGet("/quan-ly/dat-ve")]
-    public IActionResult Bookings(string? q) => View(DemoCatalog.ManagerBookings());
+    public async Task<IActionResult> Bookings(string? q, CancellationToken cancellationToken) =>
+        View(new BookingAdminViewModel
+        {
+            TuKhoa = q,
+            DatVes = await datVeBUS.DanhSachQuanLyAsync(q, cancellationToken: cancellationToken)
+        });
 
     [HttpPost("/quan-ly/dat-ve")]
     [ValidateAntiForgeryToken]

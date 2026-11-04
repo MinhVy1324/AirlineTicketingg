@@ -13,6 +13,8 @@ public sealed class DatVeConfiguration : IEntityTypeConfiguration<DatVe>
         builder.HasIndex(x => x.MaDatVe).IsUnique();
         builder.HasIndex(x => new { x.KhachHangId, x.NgayDat });
         builder.Property(x => x.NgayDat).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        builder.Property(x => x.HetHanGiuCho).IsRequired();
+        builder.HasIndex(x => new { x.TrangThai, x.HetHanGiuCho });
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
         builder.Property(x => x.TongTien).HasPrecision(12, 2);
         builder.Property(x => x.DonViTienTe).HasMaxLength(3).IsFixedLength().IsRequired();

@@ -19,6 +19,7 @@ public sealed class VeConfiguration : IEntityTypeConfiguration<Ve>
         builder.HasIndex(x => new { x.DatVeId, x.TrangThai });
         builder.Property(x => x.HangVe).HasMaxLength(20).IsRequired();
         builder.Property(x => x.GiaVe).HasPrecision(12, 2);
+        builder.Property(x => x.LyDoHuy).HasMaxLength(300);
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
         builder.ToTable(t =>
         {

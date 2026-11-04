@@ -97,7 +97,11 @@ public sealed class CancelledFlightViewModel
 
 public sealed class LookupFormModel
 {
+    [System.ComponentModel.DataAnnotations.Required]
+    [System.ComponentModel.DataAnnotations.StringLength(30)]
     public string Pnr { get; set; } = "AV8K2M";
+    [System.ComponentModel.DataAnnotations.Required]
+    [System.ComponentModel.DataAnnotations.EmailAddress]
     public string Email { get; set; } = "minhanh@example.com";
 }
 
@@ -112,6 +116,9 @@ public sealed class LookupPageViewModel
 public sealed class LookupResultViewModel
 {
     public string Pnr { get; init; } = "AV8K2M";
+    public string BookingStatus { get; init; } = string.Empty;
+    public string PaymentStatus { get; init; } = string.Empty;
+    public string TicketStatus { get; init; } = string.Empty;
     public FlightOffer Flight { get; init; } = null!;
     public string PassengerMasked { get; init; } = "NGUYEN M*** A** · Người lớn";
     public string IdentityMasked { get; init; } = "••••••••1234";
