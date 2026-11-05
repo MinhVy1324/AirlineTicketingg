@@ -1,0 +1,113 @@
+@{
+    var activeNav = ViewData["ManagerNav"] as string ?? "overview";
+    var crumb = ManagerNav.LabelFor(activeNav);
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · AeroViet Manager</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="admin-body">
+    <input type="checkbox" id="admin-nav-toggle" class="admin-nav-toggle" aria-hidden="true" tabindex="-1" />
+
+    <div class="admin-shell">
+        <label for="admin-nav-toggle" class="admin-scrim" aria-hidden="true"></label>
+
+        <aside class="admin-sidebar">
+            <a class="admin-brand" href="/quan-ly" aria-label="AeroViet · Tổng quan vận hành">
+                <span class="admin-brand__mark">@Html.Icon("plane", 23)</span>
+                <span class="admin-brand__name">AeroViet</span>
+            </a>
+
+            <div class="admin-workspace">
+                <span class="admin-workspace__eyebrow">KHÔNG GIAN LÀM VIỆC</span>
+                <span class="admin-workspace__name">@ManagerNav.WorkspaceName</span>
+            </div>
+
+            <nav class="admin-nav" aria-label="Điều hướng vận hành">
+                @foreach (var item in ManagerNav.Items)
+                {
+                    var isActive = item.Key == activeNav;
+                    <a class="admin-nav__link @(isActive ? "is-active" : null)" href="@item.Href"
+                       aria-current="@(isActive ? "page" : null)">
+                        @Html.Icon(item.Icon, 19)
+                        <span>@item.Label</span>
+                    </a>
+                }
+                <a class="admin-nav__link" href="/Dashboard">
+                    @Html.Icon("layout-dashboard", 19)
+                    <span>Dashboard dữ liệu</span>
+                </a>
+                <a class="admin-nav__link" href="/ThanhToan/LichSu">
+                    @Html.Icon("credit-card", 19)
+                    <span>Thanh toán &amp; hoàn tiền</span>
+                </a>
+            </nav>
+
+            <div class="admin-scope">
+                @Html.Icon("shield-check", 20)
+                <span class="admin-scope__title">@ManagerNav.ScopeTitle</span>
+                <span class="admin-scope__text">@ManagerNav.ScopeText</span>
+            </div>
+
+            <a class="admin-help" href="/quan-ly/doi-hoan">
+                @Html.Icon("help", 20)
+                <span>Hỗ trợ nội bộ</span>
+            </a>
+        </aside>
+
+        <div class="admin-area">
+            <header class="admin-topbar">
+                <label for="admin-nav-toggle" class="admin-menu-btn" aria-label="Mở hoặc đóng menu vận hành">
+                    @Html.Icon("layout-dashboard", 20)
+                </label>
+
+                <nav class="admin-crumb" aria-label="Bạn đang ở">
+                    <span>AeroViet Workspace</span>
+                    <span class="admin-crumb__sep" aria-hidden="true">/</span>
+                    <span>Manager</span>
+                    <span class="admin-crumb__sep" aria-hidden="true">/</span>
+                    <span class="admin-crumb__current">@crumb</span>
+                </nav>
+
+                <div class="admin-session">
+                    <a class="admin-bell" href="/quan-ly/doi-hoan" aria-label="Xem yêu cầu cần xử lý">
+                        @Html.Icon("bell", 20)
+                    </a>
+                    <span class="admin-session__sep" aria-hidden="true"></span>
+                    <span class="admin-avatar">@((User.Identity?.Name ?? "U")[0])</span>
+                    <span class="admin-user">
+                        <strong>@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name)</strong>
+                        <span>@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                    </span>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="admin-nav__link">Đăng xuất</button>
+                    </form>
+                </div>
+            </header>
+
+            <main class="admin-main" role="main">
+                @RenderBody()
+            </main>
+
+            <footer class="admin-footer">
+                <span>AeroViet · Hệ thống bán vé máy bay</span>
+                <span>Dữ liệu mẫu · Giờ Việt Nam (UTC+7)</span>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

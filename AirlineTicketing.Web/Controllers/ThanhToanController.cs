@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
+<<<<<<< Updated upstream
 public class ThanhToanController(
     IThanhToanBUS thanhToanBUS,
     AppDbContext dbContext,
@@ -17,6 +18,60 @@ public class ThanhToanController(
     [HttpGet]
     public async Task<IActionResult> Index(int datVeId, CancellationToken cancellationToken = default)
     {
+=======
+[Authorize]
+public class ThanhToanController(
+    IThanhToanBUS thanhToanBUS,
+    AppDbContext dbContext,
+    ILogger<ThanhToanController> logger,
+    IWebHostEnvironment environment) : Controller
+{
+    private bool IsStaff => User.IsInRole("Admin") || User.IsInRole("NhanVien");
+
+    private async Task<bool> CanAccessBookingAsync(int datVeId, CancellationToken cancellationToken)
+    {
+        if (IsStaff)
+        {
+            return true;
+        }
+
+        var customerIdText = User.FindFirst("KhachHangId")?.Value;
+        return int.TryParse(customerIdText, out var customerId)
+            && await dbContext.DatVes.AnyAsync(x => x.Id == datVeId && x.KhachHangId == customerId, cancellationToken);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ChoThanhToan(CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.DatVes
+            .AsNoTracking()
+            .Include(x => x.KhachHang)
+            .Where(x => x.TrangThai == TrangThaiDatVe.ChoThanhToan);
+
+        if (!IsStaff)
+        {
+            var customerIdText = User.FindFirst("KhachHangId")?.Value;
+            if (!int.TryParse(customerIdText, out var customerId))
+            {
+                return View(Array.Empty<DatVe>());
+            }
+
+            query = query.Where(x => x.KhachHangId == customerId);
+        }
+
+        var bookings = await query.OrderByDescending(x => x.NgayDat).ToListAsync(cancellationToken);
+        return View(bookings);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(int datVeId, CancellationToken cancellationToken = default)
+    {
+        if (!await CanAccessBookingAsync(datVeId, cancellationToken))
+        {
+            return Forbid();
+        }
+
+>>>>>>> Stashed changes
         var datVe = await dbContext.DatVes
             .Include(d => d.KhachHang)
             .Include(d => d.Ves)
@@ -51,6 +106,14 @@ public class ThanhToanController(
         string nhaCungCap,
         CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
+=======
+        if (!await CanAccessBookingAsync(datVeId, cancellationToken))
+        {
+            return Forbid();
+        }
+
+>>>>>>> Stashed changes
         try
         {
             var thanhToan = await thanhToanBUS.KhoiTaoThanhToanAsync(datVeId, phuongThuc, nhaCungCap, cancellationToken);
@@ -72,6 +135,14 @@ public class ThanhToanController(
             return NotFound("Không tìm thấy giao dịch thanh toán.");
         }
 
+<<<<<<< Updated upstream
+=======
+        if (!await CanAccessBookingAsync(thanhToan.DatVeId, cancellationToken))
+        {
+            return Forbid();
+        }
+
+>>>>>>> Stashed changes
         var datVe = await dbContext.DatVes
             .Include(d => d.KhachHang)
             .Include(d => d.Ves)
@@ -90,6 +161,25 @@ public class ThanhToanController(
         string? maGiaoDichNgoai = null,
         CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
+=======
+        if (!environment.IsDevelopment())
+        {
+            return NotFound();
+        }
+
+        var payment = await thanhToanBUS.GetByIdAsync(id, cancellationToken);
+        if (payment is null)
+        {
+            return NotFound();
+        }
+
+        if (!await CanAccessBookingAsync(payment.DatVeId, cancellationToken))
+        {
+            return Forbid();
+        }
+
+>>>>>>> Stashed changes
         try
         {
             var ketQua = await thanhToanBUS.XuLyThanhToanGiaLapAsync(id, thanhCong, maGiaoDichNgoai, cancellationToken);
@@ -113,6 +203,14 @@ public class ThanhToanController(
             return NotFound();
         }
 
+<<<<<<< Updated upstream
+=======
+        if (!await CanAccessBookingAsync(thanhToan.DatVeId, cancellationToken))
+        {
+            return Forbid();
+        }
+
+>>>>>>> Stashed changes
         var datVe = await dbContext.DatVes
             .Include(d => d.KhachHang)
             .Include(d => d.Ves)

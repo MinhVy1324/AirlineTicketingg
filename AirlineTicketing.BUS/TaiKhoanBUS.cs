@@ -13,6 +13,11 @@ public sealed class TaiKhoanBUS(AppDbContext dbContext) : ITaiKhoanBUS
         string normalizedUsername = dto.TenDangNhap.Trim().ToLowerInvariant();
         string normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
+<<<<<<< Updated upstream
+=======
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+>>>>>>> Stashed changes
         if (await dbContext.TaiKhoans.AnyAsync(x => x.TenDangNhap.ToLower() == normalizedUsername, cancellationToken))
         {
             throw new InvalidOperationException($"Tên đăng nhập '{dto.TenDangNhap}' đã tồn tại.");
@@ -27,6 +32,7 @@ public sealed class TaiKhoanBUS(AppDbContext dbContext) : ITaiKhoanBUS
         var khachHang = new KhachHang
         {
             HoTen = dto.HoTen.Trim(),
+<<<<<<< Updated upstream
             Email = dto.Email.Trim(),
             SoDienThoai = dto.SoDienThoai.Trim(),
             NgayTao = DateTimeOffset.UtcNow
@@ -41,15 +47,35 @@ public sealed class TaiKhoanBUS(AppDbContext dbContext) : ITaiKhoanBUS
             MatKhauHash = PasswordSecurity.HashPassword(dto.MatKhau),
             HoTen = dto.HoTen.Trim(),
             Email = dto.Email.Trim(),
+=======
+            Email = normalizedEmail,
+            SoDienThoai = dto.SoDienThoai.Trim(),
+            NgayTao = DateTimeOffset.UtcNow
+        };
+        var taiKhoan = new TaiKhoan
+        {
+            TenDangNhap = normalizedUsername,
+            MatKhauHash = PasswordSecurity.HashPassword(dto.MatKhau),
+            HoTen = dto.HoTen.Trim(),
+            Email = normalizedEmail,
+>>>>>>> Stashed changes
             SoDienThoai = dto.SoDienThoai.Trim(),
             VaiTro = VaiTroTaiKhoan.KhachHang,
             TrangThai = TrangThaiTaiKhoan.HoatDong,
             NgayTao = DateTimeOffset.UtcNow,
+<<<<<<< Updated upstream
             KhachHangId = khachHang.Id
+=======
+            KhachHang = khachHang
+>>>>>>> Stashed changes
         };
 
         await dbContext.TaiKhoans.AddAsync(taiKhoan, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+<<<<<<< Updated upstream
+=======
+        await transaction.CommitAsync(cancellationToken);
+>>>>>>> Stashed changes
 
         return MapToDTO(taiKhoan);
     }
@@ -139,17 +165,30 @@ public sealed class TaiKhoanBUS(AppDbContext dbContext) : ITaiKhoanBUS
             throw new InvalidOperationException($"Email '{dto.Email}' đã được đăng ký.");
         }
 
+<<<<<<< Updated upstream
         if (!Enum.TryParse<VaiTroTaiKhoan>(dto.VaiTro, true, out var vaiTro))
         {
             vaiTro = VaiTroTaiKhoan.NhanVien;
+=======
+        if (!Enum.TryParse<VaiTroTaiKhoan>(dto.VaiTro, true, out var vaiTro) || !Enum.IsDefined(vaiTro))
+        {
+            throw new InvalidOperationException("Vai trò tài khoản không hợp lệ.");
+>>>>>>> Stashed changes
         }
 
         var taiKhoan = new TaiKhoan
         {
+<<<<<<< Updated upstream
             TenDangNhap = dto.TenDangNhap.Trim(),
             MatKhauHash = PasswordSecurity.HashPassword(dto.MatKhau),
             HoTen = dto.HoTen.Trim(),
             Email = dto.Email.Trim(),
+=======
+            TenDangNhap = normalizedUsername,
+            MatKhauHash = PasswordSecurity.HashPassword(dto.MatKhau),
+            HoTen = dto.HoTen.Trim(),
+            Email = normalizedEmail,
+>>>>>>> Stashed changes
             SoDienThoai = dto.SoDienThoai.Trim(),
             VaiTro = vaiTro,
             TrangThai = TrangThaiTaiKhoan.HoatDong,
@@ -180,7 +219,11 @@ public sealed class TaiKhoanBUS(AppDbContext dbContext) : ITaiKhoanBUS
         }
 
         taiKhoan.HoTen = dto.HoTen.Trim();
+<<<<<<< Updated upstream
         taiKhoan.Email = dto.Email.Trim();
+=======
+        taiKhoan.Email = normalizedEmail;
+>>>>>>> Stashed changes
         taiKhoan.SoDienThoai = dto.SoDienThoai.Trim();
 
         if (taiKhoan.KhachHang != null)
@@ -227,12 +270,33 @@ public sealed class TaiKhoanBUS(AppDbContext dbContext) : ITaiKhoanBUS
 
     public async Task<bool> CapNhatTrangThaiAsync(int taiKhoanId, TrangThaiTaiKhoan trangThai, CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
+=======
+        if (!Enum.IsDefined(trangThai))
+        {
+            throw new InvalidOperationException("Trạng thái tài khoản không hợp lệ.");
+        }
+
+>>>>>>> Stashed changes
         var taiKhoan = await dbContext.TaiKhoans.FindAsync([taiKhoanId], cancellationToken);
         if (taiKhoan == null)
         {
             return false;
         }
 
+<<<<<<< Updated upstream
+=======
+        if (taiKhoan.VaiTro == VaiTroTaiKhoan.Admin
+            && taiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong
+            && trangThai == TrangThaiTaiKhoan.BiKhoa
+            && await dbContext.TaiKhoans.CountAsync(
+                x => x.VaiTro == VaiTroTaiKhoan.Admin && x.TrangThai == TrangThaiTaiKhoan.HoatDong,
+                cancellationToken) <= 1)
+        {
+            throw new InvalidOperationException("Không thể khóa quản trị viên đang hoạt động cuối cùng.");
+        }
+
+>>>>>>> Stashed changes
         taiKhoan.TrangThai = trangThai;
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
@@ -240,12 +304,33 @@ public sealed class TaiKhoanBUS(AppDbContext dbContext) : ITaiKhoanBUS
 
     public async Task<bool> CapNhatVaiTroAsync(int taiKhoanId, VaiTroTaiKhoan vaiTro, CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
+=======
+        if (!Enum.IsDefined(vaiTro))
+        {
+            throw new InvalidOperationException("Vai trò tài khoản không hợp lệ.");
+        }
+
+>>>>>>> Stashed changes
         var taiKhoan = await dbContext.TaiKhoans.FindAsync([taiKhoanId], cancellationToken);
         if (taiKhoan == null)
         {
             return false;
         }
 
+<<<<<<< Updated upstream
+=======
+        if (taiKhoan.VaiTro == VaiTroTaiKhoan.Admin
+            && taiKhoan.TrangThai == TrangThaiTaiKhoan.HoatDong
+            && vaiTro != VaiTroTaiKhoan.Admin
+            && await dbContext.TaiKhoans.CountAsync(
+                x => x.VaiTro == VaiTroTaiKhoan.Admin && x.TrangThai == TrangThaiTaiKhoan.HoatDong,
+                cancellationToken) <= 1)
+        {
+            throw new InvalidOperationException("Không thể hạ quyền quản trị viên đang hoạt động cuối cùng.");
+        }
+
+>>>>>>> Stashed changes
         taiKhoan.VaiTro = vaiTro;
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;

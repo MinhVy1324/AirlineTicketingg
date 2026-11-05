@@ -6,7 +6,11 @@ public static class PasswordSecurity
 {
     private const int SaltSize = 16;
     private const int KeySize = 32;
+<<<<<<< Updated upstream
     private const int Iterations = 100_000;
+=======
+    private const int Iterations = 210_000;
+>>>>>>> Stashed changes
     private static readonly HashAlgorithmName HashAlgorithm = HashAlgorithmName.SHA256;
 
     public static string HashPassword(string password)
@@ -35,11 +39,16 @@ public static class PasswordSecurity
             return false;
         }
 
+<<<<<<< Updated upstream
         if (!int.TryParse(parts[0], out int iterations))
+=======
+        if (!int.TryParse(parts[0], out int iterations) || iterations is < 50_000 or > 1_000_000)
+>>>>>>> Stashed changes
         {
             return false;
         }
 
+<<<<<<< Updated upstream
         byte[] salt = Convert.FromBase64String(parts[1]);
         byte[] expectedKey = Convert.FromBase64String(parts[2]);
 
@@ -51,5 +60,29 @@ public static class PasswordSecurity
             expectedKey.Length);
 
         return CryptographicOperations.FixedTimeEquals(actualKey, expectedKey);
+=======
+        try
+        {
+            byte[] salt = Convert.FromBase64String(parts[1]);
+            byte[] expectedKey = Convert.FromBase64String(parts[2]);
+            if (salt.Length != SaltSize || expectedKey.Length != KeySize)
+            {
+                return false;
+            }
+
+            byte[] actualKey = Rfc2898DeriveBytes.Pbkdf2(
+                password,
+                salt,
+                iterations,
+                HashAlgorithm,
+                expectedKey.Length);
+
+            return CryptographicOperations.FixedTimeEquals(actualKey, expectedKey);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+>>>>>>> Stashed changes
     }
 }

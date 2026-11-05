@@ -42,6 +42,19 @@ public class BaoCaoController(
             }
         }
 
+<<<<<<< Updated upstream
+=======
+        if (tuNgay.Value > denNgay.Value)
+        {
+            return BadRequest("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+        }
+
+        if (denNgay!.Value.DayNumber - tuNgay!.Value.DayNumber > 366)
+        {
+            return BadRequest("Khoảng báo cáo tối đa là 367 ngày.");
+        }
+
+>>>>>>> Stashed changes
         var overview = await thongKeBUS.GetDoanhThuTongQuanAsync(tuNgay, denNgay, "VND", cancellationToken);
         var dailyRevenue = await thongKeBUS.GetDoanhThuTheoNgayAsync(tuNgay.Value, denNgay.Value, "VND", cancellationToken);
         var flightRevenue = await thongKeBUS.GetDoanhThuTheoChuyenBayAsync(tuNgay, denNgay, cancellationToken);

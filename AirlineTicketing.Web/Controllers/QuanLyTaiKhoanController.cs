@@ -85,7 +85,11 @@ public class QuanLyTaiKhoanController(ITaiKhoanBUS taiKhoanBUS) : Controller
             return RedirectToAction(nameof(Index));
         }
 
+<<<<<<< Updated upstream
         if (Enum.TryParse<VaiTroTaiKhoan>(vaiTro, true, out var roleEnum))
+=======
+        if (Enum.TryParse<VaiTroTaiKhoan>(vaiTro, true, out var roleEnum) && Enum.IsDefined(roleEnum))
+>>>>>>> Stashed changes
         {
             await taiKhoanBUS.CapNhatVaiTroAsync(id, roleEnum, cancellationToken);
             TempData["SuccessMessage"] = $"Đã cập nhật vai trò người dùng thành: {vaiTro}.";
@@ -102,6 +106,7 @@ public class QuanLyTaiKhoanController(ITaiKhoanBUS taiKhoanBUS) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResetPassword(int id, string matKhauMoi, CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
         if (string.IsNullOrWhiteSpace(matKhauMoi) || matKhauMoi.Length < 6)
         {
             TempData["ErrorMessage"] = "Mật khẩu mới phải có tối thiểu 6 ký tự.";
@@ -109,6 +114,19 @@ public class QuanLyTaiKhoanController(ITaiKhoanBUS taiKhoanBUS) : Controller
         }
 
         await taiKhoanBUS.DatLaiMatKhauAsync(id, matKhauMoi, cancellationToken);
+=======
+        if (string.IsNullOrWhiteSpace(matKhauMoi) || matKhauMoi.Length is < 12 or > 100)
+        {
+            TempData["ErrorMessage"] = "Mật khẩu mới phải có tối thiểu 12 ký tự.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var updated = await taiKhoanBUS.DatLaiMatKhauAsync(id, matKhauMoi, cancellationToken);
+        if (!updated)
+        {
+            return NotFound();
+        }
+>>>>>>> Stashed changes
         TempData["SuccessMessage"] = "Đã đặt lại mật khẩu cho tài khoản thành công!";
 
         return RedirectToAction(nameof(Index));

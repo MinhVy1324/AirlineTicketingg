@@ -10,7 +10,11 @@ public sealed record DangKyDTO
     public string TenDangNhap { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Mật khẩu không được để trống")]
+<<<<<<< Updated upstream
     [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
+=======
+    [StringLength(100, MinimumLength = 12, ErrorMessage = "Mật khẩu phải có ít nhất 12 ký tự")]
+>>>>>>> Stashed changes
     public string MatKhau { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng xác nhận lại mật khẩu")]
@@ -66,7 +70,11 @@ public sealed record TaoNhanVienDTO
     public string TenDangNhap { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Mật khẩu khởi tạo không được để trống")]
+<<<<<<< Updated upstream
     [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu tối thiểu 6 ký tự")]
+=======
+    [StringLength(100, MinimumLength = 12, ErrorMessage = "Mật khẩu tối thiểu 12 ký tự")]
+>>>>>>> Stashed changes
     public string MatKhau { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Họ và tên không được để trống")]
@@ -106,7 +114,11 @@ public sealed record DoiMatKhauDTO
     public string MatKhauHienTai { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới")]
+<<<<<<< Updated upstream
     [StringLength(100, MinimumLength = 6, ErrorMessage = "Mật khẩu mới tối thiểu 6 ký tự")]
+=======
+    [StringLength(100, MinimumLength = 12, ErrorMessage = "Mật khẩu mới tối thiểu 12 ký tự")]
+>>>>>>> Stashed changes
     public string MatKhauMoi { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Vui lòng xác nhận mật khẩu mới")]

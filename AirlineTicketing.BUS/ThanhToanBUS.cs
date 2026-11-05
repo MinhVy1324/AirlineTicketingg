@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+using System.Data;
+>>>>>>> Stashed changes
 using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
@@ -33,7 +37,14 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
         string nhaCungCap = "NoiBo",
         CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
         var datVe = await dbContext.DatVes.FindAsync([datVeId], cancellationToken)
+=======
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var datVe = await dbContext.DatVes
+            .FromSqlInterpolated($"SELECT * FROM \"DatVes\" WHERE \"Id\" = {datVeId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken)
+>>>>>>> Stashed changes
             ?? throw new InvalidOperationException($"Không tìm thấy lượt đặt vé #{datVeId}.");
 
         if (datVe.TrangThai == TrangThaiDatVe.DaHuy || datVe.TrangThai == TrangThaiDatVe.HetHan)
@@ -46,7 +57,38 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
             throw new InvalidOperationException($"Đặt vé #{datVe.MaDatVe} đã được thanh toán thành công.");
         }
 
+<<<<<<< Updated upstream
         string prefix = string.IsNullOrWhiteSpace(nhaCungCap) ? "PAY" : nhaCungCap.ToUpperInvariant();
+=======
+        if (datVe.TongTien <= 0 || datVe.DonViTienTe.Length != 3
+            || datVe.DonViTienTe.Any(character => character is < 'A' or > 'Z'))
+        {
+            throw new InvalidOperationException("Đặt vé chưa có tổng tiền hoặc đơn vị tiền tệ hợp lệ.");
+        }
+
+        if (!Enum.IsDefined(phuongThuc))
+        {
+            throw new InvalidOperationException("Phương thức thanh toán không hợp lệ.");
+        }
+
+        var pendingPayment = await dbContext.ThanhToans
+            .Include(x => x.DatVe)
+            .FirstOrDefaultAsync(x => x.DatVeId == datVe.Id && x.TrangThai == TrangThaiThanhToan.ChoXuLy, cancellationToken);
+        if (pendingPayment is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return MapToDTO(pendingPayment);
+        }
+
+        var provider = nhaCungCap?.Trim().ToUpperInvariant() switch
+        {
+            "VNPAY" => "VNPAY",
+            "MOMO" => "MoMo",
+            "ZALOPAY" => "ZaloPay",
+            _ => "NoiBo"
+        };
+        string prefix = provider.ToUpperInvariant();
+>>>>>>> Stashed changes
         string maGiaoDich = $"{prefix}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..6].ToUpperInvariant()}";
 
         var thanhToan = new ThanhToan
@@ -55,7 +97,11 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
             SoTien = datVe.TongTien,
             DonViTienTe = datVe.DonViTienTe,
             PhuongThuc = phuongThuc,
+<<<<<<< Updated upstream
             NhaCungCap = string.IsNullOrWhiteSpace(nhaCungCap) ? "NoiBo" : nhaCungCap,
+=======
+            NhaCungCap = provider,
+>>>>>>> Stashed changes
             TrangThai = TrangThaiThanhToan.ChoXuLy,
             MaGiaoDich = maGiaoDich,
             NgayTao = DateTimeOffset.UtcNow
@@ -63,6 +109,10 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
 
         await dbContext.ThanhToans.AddAsync(thanhToan, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+<<<<<<< Updated upstream
+=======
+        await transaction.CommitAsync(cancellationToken);
+>>>>>>> Stashed changes
 
         thanhToan.DatVe = datVe;
         return MapToDTO(thanhToan);
@@ -74,15 +124,29 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
         string? maGiaoDichNgoai = null,
         CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
         var thanhToan = await dbContext.ThanhToans
             .Include(x => x.DatVe)
                 .ThenInclude(d => d.Ves)
             .FirstOrDefaultAsync(x => x.Id == thanhToanId, cancellationToken)
             ?? throw new InvalidOperationException($"Không tìm thấy giao dịch thanh toán #{thanhToanId}.");
+=======
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var thanhToan = await dbContext.ThanhToans
+            .FromSqlInterpolated($"SELECT * FROM \"ThanhToans\" WHERE \"Id\" = {thanhToanId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Không tìm thấy giao dịch thanh toán #{thanhToanId}.");
+        await dbContext.Entry(thanhToan).Reference(x => x.DatVe).LoadAsync(cancellationToken);
+        await dbContext.Entry(thanhToan.DatVe).Collection(x => x.Ves).LoadAsync(cancellationToken);
+>>>>>>> Stashed changes
 
         // Idempotency check: Giao dịch đã thành công trước đó thì trả về thành công ngay, tránh lặp
         if (thanhToan.TrangThai == TrangThaiThanhToan.ThanhCong)
         {
+<<<<<<< Updated upstream
+=======
+            await transaction.CommitAsync(cancellationToken);
+>>>>>>> Stashed changes
             return new KetQuaThanhToanDTO
             {
                 IsSuccess = true,
@@ -97,8 +161,40 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
             };
         }
 
+<<<<<<< Updated upstream
         if (thanhCong)
         {
+=======
+        if (thanhToan.TrangThai != TrangThaiThanhToan.ChoXuLy)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return new KetQuaThanhToanDTO
+            {
+                IsSuccess = false,
+                Message = "Giao dịch đã kết thúc. Hãy tạo lần thanh toán mới nếu cần thử lại.",
+                ThanhToanId = thanhToan.Id,
+                MaGiaoDich = thanhToan.MaGiaoDich,
+                MaDatVe = thanhToan.DatVe.MaDatVe,
+                TrangThai = thanhToan.TrangThai.ToString(),
+                SoTien = thanhToan.SoTien,
+                DonViTienTe = thanhToan.DonViTienTe,
+                NgayHoanTat = thanhToan.NgayHoanTat
+            };
+        }
+
+        if (thanhCong)
+        {
+            if (thanhToan.DatVe.TrangThai is TrangThaiDatVe.DaHuy or TrangThaiDatVe.HetHan
+                || thanhToan.DatVe.Ves.Count == 0)
+            {
+                throw new InvalidOperationException("Đặt vé đã đóng hoặc chưa có vé giữ chỗ để phát hành.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(maGiaoDichNgoai) && maGiaoDichNgoai.Trim().Length > 100)
+            {
+                throw new InvalidOperationException("Mã giao dịch từ cổng thanh toán quá dài.");
+            }
+>>>>>>> Stashed changes
             thanhToan.TrangThai = TrangThaiThanhToan.ThanhCong;
             thanhToan.NgayHoanTat = DateTimeOffset.UtcNow;
             if (!string.IsNullOrWhiteSpace(maGiaoDichNgoai))
@@ -120,6 +216,10 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
+<<<<<<< Updated upstream
+=======
+            await transaction.CommitAsync(cancellationToken);
+>>>>>>> Stashed changes
 
             return new KetQuaThanhToanDTO
             {
@@ -139,6 +239,10 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
             thanhToan.TrangThai = TrangThaiThanhToan.ThatBai;
             thanhToan.NgayHoanTat = DateTimeOffset.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
+<<<<<<< Updated upstream
+=======
+            await transaction.CommitAsync(cancellationToken);
+>>>>>>> Stashed changes
 
             return new KetQuaThanhToanDTO
             {
@@ -160,12 +264,28 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
         string? nguoiThucHien = null,
         CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
         var thanhToan = await dbContext.ThanhToans
             .Include(x => x.DatVe)
                 .ThenInclude(d => d.Ves)
             .Include(x => x.HoanTiens)
             .FirstOrDefaultAsync(x => x.Id == dto.ThanhToanId, cancellationToken)
             ?? throw new InvalidOperationException($"Không tìm thấy giao dịch thanh toán #{dto.ThanhToanId}.");
+=======
+        if (dto.SoTien <= 0)
+        {
+            throw new InvalidOperationException("Số tiền hoàn phải lớn hơn 0.");
+        }
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        var thanhToan = await dbContext.ThanhToans
+            .FromSqlInterpolated($"SELECT * FROM \"ThanhToans\" WHERE \"Id\" = {dto.ThanhToanId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new InvalidOperationException($"Không tìm thấy giao dịch thanh toán #{dto.ThanhToanId}.");
+        await dbContext.Entry(thanhToan).Reference(x => x.DatVe).LoadAsync(cancellationToken);
+        await dbContext.Entry(thanhToan).Collection(x => x.HoanTiens).LoadAsync(cancellationToken);
+        await dbContext.Entry(thanhToan.DatVe).Collection(x => x.Ves).LoadAsync(cancellationToken);
+>>>>>>> Stashed changes
 
         if (thanhToan.TrangThai != TrangThaiThanhToan.ThanhCong)
         {
@@ -214,6 +334,10 @@ public sealed class ThanhToanBUS(AppDbContext dbContext) : IThanhToanBUS
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+<<<<<<< Updated upstream
+=======
+        await transaction.CommitAsync(cancellationToken);
+>>>>>>> Stashed changes
 
         return new HoanTienDTO
         {

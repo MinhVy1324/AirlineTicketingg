@@ -33,18 +33,63 @@
                         <span asp-validation-for="MatKhau" class="text-danger small"></span>
                     </div>
 
+<<<<<<< Updated upstream
                     <div class="mb-3 form-check">
                         <input asp-for="GhiNho" class="form-check-input" />
                         <label asp-for="GhiNho" class="form-check-label">Ghi nhớ đăng nhập trên thiết bị này</label>
                     </div>
+=======
+        <form class="auth__form" method="post" asp-controller="Account" asp-action="Login">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
+>>>>>>> Stashed changes
 
                     <div class="d-grid mb-3">
                         <button type="submit" class="btn btn-primary btn-lg fw-semibold">Đăng Nhập</button>
                     </div>
                 </form>
 
+<<<<<<< Updated upstream
                 <div class="text-center mt-3 border-top pt-3">
                     <p class="mb-0 text-muted">Chưa có tài khoản khách hàng? <a asp-action="Register" class="text-decoration-none fw-semibold">Đăng ký ngay</a></p>
+=======
+            <div asp-validation-summary="ModelOnly" class="auth__error" role="alert"></div>
+
+            <label class="av-field">
+                <span class="av-label">Tên đăng nhập hoặc email</span>
+                <span class="av-control">
+                    <input asp-for="TenDangNhap" autocomplete="username" required />
+                    @Html.Icon("mail", 17)
+                </span>
+            </label>
+
+            <label class="av-field">
+                <span class="av-label">Mật khẩu</span>
+                <span class="av-control">
+                    <input asp-for="MatKhau" type="password" autocomplete="current-password" required />
+                    @Html.Icon("eye-off", 17)
+                </span>
+            </label>
+
+            <div class="auth__row">
+                <label class="av-check">
+                    <input asp-for="GhiNho" />
+                    <span>Ghi nhớ đăng nhập</span>
+                </label>
+                <a class="av-link" href="/dang-nhap">Quên mật khẩu?</a>
+            </div>
+
+            <button type="submit" class="av-btn av-btn--primary av-btn--lg av-btn--block">Đăng nhập</button>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Truy cập đúng khu vực của bạn</span>
+                    <span>
+                        Sau khi đăng nhập, hệ thống chuyển đến khu vực Khách hàng, Manager hoặc Admin theo quyền
+                        đã được cấp. Không tự chọn vai trò.
+                    </span>
+>>>>>>> Stashed changes
                 </div>
             </div>
         </div>

@@ -1,0 +1,48 @@
+@model IReadOnlyList<DatVe>
+@{
+    ViewData["Title"] = "Đặt vé chờ thanh toán";
+}
+
+<header class="feature-heading">
+    <div>
+        <h1>Đặt vé chờ thanh toán</h1>
+        <p>Chọn đơn đặt vé đang chờ để tiếp tục thanh toán. Số tiền được lấy từ dữ liệu máy chủ.</p>
+    </div>
+</header>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">Hiện không có đơn đặt vé nào đang chờ thanh toán.</div>
+}
+else
+{
+    <div class="feature-table">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã đặt vé</th>
+                        <th>Khách hàng</th>
+                        <th>Ngày đặt</th>
+                        <th class="text-end">Tổng tiền</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@booking.MaDatVe</td>
+                            <td>@booking.KhachHang?.HoTen</td>
+                            <td>@booking.NgayDat.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">@booking.TongTien.ToString("N0") @booking.DonViTienTe</td>
+                            <td class="text-end">
+                                <a class="btn btn-primary btn-sm" asp-action="Index" asp-route-datVeId="@booking.Id">Thanh toán</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

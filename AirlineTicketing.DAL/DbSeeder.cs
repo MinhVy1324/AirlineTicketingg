@@ -6,6 +6,7 @@ namespace AirlineTicketing.DAL;
 
 public static class DbSeeder
 {
+<<<<<<< Updated upstream
     public static async Task SeedAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
         // 1. Seed Accounts if none exist
@@ -92,13 +93,116 @@ public static class DbSeeder
             await context.SaveChangesAsync(cancellationToken);
 
             var now = DateTimeOffset.UtcNow;
+=======
+    public static async Task SeedAsync(
+        AppDbContext context,
+        string? adminPassword,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await context.TaiKhoans.AnyAsync(x => x.VaiTro == VaiTroTaiKhoan.Admin, cancellationToken))
+        {
+            if (string.IsNullOrWhiteSpace(adminPassword)
+                || adminPassword.Length < 14
+                || adminPassword.StartsWith("replace-with-", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Đặt Seed:AdminPassword riêng (ít nhất 14 ký tự) trước khi bật Database:SeedSampleData.");
+            }
+
+            await context.TaiKhoans.AddAsync(new TaiKhoan
+            {
+                TenDangNhap = "admin",
+                MatKhauHash = PasswordSecurity.HashPassword(adminPassword),
+                HoTen = "Quản Trị Viên Hệ Thống",
+                Email = "admin@airline.vn",
+                SoDienThoai = "",
+                VaiTro = VaiTroTaiKhoan.Admin,
+                TrangThai = TrangThaiTaiKhoan.HoatDong,
+                NgayTao = DateTimeOffset.UtcNow
+            }, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        if (!await context.KhachHangs.AnyAsync(cancellationToken))
+        {
+            await context.KhachHangs.AddAsync(new KhachHang
+            {
+                HoTen = "Khách hàng mẫu",
+                Email = "demo.customer@airline.vn",
+                SoDienThoai = "0900000000",
+                NgayTao = DateTimeOffset.UtcNow
+            }, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        // 2. Seed master data by natural key so interrupted seeding can safely resume.
+        async Task<SanBay> EnsureAirport(string code, string name, string city)
+        {
+            var airport = await context.SanBays.FirstOrDefaultAsync(x => x.MaSanBay == code, cancellationToken);
+            if (airport is not null) return airport;
+
+            airport = new SanBay { MaSanBay = code, TenSanBay = name, ThanhPho = city, QuocGia = "Việt Nam", DangHoatDong = true };
+            context.SanBays.Add(airport);
+            await context.SaveChangesAsync(cancellationToken);
+            return airport;
+        }
+
+        async Task<MayBay> EnsureAircraft(string code, string name, string manufacturer, int seats)
+        {
+            var aircraft = await context.MayBays.FirstOrDefaultAsync(x => x.MaMayBay == code, cancellationToken);
+            if (aircraft is not null) return aircraft;
+
+            aircraft = new MayBay { MaMayBay = code, TenMayBay = name, HangSanXuat = manufacturer, SoGhe = seats, DangHoatDong = true };
+            context.MayBays.Add(aircraft);
+            await context.SaveChangesAsync(cancellationToken);
+            return aircraft;
+        }
+
+        async Task<TuyenBay> EnsureRoute(SanBay origin, SanBay destination, int duration)
+        {
+            var route = await context.TuyenBays.FirstOrDefaultAsync(
+                x => x.SanBayDiId == origin.Id && x.SanBayDenId == destination.Id, cancellationToken);
+            if (route is not null) return route;
+
+            route = new TuyenBay { SanBayDiId = origin.Id, SanBayDenId = destination.Id, ThoiLuongDuKienPhut = duration, DangKhaiThac = true };
+            context.TuyenBays.Add(route);
+            await context.SaveChangesAsync(cancellationToken);
+            return route;
+        }
+
+        var sgn = await EnsureAirport("SGN", "Sân bay Quốc tế Tân Sơn Nhất", "TP. Hồ Chí Minh");
+        var han = await EnsureAirport("HAN", "Sân bay Quốc tế Nội Bài", "Hà Nội");
+        var dad = await EnsureAirport("DAD", "Sân bay Quốc tế Đà Nẵng", "Đà Nẵng");
+        await EnsureAirport("CXR", "Sân bay Quốc tế Cam Ranh", "Nha Trang");
+        await EnsureAirport("PQC", "Sân bay Quốc tế Phú Quốc", "Phú Quốc");
+
+        var a321 = await EnsureAircraft("VN-A321", "Airbus A321-200", "Airbus", 180);
+        var a350 = await EnsureAircraft("VN-A350", "Airbus A350-900", "Airbus", 305);
+        var b787 = await EnsureAircraft("VN-A787", "Boeing 787-9 Dreamliner", "Boeing", 274);
+
+        var route1 = await EnsureRoute(sgn, han, 130);
+        var route2 = await EnsureRoute(han, sgn, 130);
+        var route3 = await EnsureRoute(sgn, dad, 80);
+
+        if (!await context.ChuyenBays.AnyAsync(cancellationToken))
+        {
+            var now = DateTimeOffset.UtcNow;
+            var day1 = now.UtcDateTime.Date.AddDays(1);
+            var day2 = now.UtcDateTime.Date.AddDays(2);
+            var day3 = now.UtcDateTime.Date.AddDays(3);
+>>>>>>> Stashed changes
             var flight1 = new ChuyenBay
             {
                 SoHieu = "VN-120",
                 TuyenBayId = route1.Id,
                 MayBayId = a321.Id,
+<<<<<<< Updated upstream
                 GioKhoiHanh = now.AddDays(1).Date.AddHours(8),
                 GioHaCanh = now.AddDays(1).Date.AddHours(10).AddMinutes(10),
+=======
+                GioKhoiHanh = new DateTimeOffset(day1.AddHours(8), TimeSpan.Zero),
+                GioHaCanh = new DateTimeOffset(day1.AddHours(10).AddMinutes(10), TimeSpan.Zero),
+>>>>>>> Stashed changes
                 GiaCoBan = 1500000m,
                 TrangThai = TrangThaiChuyenBay.DuKien
             };
@@ -108,8 +212,13 @@ public static class DbSeeder
                 SoHieu = "VN-122",
                 TuyenBayId = route1.Id,
                 MayBayId = a350.Id,
+<<<<<<< Updated upstream
                 GioKhoiHanh = now.AddDays(1).Date.AddHours(14),
                 GioHaCanh = now.AddDays(1).Date.AddHours(16).AddMinutes(10),
+=======
+                GioKhoiHanh = new DateTimeOffset(day1.AddHours(14), TimeSpan.Zero),
+                GioHaCanh = new DateTimeOffset(day1.AddHours(16).AddMinutes(10), TimeSpan.Zero),
+>>>>>>> Stashed changes
                 GiaCoBan = 1800000m,
                 TrangThai = TrangThaiChuyenBay.DuKien
             };
@@ -119,8 +228,13 @@ public static class DbSeeder
                 SoHieu = "VN-215",
                 TuyenBayId = route2.Id,
                 MayBayId = b787.Id,
+<<<<<<< Updated upstream
                 GioKhoiHanh = now.AddDays(2).Date.AddHours(9),
                 GioHaCanh = now.AddDays(2).Date.AddHours(11).AddMinutes(10),
+=======
+                GioKhoiHanh = new DateTimeOffset(day2.AddHours(9), TimeSpan.Zero),
+                GioHaCanh = new DateTimeOffset(day2.AddHours(11).AddMinutes(10), TimeSpan.Zero),
+>>>>>>> Stashed changes
                 GiaCoBan = 1600000m,
                 TrangThai = TrangThaiChuyenBay.DuKien
             };
@@ -130,8 +244,13 @@ public static class DbSeeder
                 SoHieu = "VN-301",
                 TuyenBayId = route3.Id,
                 MayBayId = a321.Id,
+<<<<<<< Updated upstream
                 GioKhoiHanh = now.AddDays(3).Date.AddHours(7),
                 GioHaCanh = now.AddDays(3).Date.AddHours(8).AddMinutes(20),
+=======
+                GioKhoiHanh = new DateTimeOffset(day3.AddHours(7), TimeSpan.Zero),
+                GioHaCanh = new DateTimeOffset(day3.AddHours(8).AddMinutes(20), TimeSpan.Zero),
+>>>>>>> Stashed changes
                 GiaCoBan = 1200000m,
                 TrangThai = TrangThaiChuyenBay.DuKien
             };

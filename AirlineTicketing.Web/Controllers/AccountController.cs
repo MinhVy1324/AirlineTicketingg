@@ -11,6 +11,7 @@ namespace AirlineTicketing.Web.Controllers;
 
 public class AccountController(ITaiKhoanBUS taiKhoanBUS, ILogger<AccountController> logger) : Controller
 {
+<<<<<<< Updated upstream
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -27,6 +28,26 @@ public class AccountController(ITaiKhoanBUS taiKhoanBUS, ILogger<AccountControll
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(DangNhapDTO model, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
+=======
+    [HttpGet("/dang-nhap")]
+    [HttpGet("/Account/Login")]
+    public IActionResult Login(string? returnUrl = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToDefault();
+        }
+
+        ViewData["ReturnUrl"] = returnUrl;
+        return View(new DangNhapDTO { ReturnUrl = returnUrl });
+    }
+
+    [HttpPost("/dang-nhap")]
+    [HttpPost("/Account/Login")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(DangNhapDTO model, string? returnUrl = null, CancellationToken cancellationToken = default)
+    {
+>>>>>>> Stashed changes
         ViewData["ReturnUrl"] = returnUrl;
 
         if (!ModelState.IsValid)
@@ -83,7 +104,12 @@ public class AccountController(ITaiKhoanBUS taiKhoanBUS, ILogger<AccountControll
         }
     }
 
+<<<<<<< Updated upstream
     [HttpGet]
+=======
+    [HttpGet("/dang-ky")]
+    [HttpGet("/Account/Register")]
+>>>>>>> Stashed changes
     public IActionResult Register()
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -94,7 +120,12 @@ public class AccountController(ITaiKhoanBUS taiKhoanBUS, ILogger<AccountControll
         return View(new DangKyDTO());
     }
 
+<<<<<<< Updated upstream
     [HttpPost]
+=======
+    [HttpPost("/dang-ky")]
+    [HttpPost("/Account/Register")]
+>>>>>>> Stashed changes
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(DangKyDTO model, CancellationToken cancellationToken = default)
     {
@@ -136,8 +167,14 @@ public class AccountController(ITaiKhoanBUS taiKhoanBUS, ILogger<AccountControll
         }
     }
 
+<<<<<<< Updated upstream
     [HttpPost]
     [HttpGet]
+=======
+    [HttpPost("/dang-xuat")]
+    [HttpPost("/Account/Logout")]
+    [ValidateAntiForgeryToken]
+>>>>>>> Stashed changes
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

@@ -31,6 +31,10 @@ Project chỉ dùng **một file `.env` local** làm nguồn cấu hình: Docker
 
 Thay `POSTGRES_PASSWORD` trong `.env` bằng mật khẩu ngẫu nhiên riêng cho máy/môi trường đó. Không commit `.env`; `.gitignore` đã bỏ qua file này và cho phép commit `.env.example`. Không sử dụng mật khẩu mẫu cho môi trường triển khai thật.
 
+Đặt `SEED_ADMIN_PASSWORD` thành mật khẩu riêng dài ít nhất 14 ký tự để tạo tài khoản quản trị mẫu trong môi trường Development. Seeder chỉ chạy khi `SEED_SAMPLE_DATA=true` và không chạy trong Production; không có mật khẩu quản trị mẫu cố định trong mã nguồn.
+
+Tên đăng nhập quản trị mẫu là `admin`; mật khẩu lấy từ `SEED_ADMIN_PASSWORD` trong file `.env` local. Đổi mật khẩu seed sau lần chạy đầu bằng chức năng quản trị tài khoản hoặc tắt seed sau khi đã có tài khoản.
+
 | Biến | Mục đích | Mặc định mẫu |
 |---|---|---|
 | `POSTGRES_DB` | Tên database được tạo trong PostgreSQL | `airline_ticketing` |

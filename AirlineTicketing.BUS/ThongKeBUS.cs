@@ -13,6 +13,14 @@ public sealed class ThongKeBUS(AppDbContext dbContext) : IThongKeBUS
         string donViTienTe = "VND",
         CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
+=======
+        if (tuNgay.HasValue && denNgay.HasValue && tuNgay.Value > denNgay.Value)
+        {
+            throw new ArgumentException("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
+        }
+
+>>>>>>> Stashed changes
         IQueryable<ThanhToan> queryThanhToan = dbContext.ThanhToans
             .Where(x => x.TrangThai == TrangThaiThanhToan.ThanhCong && x.DonViTienTe == donViTienTe);
 
@@ -59,6 +67,19 @@ public sealed class ThongKeBUS(AppDbContext dbContext) : IThongKeBUS
         string donViTienTe = "VND",
         CancellationToken cancellationToken = default)
     {
+<<<<<<< Updated upstream
+=======
+        if (denNgay < tuNgay)
+        {
+            throw new ArgumentException("Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
+        }
+
+        if (denNgay.DayNumber - tuNgay.DayNumber > 366)
+        {
+            throw new ArgumentException("Báo cáo theo ngày giới hạn trong 367 ngày mỗi lần tra cứu.");
+        }
+
+>>>>>>> Stashed changes
         var tuNgayOffset = new DateTimeOffset(tuNgay.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
         var denNgayOffset = new DateTimeOffset(denNgay.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero);
 
@@ -159,13 +180,21 @@ public sealed class ThongKeBUS(AppDbContext dbContext) : IThongKeBUS
         CancellationToken cancellationToken = default)
     {
         var query = dbContext.Ves
+<<<<<<< Updated upstream
+=======
+            .AsNoTracking()
+>>>>>>> Stashed changes
             .Include(v => v.ChuyenBay)
                 .ThenInclude(cb => cb.TuyenBay)
                     .ThenInclude(tb => tb.SanBayDi)
             .Include(v => v.ChuyenBay)
                 .ThenInclude(cb => cb.TuyenBay)
                     .ThenInclude(tb => tb.SanBayDen)
+<<<<<<< Updated upstream
             .Where(v => v.TrangThai == TrangThaiVe.DaPhatHanh);
+=======
+            .Where(v => v.TrangThai == TrangThaiVe.DaPhatHanh || v.TrangThai == TrangThaiVe.DaHoanTien);
+>>>>>>> Stashed changes
 
         if (tuNgay.HasValue)
         {
@@ -180,6 +209,41 @@ public sealed class ThongKeBUS(AppDbContext dbContext) : IThongKeBUS
         }
 
         var tickets = await query.ToListAsync(cancellationToken);
+<<<<<<< Updated upstream
+=======
+        if (tickets.Count == 0)
+        {
+            return Array.Empty<DoanhThuTheoChuyenBayDTO>();
+        }
+
+        var bookingIds = tickets.Select(x => x.DatVeId).Distinct().ToArray();
+        var allTickets = await dbContext.Ves.AsNoTracking()
+            .Where(x => bookingIds.Contains(x.DatVeId))
+            .Select(x => new { x.DatVeId, x.ChuyenBayId, x.GiaVe })
+            .ToListAsync(cancellationToken);
+        var fareByBooking = allTickets
+            .GroupBy(x => x.DatVeId)
+            .ToDictionary(group => group.Key, group => group.Sum(x => x.GiaVe));
+
+        var paidByBooking = await dbContext.ThanhToans.AsNoTracking()
+            .Where(x => bookingIds.Contains(x.DatVeId)
+                && x.TrangThai == TrangThaiThanhToan.ThanhCong
+                && x.DonViTienTe == "VND")
+            .GroupBy(x => x.DatVeId)
+            .Select(group => new { DatVeId = group.Key, Amount = group.Sum(x => x.SoTien) })
+            .ToDictionaryAsync(x => x.DatVeId, x => x.Amount, cancellationToken);
+
+        var refundedByBooking = await (
+            from refund in dbContext.HoanTiens.AsNoTracking()
+            join payment in dbContext.ThanhToans.AsNoTracking() on refund.ThanhToanId equals payment.Id
+            where bookingIds.Contains(payment.DatVeId)
+                && refund.TrangThai == TrangThaiHoanTien.ThanhCong
+                && payment.DonViTienTe == "VND"
+                && refund.DonViTienTe == "VND"
+            group refund by payment.DatVeId into refundsForBooking
+            select new { DatVeId = refundsForBooking.Key, Amount = refundsForBooking.Sum(x => x.SoTien) })
+            .ToDictionaryAsync(x => x.DatVeId, x => x.Amount, cancellationToken);
+>>>>>>> Stashed changes
 
         var result = tickets
             .GroupBy(v => v.ChuyenBayId)
@@ -196,8 +260,26 @@ public sealed class ThongKeBUS(AppDbContext dbContext) : IThongKeBUS
                     SoHieu = flight.SoHieu,
                     TuyenBay = tuyenBayText,
                     GioKhoiHanh = flight.GioKhoiHanh,
+<<<<<<< Updated upstream
                     SoVeDaBan = g.Count(),
                     DoanhThu = g.Sum(x => x.GiaVe)
+=======
+                    SoVeDaBan = g.Count(x => x.TrangThai == TrangThaiVe.DaPhatHanh),
+                    DoanhThu = g.GroupBy(x => x.DatVeId).Sum(bookingTickets =>
+                    {
+                        var bookingId = bookingTickets.Key;
+                        var grossFare = fareByBooking.GetValueOrDefault(bookingId);
+                        if (grossFare <= 0)
+                        {
+                            return 0m;
+                        }
+
+                        var paid = paidByBooking.GetValueOrDefault(bookingId);
+                        var refunded = refundedByBooking.GetValueOrDefault(bookingId);
+                        var netPaid = Math.Max(0m, paid - refunded);
+                        return netPaid * bookingTickets.Sum(x => x.GiaVe) / grossFare;
+                    })
+>>>>>>> Stashed changes
                 };
             })
             .OrderByDescending(x => x.DoanhThu)
