@@ -9,8 +9,8 @@ public static class AdminNav
     public static readonly IReadOnlyList<AdminNavItem> Items = new[]
     {
         new AdminNavItem("overview", "Tổng quan hệ thống", "chart", "/admin"),
-        new AdminNavItem("accounts", "Tài khoản", "users", "/admin/tai-khoan"),
-        new AdminNavItem("roles", "Vai trò & phân quyền", "shield-check", "/admin/vai-tro"),
+        new AdminNavItem("accounts", "Tài khoản", "users", "/QuanLyTaiKhoan"),
+        new AdminNavItem("roles", "Vai trò & phân quyền", "shield-check", "/QuanLyTaiKhoan"),
         new AdminNavItem("catalog", "Danh mục hệ thống", "building", "/admin/danh-muc"),
         new AdminNavItem("settings", "Cấu hình nghiệp vụ", "sliders", "/admin/cau-hinh"),
         new AdminNavItem("audit", "Nhật ký hoạt động", "clock", "/admin/nhat-ky")

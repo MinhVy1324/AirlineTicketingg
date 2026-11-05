@@ -1,12 +1,14 @@
 using AirlineTicketing.Web.Demo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[Authorize(Roles = "Admin,NhanVien")]
 public class ManagerController : Controller
 {
     [HttpGet("/quan-ly")]
-    public IActionResult Index() => View(DemoCatalog.ManagerOverview());
+    public IActionResult Index() => RedirectToAction("Index", "Dashboard");
 
     [HttpGet("/quan-ly/lich-bay")]
     public IActionResult Schedules([FromQuery(Name = "hop-thoai")] string? hopThoai) =>
@@ -46,11 +48,11 @@ public class ManagerController : Controller
     public IActionResult RejectRefund(IFormCollection form) => RedirectToAction(nameof(ChangeRefunds));
 
     [HttpGet("/quan-ly/bao-cao")]
-    public IActionResult Reports() => View(DemoCatalog.ManagerReports());
+    public IActionResult Reports() => RedirectToAction("Index", "BaoCao");
 
     [HttpPost("/quan-ly/bao-cao")]
     [ValidateAntiForgeryToken]
-    public IActionResult Reports(IFormCollection form) => RedirectToAction(nameof(Reports));
+    public IActionResult Reports(IFormCollection form) => RedirectToAction("Index", "BaoCao");
 
     [HttpPost("/quan-ly/bao-cao/xuat")]
     [ValidateAntiForgeryToken]

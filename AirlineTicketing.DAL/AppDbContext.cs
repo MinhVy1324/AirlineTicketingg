@@ -10,6 +10,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<TuyenBay> TuyenBays => Set<TuyenBay>();
     public DbSet<ChuyenBay> ChuyenBays => Set<ChuyenBay>();
     public DbSet<KhachHang> KhachHangs => Set<KhachHang>();
+    public DbSet<TaiKhoan> TaiKhoans => Set<TaiKhoan>();
     public DbSet<HanhKhach> HanhKhachs => Set<HanhKhach>();
     public DbSet<DatVe> DatVes => Set<DatVe>();
     public DbSet<Ve> Ves => Set<Ve>();

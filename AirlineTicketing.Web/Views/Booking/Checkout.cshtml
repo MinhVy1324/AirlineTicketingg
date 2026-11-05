@@ -73,56 +73,13 @@
                     <p class="av-page-subtitle">Giao diện minh họa · Không thu thập thông tin thẻ thật.</p>
                 </div>
 
-                <div class="pay-methods">
-                    <label class="av-chip is-active">
-                        <input type="radio" name="payment" value="card" checked class="av-visually-hidden" />
-                        <span>◉ Thẻ ngân hàng</span>
-                    </label>
-                    <label class="av-chip">
-                        <input type="radio" name="payment" value="transfer" class="av-visually-hidden" />
-                        <span>○ Chuyển khoản / QR</span>
-                    </label>
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">Màn hình đặt vé này đang ở chế độ minh họa</span>
+                        <span>Không nhập hoặc gửi số thẻ, ngày hết hạn hay mã bảo mật. Luồng thanh toán dùng dữ liệu đặt vé trong hệ thống nằm ở <a class="av-link" href="/ThanhToan/ChoThanhToan">Đặt vé chờ thanh toán</a>.</span>
+                    </div>
                 </div>
-
-                <div class="card-brands">
-                    <span class="av-badge av-badge--info">VISA</span>
-                    <span class="av-badge av-badge--neutral">Mastercard</span>
-                    <span class="av-badge av-badge--neutral">Nội địa NAPAS</span>
-                </div>
-
-                <label class="av-field">
-                    <span class="av-label">Số thẻ</span>
-                    <span class="av-control">
-                        <input type="text" name="cardNumber" value="•••• •••• •••• @Model.CardLast4" inputmode="numeric" autocomplete="cc-number" />
-                        @Html.Icon("credit-card", 17)
-                    </span>
-                </label>
-
-                <div class="form-grid form-grid--3">
-                    <label class="av-field">
-                        <span class="av-label">Tên chủ thẻ</span>
-                        <span class="av-control">
-                            <input type="text" name="cardHolder" value="@passengerName" autocomplete="cc-name" />
-                        </span>
-                    </label>
-                    <label class="av-field">
-                        <span class="av-label">Ngày hết hạn</span>
-                        <span class="av-control">
-                            <input type="text" name="cardExpiry" value="12/28" autocomplete="cc-exp" />
-                        </span>
-                    </label>
-                    <label class="av-field">
-                        <span class="av-label">CVV</span>
-                        <span class="av-control">
-                            <input type="password" name="cardCvv" value="123" autocomplete="cc-csc" />
-                            @Html.Icon("lock", 17)
-                        </span>
-                    </label>
-                </div>
-
-                <p class="av-caption">
-                    Thanh toán được xử lý qua cổng VNPay. Không lưu số thẻ hoặc mã bảo mật tại AeroViet.
-                </p>
             </section>
 
             <div class="checkout-terms">
@@ -141,7 +98,7 @@
                     </a>
                     <button type="submit" class="av-btn av-btn--primary av-btn--lg">
                         @Html.Icon("lock", 17)
-                        <span>Thanh toán @Money.Vnd(Model.Price.Total)</span>
+                        <span>Xem kết quả minh họa</span>
                     </button>
                 </div>
             </div>

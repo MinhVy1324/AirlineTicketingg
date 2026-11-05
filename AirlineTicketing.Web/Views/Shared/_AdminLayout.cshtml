@@ -43,6 +43,18 @@
                         <span>@item.Label</span>
                     </a>
                 }
+                <a class="admin-nav__link" href="/Dashboard">
+                    @Html.Icon("layout-dashboard", 19)
+                    <span>Dashboard dữ liệu</span>
+                </a>
+                <a class="admin-nav__link" href="/BaoCao">
+                    @Html.Icon("chart", 19)
+                    <span>Báo cáo doanh thu</span>
+                </a>
+                <a class="admin-nav__link" href="/ThanhToan/LichSu">
+                    @Html.Icon("credit-card", 19)
+                    <span>Thanh toán &amp; hoàn tiền</span>
+                </a>
             </nav>
 
             <div class="admin-scope">
@@ -76,11 +88,15 @@
                         @Html.Icon("bell", 20)
                     </a>
                     <span class="admin-session__sep" aria-hidden="true"></span>
-                    <span class="admin-avatar">@DemoCatalog.AdminInitials</span>
+                    <span class="admin-avatar">@((User.Identity?.Name ?? "A")[0])</span>
                     <span class="admin-user">
-                        <strong>@DemoCatalog.AdminName</strong>
-                        <span>@DemoCatalog.AdminRole</span>
+                        <strong>@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name)</strong>
+                        <span>@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
                     </span>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="admin-nav__link">Đăng xuất</button>
+                    </form>
                 </div>
             </header>
 

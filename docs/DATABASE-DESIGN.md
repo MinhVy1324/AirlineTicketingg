@@ -14,6 +14,7 @@ erDiagram
     DATVE ||--|{ VE : contains
     HANHKHACH ||--o{ VE : travels
     CHUYENBAY ||--o{ VE : sells
+    KHACHHANG o|--o| TAIKHOAN : account
     DATVE ||--o{ THANHTOAN : payment_attempts
     THANHTOAN ||--o{ HOANTIEN : refund_attempts
 
@@ -56,6 +57,19 @@ erDiagram
         string Email
         string SoDienThoai
         timestamptz NgayTao
+    }
+    TAIKHOAN {
+        int Id PK
+        string TenDangNhap UK
+        string MatKhauHash
+        string HoTen
+        string Email UK
+        string SoDienThoai
+        string VaiTro
+        string TrangThai
+        timestamptz NgayTao
+        timestamptz LanDangNhapCuoi
+        int KhachHangId FK
     }
     DATVE {
         int Id PK
@@ -114,13 +128,14 @@ erDiagram
 
 - `TuyenBay` là cặp sân bay đi/đến dùng lại được; `ChuyenBay` là một lịch bay cụ thể có máy bay, giờ và giá. Cặp sân bay của tuyến là duy nhất và sân bay đi phải khác sân bay đến.
 - `KhachHang` là người liên hệ/đặt vé. `HanhKhach` là người thực sự bay; một người đặt có thể mua nhiều vé cho nhiều hành khách. Vé giữ FK đến hành khách, chuyến bay và đặt vé.
+- `TaiKhoan` dùng đăng nhập và phân quyền `Admin`, `NhanVien`, `KhachHang`; hồ sơ khách hàng liên kết tùy chọn. Mật khẩu chỉ lưu PBKDF2 hash, không lưu bản rõ.
 - `ThanhToan` tách khỏi `DatVe` để giữ nhiều lần thử thanh toán. `HoanTien` ghi từng lần hoàn riêng, giữ nguyên thanh toán gốc và cho phép hoàn nhiều phần.
 - Trạng thái được lưu dưới dạng chuỗi enum để dễ đọc trong PostgreSQL và DTO. Mã tiền tệ dùng ISO 4217 dạng 3 ký tự; giá tiền dùng `numeric(12,2)`, không dùng `float`.
 - Thời điểm dùng `DateTimeOffset`/`timestamptz`; dữ liệu gửi vào tầng lưu trữ cần chuẩn hóa UTC. Ngày sinh dùng `date` vì không phải thời điểm.
 
 ## Ràng buộc và chỉ mục
 
-- Mã sân bay, mã máy bay, mã đặt vé, mã vé và mã giao dịch ngoài là duy nhất; các FK dùng `Restrict` để không xóa lịch sử đặt vé/thanh toán khi xóa dữ liệu danh mục.
+- Mã sân bay, mã máy bay, tên đăng nhập, email, mã đặt vé, mã vé và mã giao dịch ngoài là duy nhất; các FK dùng `Restrict` để không xóa lịch sử đặt vé/thanh toán khi xóa dữ liệu danh mục.
 - Có CHECK cho số ghế máy bay dương, giá không âm, giờ hạ cánh sau giờ khởi hành, và tuyến không nối cùng một sân bay.
 - Chỉ mục tuyến + giờ khởi hành hỗ trợ tra cứu chuyến bay; chỉ mục máy bay + giờ hỗ trợ lịch khai thác; khách hàng + ngày đặt và đặt vé + trạng thái hỗ trợ tra cứu/quản trị.
 - Unique index có điều kiện trên `(ChuyenBayId, SoGhe)` chặn giữ/phát hành cùng ghế đồng thời nhưng cho phép bán lại ghế sau khi vé cũ bị hủy/hoàn. Một hành khách cũng không thể có hai vé đang hiệu lực cho cùng chuyến bay.
@@ -136,6 +151,7 @@ erDiagram
 | `TaoDatVeDTO` / `DatVeDTO` | Tạo và xem đặt vé; mỗi vé có chuyến, ghế, hạng và hành khách |
 | `HuyVeDTO` / `DoiVeDTO` | Gửi yêu cầu hủy hoặc đổi vé; BUS phải kiểm tra chính sách, chênh lệch giá và quyền sở hữu |
 | `KhachHangDTO`, `HanhKhachDTO`, `VeDTO` | Hợp đồng riêng cho người liên hệ, người bay và vé |
+| `DangKyDTO`, `DangNhapDTO`, `TaiKhoanDTO` | Đăng ký, đăng nhập, hồ sơ và quản lý tài khoản theo vai trò |
 | `TaoThanhToanDTO` / `ThanhToanDTO` / `HoanTienDTO` | Gửi yêu cầu thanh toán, xem giao dịch và lịch sử hoàn tiền |
 | `ThongKeDoanhThuDTO` / `DoanhThuTheoNgayDTO` | Trả báo cáo tiền đã thu, tiền đã hoàn và doanh thu thuần |
 

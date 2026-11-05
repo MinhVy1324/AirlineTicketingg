@@ -1,15 +1,17 @@
 using AirlineTicketing.Web.Demo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[Authorize(Roles = "Admin")]
 public class AdminController : Controller
 {
     [HttpGet("/admin")]
-    public IActionResult Index() => View(DemoCatalog.AdminOverview());
+    public IActionResult Index() => RedirectToAction("Index", "Dashboard");
 
     [HttpGet("/admin/tai-khoan")]
-    public IActionResult Accounts() => View(DemoCatalog.AdminAccounts());
+    public IActionResult Accounts() => RedirectToAction("Index", "QuanLyTaiKhoan");
 
     [HttpGet("/admin/tai-khoan/khoa")]
     public IActionResult LockAccount() => View("Accounts", DemoCatalog.AdminAccounts(showLockDialog: true));
@@ -19,11 +21,11 @@ public class AdminController : Controller
     public IActionResult LockAccount(IFormCollection form) => RedirectToAction(nameof(Accounts));
 
     [HttpGet("/admin/vai-tro")]
-    public IActionResult Roles() => View(DemoCatalog.AdminRoles());
+    public IActionResult Roles() => RedirectToAction("Index", "QuanLyTaiKhoan");
 
     [HttpPost("/admin/vai-tro")]
     [ValidateAntiForgeryToken]
-    public IActionResult Roles(IFormCollection form) => RedirectToAction(nameof(Roles));
+    public IActionResult Roles(IFormCollection form) => RedirectToAction("Index", "QuanLyTaiKhoan");
 
     [HttpGet("/admin/danh-muc")]
     public IActionResult Catalog(string? tab) => View(DemoCatalog.AdminCatalog(tab));

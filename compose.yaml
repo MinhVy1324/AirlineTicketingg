@@ -33,6 +33,8 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:?Set POSTGRES_DB in .env};Username=${POSTGRES_USER:?Set POSTGRES_USER in .env};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
       Database__ApplyMigrationsOnStartup: ${APPLY_DATABASE_MIGRATIONS:-true}
+      Database__SeedSampleData: ${SEED_SAMPLE_DATA:-true}
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy

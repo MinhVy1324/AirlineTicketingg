@@ -1,8 +1,10 @@
 using AirlineTicketing.Web.Demo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[Authorize]
 public class TicketsController : Controller
 {
     [HttpGet("/ve-cua-toi")]

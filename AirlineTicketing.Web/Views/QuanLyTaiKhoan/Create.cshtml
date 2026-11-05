@@ -1,0 +1,76 @@
+@model TaoNhanVienDTO
+@{
+    ViewData["Title"] = "Thêm tài khoản nội bộ";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white py-3">
+                <h4 class="mb-0 fw-bold">Tạo Tài Khoản Nội Bộ</h4>
+                <small class="opacity-75">Thêm tài khoản phân quyền Quản trị viên (Admin) hoặc Nhân viên bán vé</small>
+            </div>
+            <div class="card-body p-4">
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div asp-validation-summary="All" class="text-danger mb-0"></div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <form asp-action="Create" method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TenDangNhap" class="form-label fw-semibold">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <input asp-for="TenDangNhap" class="form-control" placeholder="staff_01" autofocus />
+                            <span asp-validation-for="TenDangNhap" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="MatKhau" class="form-label fw-semibold">Mật khẩu khởi tạo <span class="text-danger">*</span></label>
+                            <input asp-for="MatKhau" type="password" class="form-control" placeholder="Tối thiểu 12 ký tự" />
+                            <span asp-validation-for="MatKhau" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="HoTen" class="form-label fw-semibold">Họ và tên nhân viên <span class="text-danger">*</span></label>
+                        <input asp-for="HoTen" class="form-control" placeholder="Nguyễn Văn Nhân Viên" />
+                        <span asp-validation-for="HoTen" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold">Email công việc <span class="text-danger">*</span></label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="staff@airline.vn" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SoDienThoai" class="form-label fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
+                            <input asp-for="SoDienThoai" class="form-control" placeholder="0987654321" />
+                            <span asp-validation-for="SoDienThoai" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="VaiTro" class="form-label fw-semibold">Vai trò phân quyền <span class="text-danger">*</span></label>
+                        <select asp-for="VaiTro" class="form-select">
+                            <option value="NhanVien">Nhân Viên Bán Vé & Chăm Sóc Khách Hàng</option>
+                            <option value="Admin">Quản Trị Viên Hệ Thống (Toàn Quyền)</option>
+                        </select>
+                        <span asp-validation-for="VaiTro" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+                        <button type="submit" class="btn btn-primary fw-semibold px-4">Tạo Tài Khoản</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

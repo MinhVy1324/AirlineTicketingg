@@ -9,4 +9,5 @@ public class KhachHang
     public DateTimeOffset NgayTao { get; set; }
 
     public ICollection<DatVe> DatVes { get; set; } = new List<DatVe>();
+    public TaiKhoan? TaiKhoan { get; set; }
 }

@@ -1,0 +1,13 @@
+.phuong-shell { min-height: 100vh; background: #f5f7fb; color: #172b4d; }
+.phuong-shell main { min-height: calc(100vh - 160px); }
+.feature-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.feature-heading h1 { margin: 0; font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; }
+.feature-heading p { margin: .4rem 0 0; color: #637083; }
+.feature-card { height: 100%; border: 1px solid #e6eaf0; border-radius: 1rem; box-shadow: 0 8px 24px rgb(20 40 70 / 5%); }
+.feature-metric { font-size: clamp(1.4rem, 2vw, 2rem); font-weight: 700; color: #123c69; }
+.feature-table { background: #fff; border: 1px solid #e6eaf0; border-radius: .75rem; overflow: hidden; }
+.feature-table table { margin: 0; }
+.feature-note { color: #637083; font-size: .9rem; }
+.feature-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.feature-auth { max-width: 680px; margin-inline: auto; }
+@media (max-width: 640px) { .feature-heading { flex-direction: column; } }

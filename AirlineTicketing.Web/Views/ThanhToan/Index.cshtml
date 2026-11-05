@@ -1,0 +1,204 @@
+@{
+    ViewData["Title"] = "Thanh toán đặt chỗ";
+    var datVe = ViewBag.DatVe as DatVe;
+    var existingPayments = ViewBag.ExistingPayments as IReadOnlyList<ThanhToanDTO> ?? new List<ThanhToanDTO>();
+}
+
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-0">Thanh Toán Đặt Chỗ Vé Máy Bay</h3>
+                    <span class="text-muted">Mã đơn đặt chỗ: <strong class="text-primary">@datVe?.MaDatVe</strong></span>
+                </div>
+                <div>
+                    @if (datVe?.TrangThai == TrangThaiDatVe.DaXacNhan)
+                    {
+                        <span class="badge bg-success fs-6">Đã Thanh Toán</span>
+                    }
+                    else if (datVe?.TrangThai == TrangThaiDatVe.ChoThanhToan)
+                    {
+                        <span class="badge bg-warning text-dark fs-6">Đang Chờ Thanh Toán</span>
+                    }
+                    else if (datVe?.TrangThai == TrangThaiDatVe.HoanTien)
+                    {
+                        <span class="badge bg-info text-dark fs-6">Đã Hoàn Tiền</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger fs-6">@datVe?.TrangThai</span>
+                    }
+                </div>
+            </div>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="row g-4">
+                <!-- Thông tin đơn vé -->
+                <div class="col-md-7">
+                    <div class="card border-0 shadow-sm rounded-3 mb-4">
+                        <div class="card-header bg-white py-3 border-0">
+                            <h5 class="fw-bold mb-0 text-dark">Chi Tiết Vé & Hành Khách</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="p-3 bg-light border-bottom">
+                                <div class="row small">
+                                    <div class="col-6">Người liên hệ: <strong>@datVe?.KhachHang?.HoTen</strong></div>
+                                    <div class="col-6 text-end">SĐT: <strong>@datVe?.KhachHang?.SoDienThoai</strong></div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light small">
+                                        <tr>
+                                            <th>Mã Vé</th>
+                                            <th>Hành Khách</th>
+                                            <th>Số Ghế</th>
+                                            <th class="text-end">Giá Vé</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (datVe?.Ves != null)
+                                        {
+                                            foreach (var v in datVe.Ves)
+                                            {
+                                                <tr>
+                                                    <td><code>@(string.IsNullOrEmpty(v.MaVe) ? "(Chờ phát hành)" : v.MaVe)</code></td>
+                                                    <td>@v.HanhKhach?.HoTen</td>
+                                                    <td><span class="badge bg-secondary">@v.SoGhe</span> (@v.HangVe)</td>
+                                                    <td class="text-end fw-bold">@v.GiaVe.ToString("N0") đ</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="p-3 bg-light d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-uppercase">Tổng thanh toán:</span>
+                                <h4 class="fw-bold text-danger mb-0">@datVe?.TongTien.ToString("N0") @datVe?.DonViTienTe</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (existingPayments.Any())
+                    {
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-header bg-white py-3 border-0">
+                                <h6 class="fw-bold mb-0">Lịch Sử Các Lần Thử Thanh Toán</h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush small">
+                                    @foreach (var p in existingPayments)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>@p.NhaCungCap</strong> (@p.PhuongThuc)
+                                                <div class="text-muted"><code>@p.MaGiaoDich</code></div>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge @(p.TrangThai == "ThanhCong" ? "bg-success" : p.TrangThai == "ChoXuLy" ? "bg-warning text-dark" : "bg-danger")">
+                                                    @p.TrangThai
+                                                </span>
+                                                @if (p.TrangThai == "ChoXuLy")
+                                                {
+                                                    <div>
+                                                        <a asp-action="MoPhongCong" asp-route-id="@p.Id" class="badge bg-primary text-decoration-none mt-1">Tiếp tục</a>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Phương thức thanh toán -->
+                <div class="col-md-5">
+                    @if (datVe?.TrangThai == TrangThaiDatVe.ChoThanhToan)
+                    {
+                        <div class="card border-0 shadow-sm rounded-3">
+                            <div class="card-header bg-primary text-white py-3">
+                                <h5 class="fw-bold mb-0">Chọn Phương Thức Thanh Toán</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <form asp-action="KhoiTao" method="post">
+                                    <input type="hidden" name="datVeId" value="@datVe.Id" />
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Cổng thanh toán / Phương thức</label>
+
+                                        <div class="form-check p-3 border rounded mb-2 bg-light">
+                                            <input class="form-check-input" type="radio" name="phuongThuc" id="pmVnpay" value="@PhuongThucThanhToan.ChuyenKhoan" checked />
+                                            <input type="hidden" name="nhaCungCap" value="VNPAY" id="gatewayInput" />
+                                            <label class="form-check-label fw-bold d-block" for="pmVnpay">
+                                                🏦 VNPAY (QR Pay / Internet Banking)
+                                                <small class="d-block text-muted fw-normal">Quét mã VNPAY-QR hoặc thẻ ATM nội địa</small>
+                                            </label>
+                                        </div>
+
+                                        <div class="form-check p-3 border rounded mb-2">
+                                            <input class="form-check-input" type="radio" name="phuongThuc" id="pmMomo" value="@PhuongThucThanhToan.ViDienTu" onclick="document.getElementById('gatewayInput').value='MoMo';" />
+                                            <label class="form-check-label fw-bold d-block" for="pmMomo">
+                                                📱 Ví Điện Tử MoMo
+                                                <small class="d-block text-muted fw-normal">Thanh toán tức thì qua ví điện tử MoMo</small>
+                                            </label>
+                                        </div>
+
+                                        <div class="form-check p-3 border rounded mb-2">
+                                            <input class="form-check-input" type="radio" name="phuongThuc" id="pmCard" value="@PhuongThucThanhToan.TheNganHang" onclick="document.getElementById('gatewayInput').value='VisaMastercard';" />
+                                            <label class="form-check-label fw-bold d-block" for="pmCard">
+                                                💳 Thẻ Quốc Tế (Visa / MasterCard)
+                                                <small class="d-block text-muted fw-normal">Thanh toán bảo mật chuẩn 3D-Secure</small>
+                                            </label>
+                                        </div>
+
+                                        @if (User.IsInRole("Admin") || User.IsInRole("NhanVien"))
+                                        {
+                                            <div class="form-check p-3 border rounded mb-2 border-warning bg-warning-subtle">
+                                                <input class="form-check-input" type="radio" name="phuongThuc" id="pmCash" value="@PhuongThucThanhToan.TienMat" onclick="document.getElementById('gatewayInput').value='QuayVe';" />
+                                                <label class="form-check-label fw-bold d-block" for="pmCash">
+                                                    💵 Tiền Mặt Tại Quầy (Nhân Viên)
+                                                    <small class="d-block text-muted fw-normal">Thu tiền mặt trực tiếp tại quầy vé sân bay</small>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="d-grid mt-4">
+                                        <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                                            Tiến Hành Thanh Toán
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                    else if (datVe?.TrangThai == TrangThaiDatVe.DaXacNhan)
+                    {
+                        <div class="card border-0 shadow-sm text-center p-4 bg-light">
+                            <div class="text-success mb-2" style="font-size: 3rem;">✓</div>
+                            <h5 class="fw-bold text-success">Đơn Vé Đã Được Thanh Toán</h5>
+                            <p class="text-muted small">Tất cả vé trong đơn đặt chỗ đã được phát hành thành công.</p>
+                            @if (existingPayments.Any(x => x.TrangThai == "ThanhCong"))
+                            {
+                                var lastPaid = existingPayments.First(x => x.TrangThai == "ThanhCong");
+                                <a asp-action="KetQua" asp-route-id="@lastPaid.Id" class="btn btn-outline-success">Xem Hóa Đơn & Vé Điện Tử</a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
