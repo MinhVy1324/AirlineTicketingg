@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
-public class ManagerController(AppDbContext dbContext) : Controller
+public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Controller
 {
     private const string DefaultDateText = "20/11/2026";
     private const string AllText = "Tất cả";
@@ -244,7 +244,12 @@ public class ManagerController(AppDbContext dbContext) : Controller
     }
 
     [HttpGet("/quan-ly/dat-ve")]
-    public IActionResult Bookings(string? q) => View(DemoCatalog.ManagerBookings());
+    public async Task<IActionResult> Bookings(string? q, CancellationToken cancellationToken) =>
+        View(new BookingAdminViewModel
+        {
+            TuKhoa = q,
+            DatVes = await datVeBUS.DanhSachQuanLyAsync(q, cancellationToken: cancellationToken)
+        });
 
     [HttpPost("/quan-ly/dat-ve")]
     [ValidateAntiForgeryToken]

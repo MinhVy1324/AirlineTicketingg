@@ -17,12 +17,6 @@ public sealed record ThanhToanDTO
 
 public sealed record TaoThanhToanDTO
 {
-    [Range(typeof(decimal), "0.01", "9999999999.99")]
-    public decimal SoTien { get; init; }
-
-    [Required, StringLength(3, MinimumLength = 3)]
-    public string DonViTienTe { get; init; } = "VND";
-
     [Required, StringLength(20)]
     public string PhuongThuc { get; init; } = string.Empty;
 

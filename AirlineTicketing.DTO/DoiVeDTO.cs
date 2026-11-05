@@ -15,4 +15,7 @@ public sealed record DoiVeDTO
 
     [Required, StringLength(20)]
     public string HangVeMoi { get; init; } = string.Empty;
+
+    [Required, StringLength(300)]
+    public string LyDo { get; init; } = string.Empty;
 }
