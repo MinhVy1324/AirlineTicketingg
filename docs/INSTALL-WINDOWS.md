@@ -1,174 +1,206 @@
-# Cài đặt trên Windows 10/11 (nhánh `NgDang`)
+# Cài đặt trên Windows
 
-## 1. Yêu cầu
+Áp dụng cho Windows 10 22H2/Windows 11, PowerShell 7 hoặc Windows PowerShell 5.1. Khuyến nghị dùng **Docker Desktop**.
 
-- Windows 10/11 64-bit
-- Quyền cài phần mềm
-- Kết nối internet (lần đầu tải image/packages)
+> Đang dùng macOS? Xem [INSTALL-MACOS.md](INSTALL-MACOS.md).
 
-## 2. Cài công cụ
+## 1. Cài công cụ
 
-### Cách nhanh (winget, PowerShell)
+Mở PowerShell **với quyền Administrator** và chạy:
 
 ```powershell
 winget install --id Git.Git -e
 winget install --id Docker.DockerDesktop -e
-# Chỉ cần nếu chạy/debug local bằng .NET (không bắt buộc cho Docker-only):
+```
+
+Nếu định chạy local (không chỉ Docker), cài thêm .NET 10 SDK:
+
+```powershell
 winget install --id Microsoft.DotNet.SDK.10 -e
 ```
 
-Sau khi cài Docker Desktop: mở Docker Desktop, chờ engine chạy (icon ổn định), dùng **Linux containers**. Nếu Docker yêu cầu WSL 2, làm theo hướng dẫn của Docker Desktop rồi khởi động lại nếu cần.
+Đóng và mở lại PowerShell sau khi cài để nhận `PATH` mới.
 
-Kiểm tra:
+### Bật WSL 2 (backend mặc định của Docker Desktop)
+
+```powershell
+wsl --install
+wsl --set-default-version 2
+```
+
+Khởi động lại máy nếu được yêu cầu. Mở **Docker Desktop**, chờ engine chuyển sang trạng thái *Running* và giữ **Linux containers**.
+
+### Kiểm tra
 
 ```powershell
 git --version
 docker --version
 docker compose version
-docker info
-dotnet --version   # nếu đã cài SDK
+docker info --format "{{.ServerVersion}}"
+dotnet --version        # chỉ cần nếu chạy local
 ```
 
-`docker info` phải hiển thị thông tin server. Nếu báo không kết nối engine, mở Docker Desktop và chờ nó sẵn sàng.
+`docker info` phải in ra phiên bản Server; nếu báo lỗi kết nối, mở Docker Desktop và chờ khởi động xong.
 
-## 3. Clone project
+## 2. Lấy mã nguồn
 
 ```powershell
-git clone <URL_REPO> AirlineTicketingg
-cd AirlineTicketingg
-git checkout NgDang
+git clone <repository-url> AirlineTicketing
+Set-Location AirlineTicketing
 ```
 
-> Thay `<URL_REPO>` bằng URL Git thực tế của nhóm.
+Nếu dùng SSH: `git clone git@github.com:<org>/<repo>.git`.
 
-## 4. Tạo `.env`
+## 3. Tạo file cấu hình
 
 ```powershell
 Copy-Item .env.example .env
 notepad .env
 ```
 
-Sửa tối thiểu:
+Sửa `POSTGRES_PASSWORD` thành mật khẩu riêng (tối thiểu 12 ký tự, không dùng mật khẩu mẫu). Các cổng mặc định `8080–8083`, `5432`; đổi nếu bị trùng.
 
-```dotenv
-POSTGRES_PASSWORD=<đặt-mật-khẩu-mạnh-riêng>
-POSTGRES_PORT=5432
-ASPNETCORE_PORT=8080
-APPLY_DATABASE_MIGRATIONS=true
-```
-
-Nếu cổng `5432` hoặc `8080` đang bị chiếm, đổi `POSTGRES_PORT`/`ASPNETCORE_PORT`. **Không commit `.env`**.
-
-## 5. Phương án A — Chạy bằng Docker (khuyến nghị)
+## 4. Chạy bằng Docker (khuyến nghị)
 
 ```powershell
+docker compose config --quiet
 docker compose up --build -d
 docker compose ps
-docker compose logs -f web
 ```
 
-- Web: http://localhost:8080 (hoặc cổng `ASPNETCORE_PORT`)
-- Health DB: http://localhost:8080/health/database
+Lần đầu sẽ build image và tải PostgreSQL/.NET image, mất vài phút. Trạng thái đúng:
 
-Service `web` chờ `db` healthy. Migration được áp dụng tự động khi `APPLY_DATABASE_MIGRATIONS=true`.
+```text
+airline-ticketing-db-1        Up (healthy)
+airline-ticketing-migrate-1   Exited (0)
+airline-web-all               Up
+airline-web-user              Up
+airline-web-admin             Up
+airline-web-manager           Up
+```
 
-### Nạp dữ liệu mẫu
-
-Script seed nằm ở `docs/seed/seed-catalog-flights.sql`. Cách đơn giản nhất (không cần cài `psql` trên Windows):
+Kiểm tra website và database:
 
 ```powershell
-Get-Content .env | ForEach-Object {
-  if ($_ -match '^\s*([^#=]+)=(.*)$') { Set-Item -Path "Env:$($matches[1].Trim())" -Value $matches[2].Trim() }
-}
-Get-Content docs/seed/seed-catalog-flights.sql | docker compose exec -T db psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -v ON_ERROR_STOP=1
+Invoke-RestMethod http://localhost:8080/health/database
+(Invoke-WebRequest http://localhost:8082/ -MaximumRedirection 0 -ErrorAction SilentlyContinue).StatusCode
 ```
 
-Nếu có `psql` (PostgreSQL client) trên máy:
+Mở trình duyệt:
+
+| Địa chỉ | Khu vực |
+|---|---|
+| http://localhost:8080 | Đầy đủ |
+| http://localhost:8081 | Khách hàng |
+| http://localhost:8082 | Admin (`/` tự chuyển tới `/admin`) |
+| http://localhost:8083 | Manager (`/` tự chuyển tới `/quan-ly`) |
+
+Đăng nhập bằng tài khoản ở [INSTALL.md](INSTALL.md#tài-khoản-demo).
+
+Dừng hệ thống:
 
 ```powershell
-$env:PGPASSWORD = $env:POSTGRES_PASSWORD
-psql -h 127.0.0.1 -p $env:POSTGRES_PORT -U $env:POSTGRES_USER -d $env:POSTGRES_DB -v ON_ERROR_STOP=1 -f docs/seed/seed-catalog-flights.sql
+docker compose down        # giữ dữ liệu PostgreSQL
+docker compose down -v     # xoá luôn dữ liệu local
 ```
 
-Script có `ON CONFLICT DO NOTHING` nên chạy lại nhiều lần an toàn.
+## Phương án B: Local + PostgreSQL trong Docker
 
-### Kiểm tra sau seed
-
-- Tìm chuyến bay: http://localhost:8080/chuyen-bay?from=SGN&to=HAN&depart=20/11/2026&passengers=1&cabin=Phổ%20thông&trip=oneway
-- Tra cứu đặt chỗ mẫu (nếu seed tạo): dùng PNR/email theo dữ liệu seed trong `docs/seed/seed-catalog-flights.sql`.
-
-## 6. Phương án B — Local .NET + PostgreSQL trong Docker
-
-Phù hợp khi cần debug/breakpoint.
-
-1. Cài .NET 10 SDK.
-2. Chỉ chạy DB:
+Phù hợp khi sửa code và cần debug. Chỉ chạy database bằng Docker:
 
 ```powershell
 docker compose up -d db
-docker compose ps
+docker compose ps db
 ```
 
-3. Nạp seed (như mục 5).
-4. Cấu hình connection string cho app chạy local. Cách an toàn là dùng biến môi trường/session, **không hardcode mật khẩu vào file commit**:
+Nạp biến môi trường từ `.env` vào phiên PowerShell hiện tại rồi chạy web:
 
 ```powershell
-Get-Content .env | ForEach-Object {
-  if ($_ -match '^\s*([^#=]+)=(.*)$') { Set-Item -Path "Env:$($matches[1].Trim())" -Value $matches[2].Trim() }
-}
-$env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=$env:POSTGRES_PORT;Database=$env:POSTGRES_DB;Username=$env:POSTGRES_USER;Password=$env:POSTGRES_PASSWORD"
-dotnet run --project AirlineTicketing.Web
+$envValues = Get-Content .env | ConvertFrom-StringData
+$env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=$($envValues.POSTGRES_PORT);Database=$($envValues.POSTGRES_DB);Username=$($envValues.POSTGRES_USER);Password=$($envValues.POSTGRES_PASSWORD)"
+$env:Database__ApplyMigrationsOnStartup = "true"
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:ASPNETCORE_URLS = "http://localhost:5264"
+dotnet run --project AirlineTicketing.Web --no-launch-profile
 ```
 
-Nếu `.env` dùng `POSTGRES_PORT=5432` nhưng container map cổng host khác, dùng đúng cổng host. Kiểm tra: `docker compose ps`.
+Mở http://localhost:5264. Biến môi trường chỉ có hiệu lực trong cửa sổ PowerShell đó.
 
-5. Mở URL mà `dotnet run` in ra (thường `http://localhost:5xxx` hoặc profile launchSettings).
+### Visual Studio 2022 / VS Code
 
-## 7. Phương án C — Local hoàn toàn (PostgreSQL cài trên Windows)
+- **Visual Studio 2022 (17.12+)**: mở `AirlineTicketing.sln`, chọn project `AirlineTicketing.Web`, thêm User Secrets hoặc biến môi trường như trên, nhấn F5.
+- **VS Code**: cài extension *C# Dev Kit*, chọn cấu hình `http` trong `launchSettings.json`, đặt connection string trong `appsettings.Development.json` (file này đã bị gitignore? **không** — tuyệt đối không commit mật khẩu; dùng User Secrets).
 
-1. Cài PostgreSQL 16 và .NET 10 SDK.
-2. Tạo database/user tương ứng `.env` (hoặc dùng giá trị riêng).
-3. Đặt `ConnectionStrings__DefaultConnection` trỏ tới PostgreSQL local.
-4. Áp migration:
+Nạp User Secrets (không lưu mật khẩu trong repo):
 
 ```powershell
-dotnet ef database update --project AirlineTicketing.DAL --startup-project AirlineTicketing.Web
+dotnet user-secrets init --project AirlineTicketing.Web
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=airline_ticketing;Username=airline_app;Password=<mat-khau>" --project AirlineTicketing.Web
 ```
 
-5. Nạp `docs/seed/seed-catalog-flights.sql` bằng `psql`/pgAdmin.
-6. `dotnet run --project AirlineTicketing.Web`.
+## Phương án C: Local hoàn toàn
 
-## 8. Migration & schema
+1. Cài PostgreSQL 16: `winget install --id PostgreSQL.PostgreSQL.16 -e`.
+2. Trong **pgAdmin** hoặc `psql`, tạo database và user khớp `.env`:
 
-- Docker/compose: `Database__ApplyMigrationsOnStartup=true` → web tự `MigrateAsync()` khi khởi động.
-- CLI one-shot (hữu ích khi tách service migrate): `dotnet run --project AirlineTicketing.Web -- --migrate`.
-- EF CLI thủ công:
+   ```sql
+   CREATE USER airline_app WITH PASSWORD '<mat-khau>';
+   CREATE DATABASE airline_ticketing OWNER airline_app;
+   ```
+
+3. Chạy các lệnh như phương án B với `Host=localhost`.
+
+## 5. Build, migration và kiểm thử
 
 ```powershell
-dotnet tool install --global dotnet-ef   # nếu chưa có
-dotnet ef database update --project AirlineTicketing.DAL --startup-project AirlineTicketing.Web
+dotnet restore AirlineTicketing.sln
+dotnet build AirlineTicketing.sln -c Release
+dotnet test AirlineTicketing.Tests/AirlineTicketing.Tests.csproj
 ```
 
-## 9. Xử lý sự cố
-
-| Triệu chứng | Kiểm tra | Cách xử lý |
-|---|---|---|
-| `docker` không kết nối engine | `docker info` | Mở Docker Desktop, chờ running; kiểm tra WSL 2/Linux containers |
-| Port `5432`/`8080` bận | `docker compose ps`, `netstat -ano | findstr :8080` | Đổi port trong `.env`, chạy lại `docker compose up -d` |
-| `db` unhealthy | `docker compose logs db` | Kiểm tra `POSTGRES_PASSWORD/USER/DB` trong `.env`; xóa volume nếu DB init sai: `docker compose down -v` (mất dữ liệu) |
-| Web lỗi kết nối DB | `http://localhost:8080/health/database`, logs web | Kiểm tra connection string/biến env; đảm bảo `db` healthy |
-| Không có chuyến bay | trang `/chuyen-bay` trống | Nạp `docs/seed/seed-catalog-flights.sql` |
-| Build lỗi file bị khóa | tiến trình `AirlineTicketing.Web` đang chạy | Tắt app đang chạy (`Stop-Process -Name AirlineTicketing.Web -ErrorAction SilentlyContinue`) rồi build lại |
-| Lỗi ký tự tiếng Việt trong log/console | PowerShell encoding | Dùng Windows Terminal/PowerShell 7 hoặc `chcp 65001`; file nguồn trong repo là UTF-8 |
-
-## 10. Lệnh hữu ích
+Áp dụng migration thủ công (khi không dùng Docker):
 
 ```powershell
+dotnet ef database update `
+  --project AirlineTicketing.DAL/AirlineTicketing.DAL.csproj `
+  --startup-project AirlineTicketing.Web/AirlineTicketing.Web.csproj
+```
+
+Tạo migration mới sau khi đổi entity:
+
+```powershell
+dotnet ef migrations add <TenMigration> `
+  --project AirlineTicketing.DAL/AirlineTicketing.DAL.csproj `
+  --startup-project AirlineTicketing.Web/AirlineTicketing.Web.csproj `
+  --output-dir Migrations
+```
+
+## 6. Xử lý sự cố
+
+| Hiện tượng | Cách xử lý |
+|---|---|
+| `docker info` báo không kết nối engine | Mở Docker Desktop, chờ *Engine running*; kiểm tra WSL 2 bằng `wsl --status` |
+| `port is already allocated` | Đổi `ASPNETCORE_PORT`, `WEB_PORT_*` hoặc `POSTGRES_PORT` trong `.env`, rồi `docker compose up -d` |
+| `migrate` exit khác 0 | `docker compose logs migrate`; thường do sai mật khẩu trong `.env` hoặc volume cũ |
+| Đổi `POSTGRES_PASSWORD` nhưng không đăng nhập được | Volume cũ giữ mật khẩu cũ; giữ mật khẩu cũ hoặc `docker compose down -v` nếu chấp nhận mất dữ liệu |
+| `MSB3026 ... file is locked by .NET Host` | Dừng tiến trình web đang chạy (`Get-Process AirlineTicketing.Web \| Stop-Process -Force`) rồi build lại |
+| Trang trắng/404 sau khi sửa `.cshtml` | View được compile lúc build; dừng web và `dotnet build` lại |
+| Lỗi `Invoke-WebRequest -SkipHttpErrorCheck` | Windows PowerShell 5.1 không hỗ trợ; dùng `curl.exe -s -i` |
+| Cảnh báo `LF will be replaced by CRLF` | Bình thường trên Windows; không đổi cấu hình git nếu repo đã có `.gitattributes` |
+| Cổng 5432 bận vì PostgreSQL cài sẵn | Đổi `POSTGRES_PORT` trong `.env` hoặc tắt service PostgreSQL của Windows |
+
+Xem log chi tiết:
+
+```powershell
+docker compose logs --tail 200 web-user web-admin web-manager db migrate
+```
+
+## 7. Quy trình cập nhật code
+
+```powershell
+git pull
 docker compose up --build -d
 docker compose ps
-docker compose logs -f web
-docker compose down
-docker compose down -v
-dotnet build AirlineTicketing.sln
-dotnet test AirlineTicketing.sln
 ```
+
+Nếu có migration mới, service `migrate` tự áp dụng trước khi các container web khởi động. Không xoá volume để "sửa lỗi schema" nếu cần giữ dữ liệu.

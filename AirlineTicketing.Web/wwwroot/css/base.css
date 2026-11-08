@@ -233,3 +233,39 @@ table {
     line-height: 38px;
   }
 }
+
+/* ------------------------------------------------- instance test badge */
+
+.av-instance-badge {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(22, 85, 161, .94);
+  color: #fff;
+  font-family: var(--av-font);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 16px rgba(16, 46, 80, .28);
+}
+
+.av-instance-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7CE0D0;
+}
+
+.av-instance-badge[data-area="admin"] { background: rgba(16, 46, 80, .94); }
+.av-instance-badge[data-area="manager"] { background: rgba(8, 127, 131, .94); }

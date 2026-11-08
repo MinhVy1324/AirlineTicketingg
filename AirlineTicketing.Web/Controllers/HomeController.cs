@@ -1,107 +1,34 @@
 using System.Diagnostics;
-using AirlineTicketing.DAL;
-using AirlineTicketing.DTO;
-using AirlineTicketing.Web.Infrastructure;
+using AirlineTicketing.Web.Demo;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
-public class HomeController(AppDbContext dbContext) : Controller
+public class HomeController(IConfiguration configuration) : Controller
 {
-    private static readonly (string Code, string Image)[] FeaturedDestinations =
-    [
-        ("HAN", "dest-ha-noi.png"),
-        ("DAD", "dest-da-nang.png"),
-        ("PQC", "dest-phu-quoc.png")
-    ];
-
     [HttpGet("/")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public IActionResult Index()
     {
-        IReadOnlyList<DestinationCard> destinations = Array.Empty<DestinationCard>();
+        // Each Docker test container can be pointed at one area. Requests to "/"
+        // then land on the matching home page so every instance opens where the
+        // tester expects it, while direct links to the other areas keep working.
+        var area = configuration["App:DefaultArea"];
 
-        try
+        if (string.Equals(area, "admin", StringComparison.OrdinalIgnoreCase))
         {
-            destinations = await LoadDestinationsAsync(cancellationToken);
-        }
-        catch (Exception)
-        {
-            // Trang chủ vẫn mở được khi CSDL chưa sẵn sàng; hiển thị trạng thái trống.
+            return Redirect("/admin");
         }
 
-        return View(new HomeViewModel
+        if (string.Equals(area, "manager", StringComparison.OrdinalIgnoreCase))
         {
-            Search = new SearchFormModel(),
-            Destinations = destinations
-        });
+            return Redirect("/quan-ly");
+        }
+
+        return View(DemoCatalog.Home());
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() =>
         View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-
-    private async Task<IReadOnlyList<DestinationCard>> LoadDestinationsAsync(CancellationToken cancellationToken)
-    {
-        var danhMuc = FlightServices.DanhMuc(dbContext);
-        var chuyenBay = FlightServices.ChuyenBay(dbContext);
-
-        var airports = await danhMuc.LaySanBayAsync(trangThai: "Hoạt động", cancellationToken: cancellationToken);
-        var routes = await danhMuc.LayTuyenBayAsync(trangThai: "Đang khai thác", cancellationToken: cancellationToken);
-        var origin = airports.FirstOrDefault(airport =>
-            string.Equals(airport.MaSanBay, "SGN", StringComparison.OrdinalIgnoreCase));
-
-        if (origin is null)
-        {
-            return Array.Empty<DestinationCard>();
-        }
-
-        var dates = new[]
-        {
-            DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7)),
-            new DateOnly(2026, 11, 20)
-        }.Distinct().ToArray();
-
-        var cards = new List<DestinationCard>();
-
-        foreach (var (code, image) in FeaturedDestinations)
-        {
-            var destination = airports.FirstOrDefault(airport =>
-                string.Equals(airport.MaSanBay, code, StringComparison.OrdinalIgnoreCase));
-            var route = routes.FirstOrDefault(item =>
-                item.SanBayDiId == origin.Id && item.SanBayDenId == destination?.Id);
-
-            if (destination is null || route is null)
-            {
-                continue;
-            }
-
-            decimal? minPrice = null;
-            foreach (var date in dates)
-            {
-                var flights = await chuyenBay.TimChuyenBayAsync(new TimChuyenBayDTO
-                {
-                    SanBayDiId = route.SanBayDiId,
-                    SanBayDenId = route.SanBayDenId,
-                    NgayDi = date,
-                    SoHanhKhach = 1
-                }, cancellationToken);
-
-                if (flights.Count > 0)
-                {
-                    var candidate = flights.Min(item => item.GiaCoBan);
-                    minPrice = minPrice is null ? candidate : Math.Min(minPrice.Value, candidate);
-                }
-            }
-
-            if (minPrice is null)
-            {
-                continue;
-            }
-
-            cards.Add(new DestinationCard(destination.ThanhPho, destination.MaSanBay, minPrice.Value, image));
-        }
-
-        return cards;
-    }
 }

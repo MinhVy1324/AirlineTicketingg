@@ -51,9 +51,9 @@
             }
 
             <label class="av-field">
-                <span class="av-label">Địa chỉ email</span>
+                <span class="av-label">Tên đăng nhập hoặc email</span>
                 <span class="av-control">
-                    <input type="email" name="email" value="@Model.Email" autocomplete="email" required />
+                    <input type="text" name="email" value="@Model.Email" autocomplete="username" required />
                     @Html.Icon("mail", 17)
                 </span>
             </label>
@@ -88,8 +88,7 @@
             </div>
 
             <p class="auth__foot">
-                Bạn chưa có tài khoản?
-                <a class="av-link" href="/dang-ky">Đăng ký khách hàng</a>
+                Môi trường demo: <code>admin / Admin@123</code>, <code>manager / Manager@123</code>, <code>minhanh / Customer@123</code>.
             </p>
         </form>
 
