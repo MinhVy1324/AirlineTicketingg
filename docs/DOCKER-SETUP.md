@@ -1,6 +1,6 @@
 # Docker và triển khai môi trường phát triển
 
-Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Một image dùng chung được chạy thành **bốn container** để tiện test: một container đầy đủ ở `http://localhost:8080` và ba container theo từng khu vực ở `http://localhost:8081` (khách hàng), `http://localhost:8082` (admin), `http://localhost:8083` (manager). PostgreSQL truy cập từ máy host qua `localhost:5432`.
+Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Một image dùng chung được chạy thành **bốn container** để tiện test: một container đầy đủ ở `http://127.0.0.1:8080` và ba container theo từng khu vực ở `http://127.0.0.3` (khách hàng), `http://127.0.0.1` (admin), `http://127.0.0.2` (manager). PostgreSQL truy cập từ máy host qua `localhost:5432`.
 
 Hướng dẫn cài đặt theo hệ điều hành: [Windows](INSTALL-WINDOWS.md) · [macOS](INSTALL-MACOS.md) · [tổng quan và tài khoản demo](INSTALL.md).
 
@@ -111,27 +111,27 @@ Compose build **một image duy nhất** rồi chạy 4 container web cạnh nha
 
 | Địa chỉ | Khu vực | Mở `/` sẽ chuyển tới |
 |---|---|---|
-| http://localhost:8080 | Tất cả khu vực | Trang chủ khách hàng |
-| http://localhost:8081 | Khách hàng | Trang chủ khách hàng |
-| http://localhost:8082 | Admin | `/admin` |
-| http://localhost:8083 | Manager | `/quan-ly` |
+| http://127.0.0.1:8080 | Tất cả khu vực | Trang chủ khách hàng |
+| http://127.0.0.3 | Khách hàng | Trang chủ khách hàng |
+| http://127.0.0.1 | Admin | `/admin` |
+| http://127.0.0.2 | Manager | `/quan-ly` |
 
-Container `web-admin` và `web-manager` chỉ khác nhau ở biến `App__DefaultArea`, nên mỗi cổng mở thẳng vào đúng khu vực cần test. Các route còn lại vẫn truy cập được trên mọi container (ví dụ mở `http://localhost:8081/admin`) để test chéo luồng.
+Container `web-admin` và `web-manager` chỉ khác nhau ở biến `App__DefaultArea`, nên mỗi cổng mở thẳng vào đúng khu vực cần test. Các route còn lại vẫn truy cập được trên mọi container (ví dụ mở `http://127.0.0.3/admin`) để test chéo luồng.
 
-Mỗi trang hiển thị một badge nhỏ ở góc phải dưới (ví dụ `ADMIN · :8082`) để biết đang xem container nào. Response cũng có header `X-App-Area: customer|admin|manager|all`.
+Mỗi trang hiển thị một badge nhỏ ở góc phải dưới (ví dụ `ADMIN ·  (admin · 127.0.0.1)`) để biết đang xem container nào. Response cũng có header `X-App-Area: customer|admin|manager|all`.
 
 Kiểm tra kết nối C# → PostgreSQL:
 
 ```powershell
-Invoke-RestMethod http://localhost:8080/health/database
-Invoke-RestMethod http://localhost:8081/health/database
-Invoke-RestMethod http://localhost:8082/health/database
-Invoke-RestMethod http://localhost:8083/health/database
+Invoke-RestMethod http://127.0.0.1:8080/health/database
+Invoke-RestMethod http://127.0.0.3/health/database
+Invoke-RestMethod http://127.0.0.1/health/database
+Invoke-RestMethod http://127.0.0.2/health/database
 ```
 
 Kết quả thành công có dạng `status: connected`, `database: PostgreSQL`. Compose đợi `db` đạt `healthy` và service `migrate` chạy xong trước khi tạo các container web; nếu ứng dụng không khởi động, đọc log bằng `docker compose logs --tail 100 web-user web-admin web-manager db migrate`.
 
-> **Lưu ý về cookie:** cookie của trình duyệt gắn với host, không gắn với cổng, nên `localhost:8081`, `localhost:8082`, `localhost:8083` dùng chung cookie. Khi thêm đăng nhập thật, hãy dùng ba profile trình duyệt riêng (hoặc thêm host alias `user.localhost`, `admin.localhost`, `manager.localhost`) nếu cần tách phiên đăng nhập.
+> **Lưu ý về cookie:** cookie của trình duyệt gắn với host, không gắn với cổng, nên `127.0.0.3`, `127.0.0.1`, `127.0.0.2` dùng chung cookie. Khi thêm đăng nhập thật, hãy dùng ba profile trình duyệt riêng (hoặc thêm host alias `user.localhost`, `admin.localhost`, `manager.localhost`) nếu cần tách phiên đăng nhập.
 
 Chỉ cần một khu vực thì chạy riêng service tương ứng:
 
@@ -148,7 +148,7 @@ Kiểm tra restart:
 ```powershell
 docker compose restart db
 docker compose ps
-Invoke-RestMethod http://localhost:8080/health/database
+Invoke-RestMethod http://127.0.0.1:8080/health/database
 ```
 
 Named volume `postgres_data` tồn tại độc lập với container. Vì vậy các lệnh sau không xóa database:
@@ -170,10 +170,10 @@ notepad .env
 docker compose config --quiet
 docker compose up --build -d
 docker compose ps
-Invoke-RestMethod http://localhost:8080/health/database
+Invoke-RestMethod http://127.0.0.1:8080/health/database
 ```
 
-Sau khi chạy, mở một trong các địa chỉ ở mục 6: `:8080` (tất cả), `:8081` (khách hàng), `:8082` (admin), `:8083` (manager). Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
+Sau khi chạy, mở một trong các địa chỉ ở mục 6: `:8080` (tất cả), ` (customer · 127.0.0.3)` (khách hàng), ` (admin · 127.0.0.1)` (admin), ` (manager · 127.0.0.2)` (manager). Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
 
 ## 9. EF Core migrations
 

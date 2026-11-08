@@ -22,10 +22,12 @@ docker compose up --build -d
 
 | Địa chỉ | Khu vực |
 |---|---|
-| http://localhost:8080 | Tất cả (đầy đủ) |
-| http://localhost:8081 | Khách hàng |
-| http://localhost:8082 | Admin (`/` → `/admin`) |
-| http://localhost:8083 | Manager (`/` → `/quan-ly`) |
+| http://127.0.0.1/ | Admin (`/` → `/admin`) |
+| http://127.0.0.2/ | Manager (`/` → `/quan-ly`) |
+| http://127.0.0.3/ | Khách hàng |
+| http://127.0.0.1:8080/ | Tất cả (đầy đủ) |
+
+> **Windows/macOS + Docker Desktop:** nếu `127.0.0.2`/`127.0.0.3` không truy cập được, đặt `WEB_PORT_MANAGER=8082`, `WEB_PORT_USER=8083` trong `.env` và dùng `http://127.0.0.1:8082/`, `http://127.0.0.1:8083/` (hoặc thêm hostname vào file `hosts`).
 
 ## Thiết kế dữ liệu và DTO
 

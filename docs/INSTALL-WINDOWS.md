@@ -82,18 +82,18 @@ airline-web-manager           Up
 Kiểm tra website và database:
 
 ```powershell
-Invoke-RestMethod http://localhost:8080/health/database
-(Invoke-WebRequest http://localhost:8082/ -MaximumRedirection 0 -ErrorAction SilentlyContinue).StatusCode
+Invoke-RestMethod http://127.0.0.1:8080/health/database
+(Invoke-WebRequest http://127.0.0.1/ -MaximumRedirection 0 -ErrorAction SilentlyContinue).StatusCode
 ```
 
 Mở trình duyệt:
 
 | Địa chỉ | Khu vực |
 |---|---|
-| http://localhost:8080 | Đầy đủ |
-| http://localhost:8081 | Khách hàng |
-| http://localhost:8082 | Admin (`/` tự chuyển tới `/admin`) |
-| http://localhost:8083 | Manager (`/` tự chuyển tới `/quan-ly`) |
+| http://127.0.0.1:8080 | Đầy đủ |
+| http://127.0.0.3 | Khách hàng |
+| http://127.0.0.1 | Admin (`/` tự chuyển tới `/admin`) |
+| http://127.0.0.2 | Manager (`/` tự chuyển tới `/quan-ly`) |
 
 Đăng nhập bằng tài khoản ở [INSTALL.md](INSTALL.md#tài-khoản-demo).
 

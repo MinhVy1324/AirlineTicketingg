@@ -14,12 +14,12 @@ Tài liệu dành cho thành viên mới clone project và chạy được hệ 
 
 | Địa chỉ | Khu vực | Mở `/` sẽ tới |
 |---|---|---|
-| http://localhost:8080 | Đầy đủ | Trang chủ khách hàng |
-| http://localhost:8081 | Khách hàng | Trang chủ khách hàng |
-| http://localhost:8082 | Admin | `/admin` |
-| http://localhost:8083 | Manager | `/quan-ly` |
+| http://127.0.0.1:8080 | Đầy đủ | Trang chủ khách hàng |
+| http://127.0.0.3 | Khách hàng | Trang chủ khách hàng |
+| http://127.0.0.1 | Admin | `/admin` |
+| http://127.0.0.2 | Manager | `/quan-ly` |
 
-Kiểm tra nhanh: `http://localhost:8080/health/database` phải trả `status: connected`.
+Kiểm tra nhanh: `http://127.0.0.1:8080/health/database` phải trả `status: connected`.
 
 ## Tài khoản demo
 
