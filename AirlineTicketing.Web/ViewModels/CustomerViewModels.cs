@@ -162,8 +162,8 @@ public sealed record SeatRow(string Number, IReadOnlyList<SeatCell> Seats);
 
 public sealed class LoginViewModel
 {
-    public string Email { get; set; } = "minhanh@example.com";
-    public string Password { get; set; } = "aeroviet";
+    public string Email { get; set; } = "";
+    public string Password { get; set; } = "";
     public bool RememberMe { get; set; } = true;
     public string? ReturnUrl { get; set; }
     public string? ErrorMessage { get; set; }

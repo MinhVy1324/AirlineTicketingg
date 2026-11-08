@@ -14,6 +14,10 @@ public sealed class MayBayConfiguration : IEntityTypeConfiguration<MayBay>
         builder.Property(x => x.TenMayBay).HasMaxLength(100).IsRequired();
         builder.Property(x => x.HangSanXuat).HasMaxLength(100).IsRequired();
         builder.Property(x => x.DangHoatDong).HasDefaultValue(true);
-        builder.ToTable(t => t.HasCheckConstraint("CK_MayBay_SoGhe", "\"SoGhe\" > 0"));
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_MayBay_SoGhe", "\"SoGhe\" > 0");
+            t.HasCheckConstraint("CK_MayBay_NamKhaiThac", "\"NamKhaiThac\" IS NULL OR \"NamKhaiThac\" >= 1950");
+        });
     }
 }

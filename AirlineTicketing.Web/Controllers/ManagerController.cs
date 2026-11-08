@@ -1,8 +1,11 @@
 using AirlineTicketing.Web.Demo;
+using AirlineTicketing.Web.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Manager}")]
 public class ManagerController : Controller
 {
     [HttpGet("/quan-ly")]

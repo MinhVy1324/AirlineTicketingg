@@ -9,8 +9,17 @@ public class DatVe
     public TrangThaiDatVe TrangThai { get; set; } = TrangThaiDatVe.ChoThanhToan;
     public decimal TongTien { get; set; }
     public string DonViTienTe { get; set; } = "VND";
+    public DateTimeOffset? HanGiuCho { get; set; }
+    public DateTimeOffset? NgayXacNhan { get; set; }
+    public decimal ThuePhi { get; set; }
+    public decimal PhiDichVu { get; set; }
+    public decimal PhiHanhLy { get; set; }
+    public string? EmailLienHe { get; set; }
+    public string? SoDienThoaiLienHe { get; set; }
+    public string? GhiChu { get; set; }
 
     public KhachHang KhachHang { get; set; } = null!;
     public ICollection<Ve> Ves { get; set; } = new List<Ve>();
     public ICollection<ThanhToan> ThanhToans { get; set; } = new List<ThanhToan>();
+    public ICollection<YeuCauDoiHoan> YeuCaus { get; set; } = new List<YeuCauDoiHoan>();
 }

@@ -1,13 +1,36 @@
 using AirlineTicketing.DAL;
 using AirlineTicketing.DAL.Repositories;
+using AirlineTicketing.Web.Infrastructure;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddAuthorization();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "aeroviet.auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.LoginPath = "/dang-nhap";
+        options.AccessDeniedPath = "/dang-nhap";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.Redirect("/dang-nhap?tu-choi=1");
+            return Task.CompletedTask;
+        };
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole(AppRoles.Admin));
+    options.AddPolicy("StaffOnly", policy => policy.RequireRole(AppRoles.Admin, AppRoles.Manager));
+});
 builder.Services.AddSingleton<HtmlEncoder>(HtmlEncoder.Create(UnicodeRanges.All));
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -26,7 +49,8 @@ if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
     await using var migrationScope = app.Services.CreateAsyncScope();
     var migrationDb = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
     await migrationDb.Database.MigrateAsync();
-    app.Logger.LogInformation("Database migrations applied.");
+    await DbSeeder.SeedAsync(migrationDb);
+    app.Logger.LogInformation("Database migrations and seed applied.");
     return;
 }
 
@@ -35,6 +59,7 @@ if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
     await using var scope = app.Services.CreateAsyncScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
+    await DbSeeder.SeedAsync(dbContext);
 }
 
 if (!app.Environment.IsDevelopment())
@@ -55,6 +80,7 @@ app.Use(async (context, next) =>
 
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
