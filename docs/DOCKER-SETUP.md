@@ -1,6 +1,6 @@
 # Docker và triển khai môi trường phát triển
 
-Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Máy host truy cập website qua `http://localhost:8080` và PostgreSQL qua `localhost:5432`.
+Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Một image dùng chung được chạy thành **bốn container** để tiện test: một container đầy đủ ở `http://localhost:8080` và ba container theo từng khu vực ở `http://localhost:8081` (khách hàng), `http://localhost:8082` (admin), `http://localhost:8083` (manager). PostgreSQL truy cập từ máy host qua `localhost:5432`.
 
 Thiết kế bảng, ERD và các DTO nằm trong [DATABASE-DESIGN.md](DATABASE-DESIGN.md).
 
@@ -37,9 +37,13 @@ Thay `POSTGRES_PASSWORD` trong `.env` bằng mật khẩu ngẫu nhiên riêng c
 | `POSTGRES_USER` | User ứng dụng của PostgreSQL | `airline_app` |
 | `POSTGRES_PASSWORD` | Mật khẩu local; phải thay trước khi chạy | Placeholder trong `.env.example` |
 | `POSTGRES_PORT` | Cổng PostgreSQL trên host | `5432` |
-| `ASPNETCORE_PORT` | Cổng website trên host | `8080` |
+| `ASPNETCORE_PORT` | Cổng của container đầy đủ (mọi khu vực) | `8080` |
+| `WEB_PORT_USER` | Cổng của container khách hàng | `8081` |
+| `WEB_PORT_ADMIN` | Cổng của container admin | `8082` |
+| `WEB_PORT_MANAGER` | Cổng của container manager | `8083` |
 | `ASPNETCORE_ENVIRONMENT` | ASP.NET Core environment | `Development` |
-| `APPLY_DATABASE_MIGRATIONS` | Tự áp dụng EF Core migrations khi website khởi động | `true` cho Docker local |
+
+Không cần biến bật migration: Compose luôn chạy service một lần `migrate` trước khi khởi động các container web (xem mục 9).
 
 Nếu cổng 5432 hoặc 8080 đã được dùng, đổi giá trị tương ứng trong `.env`. Bên trong Compose, connection string luôn dùng `Host=db;Port=5432`; từ ứng dụng chạy trực tiếp trên Windows, dùng `Host=localhost` và cổng host trong `.env`.
 
@@ -101,13 +105,37 @@ docker compose ps
 docker compose logs -f web
 ```
 
-Mở `http://localhost:8080`. Kiểm tra kết nối C# → PostgreSQL:
+Compose build **một image duy nhất** rồi chạy 4 container web cạnh nhau:
+
+| Địa chỉ | Khu vực | Mở `/` sẽ chuyển tới |
+|---|---|---|
+| http://localhost:8080 | Tất cả khu vực | Trang chủ khách hàng |
+| http://localhost:8081 | Khách hàng | Trang chủ khách hàng |
+| http://localhost:8082 | Admin | `/admin` |
+| http://localhost:8083 | Manager | `/quan-ly` |
+
+Container `web-admin` và `web-manager` chỉ khác nhau ở biến `App__DefaultArea`, nên mỗi cổng mở thẳng vào đúng khu vực cần test. Các route còn lại vẫn truy cập được trên mọi container (ví dụ mở `http://localhost:8081/admin`) để test chéo luồng.
+
+Mỗi trang hiển thị một badge nhỏ ở góc phải dưới (ví dụ `ADMIN · :8082`) để biết đang xem container nào. Response cũng có header `X-App-Area: customer|admin|manager|all`.
+
+Kiểm tra kết nối C# → PostgreSQL:
 
 ```powershell
 Invoke-RestMethod http://localhost:8080/health/database
+Invoke-RestMethod http://localhost:8081/health/database
+Invoke-RestMethod http://localhost:8082/health/database
+Invoke-RestMethod http://localhost:8083/health/database
 ```
 
-Kết quả thành công có dạng `status: connected`, `database: PostgreSQL`. Compose đợi `db` đạt `healthy` trước khi tạo service `web`; nếu ứng dụng không khởi động, đọc log bằng `docker compose logs --tail 100 web db`.
+Kết quả thành công có dạng `status: connected`, `database: PostgreSQL`. Compose đợi `db` đạt `healthy` và service `migrate` chạy xong trước khi tạo các container web; nếu ứng dụng không khởi động, đọc log bằng `docker compose logs --tail 100 web-user web-admin web-manager db migrate`.
+
+> **Lưu ý về cookie:** cookie của trình duyệt gắn với host, không gắn với cổng, nên `localhost:8081`, `localhost:8082`, `localhost:8083` dùng chung cookie. Khi thêm đăng nhập thật, hãy dùng ba profile trình duyệt riêng (hoặc thêm host alias `user.localhost`, `admin.localhost`, `manager.localhost`) nếu cần tách phiên đăng nhập.
+
+Chỉ cần một khu vực thì chạy riêng service tương ứng:
+
+```powershell
+docker compose up -d web-admin
+```
 
 ## 7. Khởi động lại và bảo toàn dữ liệu — DOCKER-07
 
@@ -143,11 +171,20 @@ docker compose ps
 Invoke-RestMethod http://localhost:8080/health/database
 ```
 
-Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
+Sau khi chạy, mở một trong các địa chỉ ở mục 6: `:8080` (tất cả), `:8081` (khách hàng), `:8082` (admin), `:8083` (manager). Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
 
 ## 9. EF Core migrations
 
-Migrations nằm trong `AirlineTicketing.DAL/Migrations`. Compose development đặt `APPLY_DATABASE_MIGRATIONS=true` để website áp dụng migrations khi khởi động sau khi PostgreSQL healthy. Sau khi thay đổi entity/configuration, tạo migration mới:
+Migrations nằm trong `AirlineTicketing.DAL/Migrations`. Compose có service một lần `migrate`: nó chạy `dotnet AirlineTicketing.Web.dll --migrate`, áp dụng migration sau khi PostgreSQL `healthy` rồi thoát. Bốn container web đặt `Database__ApplyMigrationsOnStartup=false` và chỉ khởi động khi `migrate` kết thúc thành công, nhờ vậy nhiều container không tranh nhau sửa schema.
+
+```powershell
+docker compose logs migrate
+docker compose run --rm migrate
+```
+
+Khi chạy trực tiếp bằng `dotnet run` mà không qua Docker, có thể bật tự động migration bằng `$env:Database__ApplyMigrationsOnStartup = 'true'` (xem mục 4).
+
+Sau khi thay đổi entity/configuration, tạo migration mới:
 
 ```powershell
 dotnet ef migrations add <MigrationName> `
@@ -156,7 +193,7 @@ dotnet ef migrations add <MigrationName> `
   --output-dir Migrations
 ```
 
-Commit migration cùng thay đổi model. Ở production, đặt `APPLY_DATABASE_MIGRATIONS=false` và chạy migration qua bước triển khai/DBA được kiểm soát thay vì tự động đổi schema khi ứng dụng khởi động.
+Commit migration cùng thay đổi model. Ở production, giữ `Database__ApplyMigrationsOnStartup=false` và chạy migration qua bước triển khai/DBA được kiểm soát (hoặc `docker compose run --rm migrate`) thay vì để mọi container tự đổi schema khi khởi động.
 
 ## 10. Lệnh thường dùng
 
@@ -164,6 +201,10 @@ Commit migration cùng thay đổi model. Ở production, đặt `APPLY_DATABASE
 |---|---|
 | Xem trạng thái | `docker compose ps` |
 | Theo dõi log | `docker compose logs -f web db` |
+| Chỉ chạy container khách hàng | `docker compose up -d web-user` |
+| Chỉ chạy container admin | `docker compose up -d web-admin` |
+| Chỉ chạy container manager | `docker compose up -d web-manager` |
+| Xem log migration | `docker compose logs migrate` |
 | Dừng, giữ dữ liệu | `docker compose down` |
 | Khởi động lại | `docker compose up -d` |
 | Build lại website | `docker compose up --build -d web` |

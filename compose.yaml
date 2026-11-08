@@ -1,3 +1,30 @@
+name: airline-ticketing
+
+# Shared by every web container (the all-in-one instance and the three
+# area-specific test instances). Compose builds the image once.
+x-app-environment: &app-environment
+  ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+  ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:?Set POSTGRES_DB in .env};Username=${POSTGRES_USER:?Set POSTGRES_USER in .env};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+  # Migrations are applied once by the "migrate" service, never in parallel.
+  Database__ApplyMigrationsOnStartup: "false"
+
+x-web-common: &web-common
+  image: ${WEB_IMAGE:-airline-ticketing-web:local}
+  build:
+    context: .
+    dockerfile: AirlineTicketing.Web/Dockerfile
+  restart: unless-stopped
+  env_file:
+    - .env
+  environment:
+    <<: *app-environment
+    ASPNETCORE_URLS: http://+:8080
+  depends_on:
+    db:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+
 services:
   db:
     image: postgres:16-alpine
@@ -19,23 +46,69 @@ services:
       retries: 10
       start_period: 5s
 
-  web:
+  # Runs EF Core migrations once, then exits. All web containers wait for it.
+  migrate:
+    image: ${WEB_IMAGE:-airline-ticketing-web:local}
     build:
       context: .
       dockerfile: AirlineTicketing.Web/Dockerfile
-    restart: unless-stopped
+    restart: "no"
     env_file:
       - .env
-    ports:
-      - "127.0.0.1:${ASPNETCORE_PORT:-8080}:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB:?Set POSTGRES_DB in .env};Username=${POSTGRES_USER:?Set POSTGRES_USER in .env};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
-      Database__ApplyMigrationsOnStartup: ${APPLY_DATABASE_MIGRATIONS:-true}
+      <<: *app-environment
+    command: ["dotnet", "AirlineTicketing.Web.dll", "--migrate"]
     depends_on:
       db:
         condition: service_healthy
+
+  # All-in-one instance (kept at the original address).
+  web:
+    <<: *web-common
+    container_name: airline-web-all
+    ports:
+      - "127.0.0.1:${ASPNETCORE_PORT:-8080}:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+      App__DefaultArea: all
+      App__InstanceLabel: "Tất cả · :${ASPNETCORE_PORT:-8080}"
+
+  # Customer flow only.
+  web-user:
+    <<: *web-common
+    container_name: airline-web-user
+    ports:
+      - "127.0.0.1:${WEB_PORT_USER:-8081}:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+      App__DefaultArea: customer
+      App__InstanceLabel: "Khách hàng · :${WEB_PORT_USER:-8081}"
+
+  # Admin area: "/" redirects to /admin.
+  web-admin:
+    <<: *web-common
+    container_name: airline-web-admin
+    ports:
+      - "127.0.0.1:${WEB_PORT_ADMIN:-8082}:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+      App__DefaultArea: admin
+      App__InstanceLabel: "Admin · :${WEB_PORT_ADMIN:-8082}"
+
+  # Manager area: "/" redirects to /quan-ly.
+  web-manager:
+    <<: *web-common
+    container_name: airline-web-manager
+    ports:
+      - "127.0.0.1:${WEB_PORT_MANAGER:-8083}:8080"
+    environment:
+      <<: *app-environment
+      ASPNETCORE_URLS: http://+:8080
+      App__DefaultArea: manager
+      App__InstanceLabel: "Manager · :${WEB_PORT_MANAGER:-8083}"
 
 volumes:
   postgres_data:

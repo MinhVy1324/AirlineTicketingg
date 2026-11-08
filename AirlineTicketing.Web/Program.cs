@@ -19,6 +19,17 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
 var app = builder.Build();
 
+// One-shot mode used by the Compose "migrate" service so that several web
+// containers can start in parallel without racing on the same migration.
+if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await migrationDb.Database.MigrateAsync();
+    app.Logger.LogInformation("Database migrations applied.");
+    return;
+}
+
 if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
     await using var scope = app.Services.CreateAsyncScope();
@@ -32,6 +43,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 app.UseHttpsRedirection();
+
+// Tags every response with the area this container was started for, so the
+// parallel Docker instances are easy to tell apart while testing.
+var instanceArea = app.Configuration["App:DefaultArea"] ?? "customer";
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-App-Area"] = instanceArea;
+    await next();
+});
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
