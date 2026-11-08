@@ -97,8 +97,8 @@ public sealed class CancelledFlightViewModel
 
 public sealed class LookupFormModel
 {
-    public string Pnr { get; set; } = "AV8K2M";
-    public string Email { get; set; } = "minhanh@example.com";
+    public string Pnr { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 }
 
 public sealed class LookupPageViewModel

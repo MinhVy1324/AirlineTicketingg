@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using AirlineTicketing.DAL;
 using AirlineTicketing.DTO;
-using AirlineTicketing.Web.Demo;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -20,29 +19,22 @@ public class HomeController(AppDbContext dbContext) : Controller
     [HttpGet("/")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var demo = DemoCatalog.Home();
+        IReadOnlyList<DestinationCard> destinations = Array.Empty<DestinationCard>();
 
         try
         {
-            var destinations = await LoadDestinationsAsync(cancellationToken);
-            if (destinations.Count == 0)
-            {
-                return View(demo);
-            }
-
-            return View(new HomeViewModel
-            {
-                CustomerName = demo.CustomerName,
-                CustomerInitials = demo.CustomerInitials,
-                Search = demo.Search,
-                Destinations = destinations
-            });
+            destinations = await LoadDestinationsAsync(cancellationToken);
         }
         catch (Exception)
         {
-            // Trang chủ vẫn phải mở được khi CSDL chưa sẵn sàng; dùng dữ liệu minh hoạ.
-            return View(demo);
+            // Trang chủ vẫn mở được khi CSDL chưa sẵn sàng; hiển thị trạng thái trống.
         }
+
+        return View(new HomeViewModel
+        {
+            Search = new SearchFormModel(),
+            Destinations = destinations
+        });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -64,9 +56,11 @@ public class HomeController(AppDbContext dbContext) : Controller
             return Array.Empty<DestinationCard>();
         }
 
-        var date = FlightMapping.TryParseDate("20/11/2026", out var parsed)
-            ? parsed
-            : DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+        var dates = new[]
+        {
+            DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7)),
+            new DateOnly(2026, 11, 20)
+        }.Distinct().ToArray();
 
         var cards = new List<DestinationCard>();
 
@@ -82,24 +76,30 @@ public class HomeController(AppDbContext dbContext) : Controller
                 continue;
             }
 
-            var flights = await chuyenBay.TimChuyenBayAsync(new TimChuyenBayDTO
+            decimal? minPrice = null;
+            foreach (var date in dates)
             {
-                SanBayDiId = route.SanBayDiId,
-                SanBayDenId = route.SanBayDenId,
-                NgayDi = date,
-                SoHanhKhach = 1
-            }, cancellationToken);
+                var flights = await chuyenBay.TimChuyenBayAsync(new TimChuyenBayDTO
+                {
+                    SanBayDiId = route.SanBayDiId,
+                    SanBayDenId = route.SanBayDenId,
+                    NgayDi = date,
+                    SoHanhKhach = 1
+                }, cancellationToken);
 
-            if (flights.Count == 0)
+                if (flights.Count > 0)
+                {
+                    var candidate = flights.Min(item => item.GiaCoBan);
+                    minPrice = minPrice is null ? candidate : Math.Min(minPrice.Value, candidate);
+                }
+            }
+
+            if (minPrice is null)
             {
                 continue;
             }
 
-            cards.Add(new DestinationCard(
-                destination.ThanhPho,
-                destination.MaSanBay,
-                flights.Min(item => item.GiaCoBan),
-                image));
+            cards.Add(new DestinationCard(destination.ThanhPho, destination.MaSanBay, minPrice.Value, image));
         }
 
         return cards;

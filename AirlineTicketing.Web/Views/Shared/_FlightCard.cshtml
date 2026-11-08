@@ -34,7 +34,7 @@
             <strong>@Money.Vnd(flight.PricePerPassenger)</strong>
             <span>/khách · Đã gồm thuế, phí</span>
             <a class="av-btn av-btn--primary av-btn--sm"
-               asp-controller="Booking" asp-action="Passengers">Chọn chuyến</a>
+               asp-controller="Booking" asp-action="Passengers" asp-route-flightId="@flight.Id">Chọn chuyến</a>
         </div>
     </div>
 

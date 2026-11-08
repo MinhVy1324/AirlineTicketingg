@@ -58,8 +58,8 @@ public sealed record DestinationCard(string Name, string Code, decimal FromPrice
 
 public sealed class HomeViewModel
 {
-    public string CustomerName { get; init; } = "Minh Anh";
-    public string CustomerInitials { get; init; } = "MA";
+    public string CustomerName { get; init; } = "Khách hàng";
+    public string CustomerInitials { get; init; } = "KH";
     public SearchFormModel Search { get; init; } = new();
     public IReadOnlyList<DestinationCard> Destinations { get; init; } = Array.Empty<DestinationCard>();
 }
@@ -85,14 +85,14 @@ public sealed record DayPriceChip(string DateText, decimal Price, bool IsActive)
 
 public sealed class PassengerFormModel
 {
-    public string LastName { get; set; } = "NGUYEN";
-    public string FirstName { get; set; } = "MINH ANH";
+    public string LastName { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
     public string Gender { get; set; } = "Nữ";
-    public string DateOfBirth { get; set; } = "15/08/1998";
+    public string DateOfBirth { get; set; } = string.Empty;
     public string Nationality { get; set; } = "Việt Nam";
-    public string IdentityNumber { get; set; } = "079098001234";
-    public string Email { get; set; } = "minhanh@example.com";
-    public string Phone { get; set; } = "+84 912 345 678";
+    public string IdentityNumber { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
 
     public string FullName => $"{LastName} {FirstName}".Trim();
 }
@@ -162,8 +162,8 @@ public sealed record SeatRow(string Number, IReadOnlyList<SeatCell> Seats);
 
 public sealed class LoginViewModel
 {
-    public string Email { get; set; } = "minhanh@example.com";
-    public string Password { get; set; } = "aeroviet";
+    public string Email { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
     public bool RememberMe { get; set; } = true;
     public string? ReturnUrl { get; set; }
     public string? ErrorMessage { get; set; }

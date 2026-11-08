@@ -74,8 +74,15 @@ using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Đăng ký Controllers, Views và Font tiếng Việt (UTF-8)
-builder.Services.AddControllersWithViews();
+// 1. Đăng ký Controllers, Views, session và Font tiếng Việt (UTF-8)
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+builder.Services.AddControllersWithViews().AddSessionStateTempDataProvider();
 builder.Services.AddAuthorization();
 builder.Services.AddSingleton<HtmlEncoder>(HtmlEncoder.Create(UnicodeRanges.All));
 
@@ -101,7 +108,16 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
 var app = builder.Build();
 
-// 4. Tự động áp dụng Migration khi ứng dụng khởi động (nếu bật cấu hình)
+// 4. Hỗ trợ --migrate (one-shot cho Docker) và tự áp dụng migration khi khởi động.
+if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
+{
+    await using var migrationScope = app.Services.CreateAsyncScope();
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await migrationDb.Database.MigrateAsync();
+    app.Logger.LogInformation("Database migrations applied.");
+    return;
+}
+
 if (app.Configuration.GetValue<bool>("Database:ApplyMigrationsOnStartup"))
 {
     await using var scope = app.Services.CreateAsyncScope();
@@ -119,6 +135,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession();
 app.UseAuthorization();
 
 app.MapStaticAssets();
