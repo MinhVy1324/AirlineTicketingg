@@ -2,6 +2,8 @@
 
 Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Một image dùng chung được chạy thành **bốn container** để tiện test: một container đầy đủ ở `http://localhost:8080` và ba container theo từng khu vực ở `http://localhost:8081` (khách hàng), `http://localhost:8082` (admin), `http://localhost:8083` (manager). PostgreSQL truy cập từ máy host qua `localhost:5432`.
 
+Hướng dẫn cài đặt theo hệ điều hành: [Windows](INSTALL-WINDOWS.md) · [macOS](INSTALL-MACOS.md) · [tổng quan và tài khoản demo](INSTALL.md).
+
 Thiết kế bảng, ERD và các DTO nằm trong [DATABASE-DESIGN.md](DATABASE-DESIGN.md).
 
 ## 1. Môi trường cần có — DOCKER-01

@@ -1,5 +1,16 @@
 # AirlineTicketing
 
+Hệ thống bán vé máy bay (ASP.NET Core MVC + PostgreSQL) gồm ba khu vực: khách hàng, admin và manager.
+
+## Cài đặt
+
+| Hệ điều hành | Hướng dẫn |
+|---|---|
+| Tổng quan, tài khoản demo, biến môi trường | [docs/INSTALL.md](docs/INSTALL.md) |
+| Windows 10/11 | [docs/INSTALL-WINDOWS.md](docs/INSTALL-WINDOWS.md) |
+| macOS (Apple Silicon & Intel) | [docs/INSTALL-MACOS.md](docs/INSTALL-MACOS.md) |
+| Chi tiết Docker Compose | [docs/DOCKER-SETUP.md](docs/DOCKER-SETUP.md) |
+
 ## Chạy môi trường phát triển bằng Docker
 
 Xem [hướng dẫn Docker, PostgreSQL và cách clone/chạy project](docs/DOCKER-SETUP.md).
