@@ -1,10 +1,11 @@
 using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
+using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
-using AirlineTicketing.Web.Demo;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
@@ -16,20 +17,45 @@ public class AdminController(AppDbContext dbContext) : Controller
     private const string RouteInactiveText = "Tạm dừng";
 
     [HttpGet("/admin")]
-    public IActionResult Index() => View(DemoCatalog.AdminOverview());
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        var paidRevenue = await dbContext.ThanhToans.AsNoTracking()
+            .Where(x => x.TrangThai == TrangThaiThanhToan.ThanhCong)
+            .SumAsync(x => (decimal?)x.SoTien, cancellationToken) ?? 0m;
+        var tickets = await dbContext.Ves.AsNoTracking().CountAsync(cancellationToken);
+        var customers = await dbContext.KhachHangs.AsNoTracking().CountAsync(cancellationToken);
+        var flights = await dbContext.ChuyenBays.AsNoTracking().CountAsync(cancellationToken);
+
+        return View(new AdminOverviewViewModel
+        {
+            StatusText = "Dữ liệu hệ thống",
+            StatusMeta = $"Cập nhật {DateTimeOffset.UtcNow.AddHours(7):HH:mm}, {DateTimeOffset.UtcNow.AddHours(7):dd/MM/yyyy} (UTC+7)",
+            PeriodText = "Theo toàn bộ dữ liệu hiện có",
+            Kpis = new[]
+            {
+                new AdminKpi("Doanh thu đã thanh toán", Money.Vnd(paidRevenue), "Giao dịch thanh toán thành công", "success", "chart"),
+                new AdminKpi("Vé trong hệ thống", tickets.ToString(), $"{flights} chuyến bay đã cấu hình", "info", "ticket"),
+                new AdminKpi("Khách hàng", customers.ToString(), "Theo bảng khách hàng", "info", "users"),
+                new AdminKpi("Cổng dữ liệu", "Kết nối", "Đọc từ PostgreSQL qua EF Core", "success", "activity")
+            },
+            Revenue = Array.Empty<AdminRevenuePoint>(),
+            Health = Array.Empty<AdminHealthRow>(),
+            Activity = Array.Empty<AdminActivityRow>()
+        });
+    }
 
     [HttpGet("/admin/tai-khoan")]
-    public IActionResult Accounts() => View(DemoCatalog.AdminAccounts());
+    public IActionResult Accounts() => View(NotConfiguredAccounts());
 
     [HttpGet("/admin/tai-khoan/khoa")]
-    public IActionResult LockAccount() => View("Accounts", DemoCatalog.AdminAccounts(showLockDialog: true));
+    public IActionResult LockAccount() => View("Accounts", NotConfiguredAccounts());
 
     [HttpPost("/admin/tai-khoan/khoa")]
     [ValidateAntiForgeryToken]
     public IActionResult LockAccount(IFormCollection form) => RedirectToAction(nameof(Accounts));
 
     [HttpGet("/admin/vai-tro")]
-    public IActionResult Roles() => View(DemoCatalog.AdminRoles());
+    public IActionResult Roles() => View(NotConfiguredRoles());
 
     [HttpPost("/admin/vai-tro")]
     [ValidateAntiForgeryToken]
@@ -144,14 +170,14 @@ public class AdminController(AppDbContext dbContext) : Controller
     }
 
     [HttpGet("/admin/cau-hinh")]
-    public IActionResult Settings() => View(DemoCatalog.AdminSettings());
+    public IActionResult Settings() => View(NotConfiguredSettings());
 
     [HttpPost("/admin/cau-hinh")]
     [ValidateAntiForgeryToken]
     public IActionResult Settings(IFormCollection form) => RedirectToAction(nameof(Settings));
 
     [HttpGet("/admin/nhat-ky")]
-    public IActionResult Audit() => View(DemoCatalog.AdminAudit());
+    public IActionResult Audit() => View(NotConfiguredAudit());
 
     [HttpPost("/admin/nhat-ky")]
     [ValidateAntiForgeryToken]
@@ -413,4 +439,101 @@ public class AdminController(AppDbContext dbContext) : Controller
             : shown == 0
                 ? $"Không có {unit} khớp bộ lọc trong {total} {unit}"
                 : $"Hiển thị {shown} trong {total} {unit}";
+
+    private static AdminAccountsViewModel NotConfiguredAccounts() => new()
+    {
+        Stats = Array.Empty<AdminKpi>(),
+        Accounts = Array.Empty<AdminAccountRow>(),
+        Detail = new AdminAccountDetailViewModel
+        {
+            Title = "Tài khoản & phân quyền",
+            Subtitle = "Chưa khả dụng trên nhánh NgDang",
+            Fields = new[]
+            {
+                new AdminDetailField("Trạng thái", "Schema xác thực/tài khoản (GĐ2) chưa được merge vào NgDang."),
+                new AdminDetailField("Hành động", "Sử dụng nhánh có GĐ2 (main) hoặc merge schema GĐ2 để quản lý tài khoản.")
+            },
+            PrimaryActionText = "Quay lại tổng quan",
+            DangerActionText = string.Empty,
+            DangerActionHref = "/admin"
+        },
+        ResultText = "0 tài khoản",
+        ShowLockDialog = false,
+        LockDialog = new AdminLockDialogViewModel()
+    };
+
+    private static AdminRolesViewModel NotConfiguredRoles() => new()
+    {
+        Roles = Array.Empty<AdminRoleCard>(),
+        Permissions = Array.Empty<AdminPermissionRow>(),
+        PolicyVersion = "NgDang",
+        PermissionLegend = "Quản lý vai trò/phân quyền cần schema GĐ2.",
+        PermissionFootnote = "Chức năng này chưa khả dụng trên nhánh hiện tại.",
+        LimitsTitle = "Chưa khả dụng",
+        LimitTitle = "Cần schema phân quyền (GĐ2)",
+        LimitText = "Merge/port GĐ2 từ main để bật quản lý vai trò và phân quyền.",
+        LimitNote = string.Empty,
+        ControlTitle = "Trạng thái",
+        ControlStatus = "Chưa cấu hình",
+        ControlUpdated = "—",
+        ControlActor = "—"
+    };
+
+    private static AdminSettingsViewModel NotConfiguredSettings() => new()
+    {
+        VersionText = "NgDang · chưa có bảng cấu hình GĐ2",
+        DirtyText = "Không thể lưu trên nhánh hiện tại",
+        UpdatedText = "—",
+        BookingTitle = "Đặt chỗ & phí dịch vụ",
+        BookingFields = new[] { new AdminSettingField("Trạng thái", "Cần schema CauHinhHeThong (GĐ2).") },
+        ExampleTitle = "Ghi chú",
+        ExampleText = "Merge/port GĐ2 từ main để bật cấu hình nghiệp vụ.",
+        PolicyTitle = "Chính sách đổi / hoàn",
+        PolicySubtitle = "Chưa khả dụng trên NgDang",
+        PolicyFields = Array.Empty<AdminSettingField>(),
+        PolicyChecks = Array.Empty<string>(),
+        PaymentTitle = "Tích hợp thanh toán",
+        Payment = new AdminPaymentViewModel
+        {
+            Name = "—",
+            StatusText = "Chưa cấu hình",
+            StatusTone = "neutral",
+            Environment = "—",
+            MerchantId = "—",
+            SecretMasked = "—",
+            Note = "Cần schema/cấu hình GĐ2.",
+            CheckText = "—"
+        },
+        NotificationTitle = "Thông báo",
+        NotificationFields = Array.Empty<AdminSettingField>(),
+        EmailSender = new AdminSettingField("Email gửi hệ thống", "—"),
+        FooterNote = "Chức năng cấu hình cần schema GĐ2.",
+        SaveNoteTitle = "Chưa khả dụng",
+        SaveNoteText = "Không thay đổi dữ liệu trên nhánh hiện tại."
+    };
+
+    private static AdminAuditViewModel NotConfiguredAudit() => new()
+    {
+        FromDate = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7)).ToString("dd/MM/yyyy"),
+        ToDate = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7)).ToString("dd/MM/yyyy"),
+        ActorFilter = "Tất cả",
+        TypeFilter = "Tất cả",
+        FilterText = "Lọc",
+        ExportText = "Xuất",
+        Rows = Array.Empty<AdminAuditRow>(),
+        ResultText = "0 sự kiện · nhật ký cần schema NhatKyHoatDong (GĐ2)",
+        Detail = new AdminAuditDetailViewModel
+        {
+            Title = "Nhật ký hoạt động",
+            Subtitle = "Chưa khả dụng trên nhánh NgDang",
+            Left = new[] { new AdminDetailField("Trạng thái", "Cần schema GĐ2.") },
+            Right = Array.Empty<AdminDetailField>(),
+            Content = "Merge/port GĐ2 từ main để bật nhật ký hoạt động."
+        },
+        IntegrityTitle = "Tính toàn vẹn nhật ký",
+        IntegrityStatus = "Chưa cấu hình",
+        IntegrityNoteTitle = "Ghi chú",
+        IntegrityNoteText = "Nhật ký hoạt động chưa khả dụng trên nhánh hiện tại.",
+        IntegrityCode = "—"
+    };
 }

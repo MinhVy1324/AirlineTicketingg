@@ -1,11 +1,12 @@
 using System.Globalization;
 using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
+using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
-using AirlineTicketing.Web.Demo;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
@@ -17,7 +18,37 @@ public class ManagerController(AppDbContext dbContext) : Controller
     private static readonly string[] StatusChoices = ["Mở bán", "Đang bay", "Hoàn tất", "Đã hủy"];
 
     [HttpGet("/quan-ly")]
-    public IActionResult Index() => View(DemoCatalog.ManagerOverview());
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        var todayVn = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+        var startUtc = new DateTimeOffset(todayVn.ToDateTime(TimeOnly.MinValue), ChuyenBayBUS.VietnamOffset).ToUniversalTime();
+        var endUtc = startUtc.AddDays(1);
+
+        var todayFlights = await dbContext.ChuyenBays.AsNoTracking().CountAsync(x => x.GioKhoiHanh >= startUtc && x.GioKhoiHanh < endUtc, cancellationToken);
+        var pendingPayments = await dbContext.DatVes.AsNoTracking().CountAsync(x => x.TrangThai == TrangThaiDatVe.ChoThanhToan, cancellationToken);
+        var confirmedBookings = await dbContext.DatVes.AsNoTracking().CountAsync(x => x.TrangThai == TrangThaiDatVe.DaXacNhan, cancellationToken);
+        var paidRevenue = await dbContext.ThanhToans.AsNoTracking()
+            .Where(x => x.TrangThai == TrangThaiThanhToan.ThanhCong)
+            .SumAsync(x => (decimal?)x.SoTien, cancellationToken) ?? 0m;
+
+        return View(new ManagerOverviewViewModel
+        {
+            Subtitle = $"Hôm nay, {todayVn:dd/MM/yyyy} · Dữ liệu theo hệ thống (UTC+7).",
+            ShiftText = "Ca làm việc",
+            UpdatedText = $"Cập nhật lúc {DateTimeOffset.UtcNow.AddHours(7):HH:mm} (UTC+7)",
+            Kpis = new[]
+            {
+                new ManagerKpi("Chuyến bay hôm nay", todayFlights.ToString(), "Theo lịch khai thác", "info", "plane"),
+                new ManagerKpi("Đặt chỗ chờ thanh toán", pendingPayments.ToString(), "Cần theo dõi", pendingPayments > 0 ? "warning" : "success", "clock"),
+                new ManagerKpi("Đặt chỗ đã xác nhận", confirmedBookings.ToString(), "Tổng theo hệ thống", "success", "check"),
+                new ManagerKpi("Doanh thu đã thanh toán", Money.Vnd(paidRevenue), "Tổng giao dịch thành công", "info", "wallet")
+            },
+            Flights = Array.Empty<ManagerFlightRow>(),
+            Holds = Array.Empty<ManagerHoldRow>(),
+            Workload = Array.Empty<ManagerWorkloadRow>(),
+            Checklist = Array.Empty<ManagerChecklistItem>()
+        });
+    }
 
     [HttpGet("/quan-ly/lich-bay")]
     public async Task<IActionResult> Schedules(
@@ -244,17 +275,157 @@ public class ManagerController(AppDbContext dbContext) : Controller
     }
 
     [HttpGet("/quan-ly/dat-ve")]
-    public IActionResult Bookings(string? q) => View(DemoCatalog.ManagerBookings());
+    public async Task<IActionResult> Bookings(string? q, CancellationToken cancellationToken)
+    {
+        var query = dbContext.DatVes.AsNoTracking()
+            .Include(x => x.KhachHang)
+            .Include(x => x.ThanhToans)
+            .Include(x => x.Ves).ThenInclude(x => x.ChuyenBay).ThenInclude(x => x.TuyenBay).ThenInclude(x => x.SanBayDi)
+            .Include(x => x.Ves).ThenInclude(x => x.ChuyenBay).ThenInclude(x => x.TuyenBay).ThenInclude(x => x.SanBayDen)
+            .OrderByDescending(x => x.NgayDat)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var term = q.Trim().ToUpperInvariant();
+            query = query.Where(x => x.MaDatVe.ToUpper().Contains(term) || x.KhachHang.HoTen.ToUpper().Contains(term));
+        }
+
+        var bookings = await query.Take(100).ToListAsync(cancellationToken);
+        var rows = bookings.Select((b, i) =>
+        {
+            var ve = b.Ves.OrderBy(x => x.Id).FirstOrDefault();
+            var f = ve?.ChuyenBay;
+            var dep = f is null ? "—" : FlightMapping.ToVietnamTime(f.GioKhoiHanh).ToString("dd/MM HH:mm");
+            var flightDate = f is null ? "—" : $"{f.SoHieu} · {f.TuyenBay.SanBayDi.MaSanBay}→{f.TuyenBay.SanBayDen.MaSanBay} · {dep}";
+            var paid = b.ThanhToans.Any(t => t.TrangThai == TrangThaiThanhToan.ThanhCong);
+            var (paymentText, paymentTone) = paid ? ("Đã thanh toán", "success")
+                : b.TrangThai == TrangThaiDatVe.ChoThanhToan ? ("Chờ thanh toán", "warning")
+                : ("Chưa thanh toán", "neutral");
+            var issued = b.Ves.Any(v => v.TrangThai == TrangThaiVe.DaPhatHanh);
+            var (ticketText, ticketTone) = issued ? ("Đã xuất vé", "success")
+                : b.TrangThai == TrangThaiDatVe.DaHuy ? ("Đã hủy", "danger")
+                : ("Chưa xuất", "warning");
+            var (holdText, holdTone) = b.TrangThai switch
+            {
+                TrangThaiDatVe.ChoThanhToan => ("Đang giữ chỗ", "warning"),
+                TrangThaiDatVe.DaXacNhan => ("Đã xác nhận", "success"),
+                TrangThaiDatVe.HetHan => ("Hết hạn", "danger"),
+                TrangThaiDatVe.DaHuy => ("Đã hủy", "danger"),
+                TrangThaiDatVe.HoanTien => ("Hoàn tiền", "info"),
+                _ => (b.TrangThai.ToString(), "neutral")
+            };
+            return new ManagerBookingRow(b.MaDatVe, b.KhachHang?.HoTen ?? "—", flightDate, holdText, holdTone,
+                paymentText, paymentTone, ticketText, ticketTone, Money.Vnd(b.TongTien), i == 0);
+        }).ToList();
+
+        var selected = bookings.FirstOrDefault();
+        var detailStatuses = selected is null
+            ? Array.Empty<ManagerStatusBadge>()
+            : new[] { new ManagerStatusBadge(selected.TrangThai.ToString(), BookingTone(selected.TrangThai)) };
+
+        return View(new ManagerBookingsViewModel
+        {
+            Subtitle = "Dữ liệu đặt chỗ theo hệ thống (UTC+7).",
+            SearchLabel = "PNR / Tên khách hàng",
+            SearchPlaceholder = "Nhập PNR hoặc tên",
+            DateLabel = "Ngày đặt",
+            DateValue = DateTimeOffset.UtcNow.AddHours(7).ToString("dd/MM/yyyy"),
+            StatusLabel = "Trạng thái",
+            StatusValue = string.IsNullOrWhiteSpace(q) ? "Tất cả" : $"Tìm: {q}",
+            SearchText = "Tìm đặt chỗ",
+            ListTitle = "Danh sách đặt chỗ",
+            ListMeta = $"{rows.Count} đặt chỗ",
+            Rows = rows,
+            ResultText = $"Hiển thị 1–{rows.Count} trong {rows.Count} đặt chỗ",
+            DetailTitle = selected is null ? "Chi tiết đặt chỗ" : $"Đặt chỗ · {selected.MaDatVe}",
+            DetailSubtitle = selected is null
+                ? "Chưa có dữ liệu"
+                : $"Tạo lúc {FlightMapping.ToVietnamTime(selected.NgayDat):HH:mm 'ngày' dd/MM/yyyy} (UTC+7)",
+            Statuses = detailStatuses,
+            Fields = selected is null
+                ? new[] { new AdminDetailField("Trạng thái", "Chưa có dữ liệu đặt chỗ. Nạp seed hoặc tạo đặt chỗ.") }
+                : BuildBookingDetailFields(selected),
+            TotalLabel = "Tổng tiền",
+            TotalValue = selected is null ? "—" : Money.Vnd(selected.TongTien),
+            PrimaryActionText = "Làm mới",
+            SecondaryActionText = "Xem vé của tôi",
+            SafeTitle = "Dữ liệu hệ thống",
+            SafeText = "Dữ liệu đọc trực tiếp từ cơ sở dữ liệu.",
+            TimelineTitle = "Lịch sử",
+            Timeline = Array.Empty<ManagerTimelineRow>(),
+            TransactionCode = selected?.ThanhToans.FirstOrDefault(t => t.TrangThai == TrangThaiThanhToan.ThanhCong)?.MaGiaoDich ?? "—",
+            TransactionConfirmed = selected?.ThanhToans.Any(t => t.TrangThai == TrangThaiThanhToan.ThanhCong) == true ? "Đã xác nhận thanh toán" : "Chưa có giao dịch thành công",
+            ConditionsTitle = "Ghi chú",
+            Conditions = Array.Empty<ManagerChecklistItem>(),
+            IssuedText = selected?.Ves.Any(v => v.TrangThai == TrangThaiVe.DaPhatHanh) == true ? "Đã xuất vé" : "Chưa xuất vé",
+            ConditionsNote = "Dữ liệu đọc trực tiếp từ cơ sở dữ liệu."
+        });
+    }
 
     [HttpPost("/quan-ly/dat-ve")]
     [ValidateAntiForgeryToken]
-    public IActionResult Bookings(IFormCollection form) => RedirectToAction(nameof(Bookings));
+    public IActionResult Bookings(IFormCollection form) => RedirectToAction(nameof(Bookings), new { q = form["q"].ToString() });
+
+    private static IReadOnlyList<AdminDetailField> BuildBookingDetailFields(DatVe b)
+    {
+        var ve = b.Ves.OrderBy(x => x.Id).FirstOrDefault();
+        var f = ve?.ChuyenBay;
+        var paid = b.ThanhToans.FirstOrDefault(t => t.TrangThai == TrangThaiThanhToan.ThanhCong);
+        return new[]
+        {
+            new AdminDetailField("Mã đặt chỗ", b.MaDatVe),
+            new AdminDetailField("Khách hàng", b.KhachHang?.HoTen ?? "—"),
+            new AdminDetailField("Email", b.KhachHang?.Email ?? "—"),
+            new AdminDetailField("Chuyến bay", f is null ? "—" : $"{f.SoHieu} · {f.TuyenBay.SanBayDi.MaSanBay}→{f.TuyenBay.SanBayDen.MaSanBay}"),
+            new AdminDetailField("Khởi hành", f is null ? "—" : FlightMapping.ToVietnamTime(f.GioKhoiHanh).ToString("dd/MM/yyyy HH:mm '(UTC+7)'")),
+            new AdminDetailField("Hành khách", ve?.HanhKhach?.HoTen ?? "—"),
+            new AdminDetailField("Số vé", ve?.MaVe ?? "Chưa phát hành"),
+            new AdminDetailField("Tổng tiền", Money.Vnd(b.TongTien)),
+            new AdminDetailField("Thanh toán", paid is null ? "Chưa có giao dịch thành công" : $"{paid.PhuongThuc} · {paid.MaGiaoDich}")
+        };
+    }
 
     [HttpGet("/quan-ly/doi-hoan")]
     public IActionResult ChangeRefunds(
         string? tab,
-        [FromQuery(Name = "hop-thoai")] string? hopThoai) =>
-        View(DemoCatalog.ManagerChangeRefunds(tab, hopThoai));
+        [FromQuery(Name = "hop-thoai")] string? hopThoai)
+    {
+        var isRefund = string.Equals(tab, "refund", StringComparison.OrdinalIgnoreCase);
+        var tabs = new[]
+        {
+            new ManagerQueueTab("Yêu cầu đổi vé", "/quan-ly/doi-hoan?tab=change", !isRefund),
+            new ManagerQueueTab("Yêu cầu hoàn vé", "/quan-ly/doi-hoan?tab=refund", isRefund)
+        };
+        return View(new ManagerChangeRefundsViewModel
+        {
+            Subtitle = "Chức năng đổi/hoàn cần schema yêu cầu đổi/hoàn (GĐ2). Dữ liệu thực chưa khả dụng trên NgDang.",
+            Tabs = tabs,
+            QueueTitle = "Hàng đợi yêu cầu",
+            QueueSubtitle = "0 yêu cầu · chưa cấu hình GĐ2",
+            Rows = Array.Empty<ManagerRequestRow>(),
+            ResultText = "Chưa có dữ liệu. Merge/port GĐ2 từ main để bật xử lý đổi/hoàn.",
+            DetailTitle = "Chi tiết yêu cầu",
+            DetailSubtitle = "Chưa khả dụng trên nhánh hiện tại",
+            DetailFields = new[] { new AdminDetailField("Trạng thái", "Cần bảng/schema YeuCauDoiHoan (GĐ2).") },
+            EligibleTitle = "Điều kiện",
+            EligibleText = "Chức năng đổi/hoàn chưa được kích hoạt trên NgDang.",
+            ConditionText = "Port/merge GĐ2 để xử lý đổi/hoàn theo dữ liệu thực.",
+            DecisionTitle = "Phê duyệt / từ chối",
+            ReasonLabel = "Lý do xử lý",
+            ReasonValue = string.Empty,
+            DecisionNote = "Không thể thực hiện trên nhánh hiện tại.",
+            ProcessTitle = "Quy trình",
+            ProcessText = "Cần schema và nghiệp vụ GĐ2.",
+            RefundTitle = "Hoàn tiền dự kiến",
+            RefundRows = Array.Empty<ManagerRefundRow>(),
+            RefundMethodValue = "—",
+            RefundTimeValue = "—",
+            WarningTitle = "Chưa khả dụng",
+            WarningText = "Tính năng đổi/hoàn chưa sẵn sàng trên NgDang.",
+            ShowApproveDialog = false
+        });
+    }
 
     [HttpPost("/quan-ly/doi-hoan/duyet")]
     [ValidateAntiForgeryToken]
@@ -265,7 +436,7 @@ public class ManagerController(AppDbContext dbContext) : Controller
     public IActionResult RejectRefund(IFormCollection form) => RedirectToAction(nameof(ChangeRefunds));
 
     [HttpGet("/quan-ly/bao-cao")]
-    public IActionResult Reports() => View(DemoCatalog.ManagerReports());
+    public async Task<IActionResult> Reports(CancellationToken cancellationToken) => View(await BuildReportsModelAsync(cancellationToken));
 
     [HttpPost("/quan-ly/bao-cao")]
     [ValidateAntiForgeryToken]
@@ -381,6 +552,53 @@ public class ManagerController(AppDbContext dbContext) : Controller
         AirlineTicketing.Domain.TrangThaiChuyenBay.HoanTat => "neutral",
         _ => "warning"
     };
+
+    private static string BookingTone(TrangThaiDatVe status) => status switch
+    {
+        TrangThaiDatVe.DaXacNhan => "success",
+        TrangThaiDatVe.ChoThanhToan => "warning",
+        TrangThaiDatVe.DaHuy => "danger",
+        TrangThaiDatVe.HoanTien => "info",
+        TrangThaiDatVe.HetHan => "danger",
+        _ => "neutral"
+    };
+
+    private async Task<ManagerReportsViewModel> BuildReportsModelAsync(CancellationToken cancellationToken)
+    {
+        // Báo cáo tổng hợp thực dụng từ dữ liệu hiện có; chưa có bảng báo cáo/GĐ2 riêng.
+        var paid = await dbContext.ThanhToans.AsNoTracking()
+            .Where(x => x.TrangThai == TrangThaiThanhToan.ThanhCong)
+            .SumAsync(x => (decimal?)x.SoTien, cancellationToken) ?? 0m;
+        var refunded = await dbContext.HoanTiens.AsNoTracking()
+            .Where(x => x.TrangThai == TrangThaiHoanTien.ThanhCong)
+            .SumAsync(x => (decimal?)x.SoTien, cancellationToken) ?? 0m;
+        var ticketCount = await dbContext.Ves.AsNoTracking().CountAsync(cancellationToken);
+        var bookingCount = await dbContext.DatVes.AsNoTracking().CountAsync(cancellationToken);
+
+        return new ManagerReportsViewModel
+        {
+            Subtitle = "Tổng hợp theo dữ liệu giao dịch/đặt chỗ hiện có (NgDang). Một số chỉ số nâng cao cần GĐ2.",
+            PeriodLabel = "Phạm vi",
+            PeriodValue = "Toàn bộ dữ liệu hiện có",
+            AirlineLabel = "Nguồn",
+            AirlineValue = "PostgreSQL",
+            RouteLabel = "Ghi chú",
+            RouteValue = "Báo cáo chi tiết theo tuyến/hãng cần mở rộng",
+            ViewText = "Làm mới",
+            ExportText = "—",
+            Kpis = new[]
+            {
+                new ManagerKpi("Doanh thu đã thu", Money.Vnd(paid), "Thanh toán thành công", "success", "wallet"),
+                new ManagerKpi("Đã hoàn tiền", Money.Vnd(refunded), "Giao dịch hoàn tiền", refunded > 0 ? "warning" : "neutral", "refresh"),
+                new ManagerKpi("Đặt chỗ", bookingCount.ToString(), "Tổng đặt chỗ", "info", "ticket"),
+                new ManagerKpi("Vé", ticketCount.ToString(), "Tổng vé phát sinh", "info", "plane")
+            },
+            Bars = Array.Empty<ManagerRevenueBar>(),
+            Airlines = Array.Empty<ManagerAirlineRevenue>(),
+            Routes = Array.Empty<ManagerRouteRevenue>(),
+            Note = "Báo cáo xu hướng/doanh thu theo hãng-tuyến chi tiết cần dữ liệu và nghiệp vụ GĐ2 đầy đủ."
+        };
+    }
 
     private static int ParseInt(string? value) =>
         int.TryParse(value, out var parsed) ? parsed : 0;
