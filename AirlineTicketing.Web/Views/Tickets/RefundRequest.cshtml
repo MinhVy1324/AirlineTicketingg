@@ -25,6 +25,7 @@
 
     <form class="booking-layout" method="post" action="/ve-cua-toi/yeu-cau-hoan">
         @Html.AntiForgeryToken()
+        <input type="hidden" name="pnr" value="@booking.Pnr" />
 
         <div class="booking-main">
             <section class="av-card">

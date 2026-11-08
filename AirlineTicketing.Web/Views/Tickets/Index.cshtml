@@ -157,11 +157,11 @@
                     @if (detail.CanManage)
                     {
                         <div class="av-row av-gap-12 av-wrap">
-                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi?pnr=@detail.Pnr">
                                 @Html.Icon("refresh", 17)
                                 <span>Yêu cầu đổi vé</span>
                             </a>
-                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan?pnr=@detail.Pnr">
                                 @Html.Icon("undo", 17)
                                 <span>Yêu cầu hoàn vé</span>
                             </a>

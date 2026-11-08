@@ -308,7 +308,9 @@ public sealed record ManagerRequestRow(
     string Submitted,
     string StatusText,
     string StatusTone,
-    bool IsSelected = false);
+    bool IsSelected = false,
+    int Id = 0,
+    string Href = "");
 
 public sealed record ManagerRefundRow(string Label, string Value, bool IsTotal = false);
 

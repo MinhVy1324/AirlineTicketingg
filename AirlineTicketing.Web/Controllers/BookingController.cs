@@ -223,7 +223,15 @@ public class BookingController(AppDbContext dbContext) : Controller
             NgayDat = now,
             TrangThai = TrangThaiDatVe.DaXacNhan,
             TongTien = model.Price.Total,
-            DonViTienTe = "VND"
+            DonViTienTe = "VND",
+            HanGiuCho = now.AddMinutes(15),
+            NgayXacNhan = now,
+            ThuePhi = model.Price.Taxes,
+            PhiDichVu = model.Price.ServiceFee,
+            PhiHanhLy = model.Price.BaggageFee,
+            EmailLienHe = email,
+            SoDienThoaiLienHe = phone,
+            GhiChu = null
         };
         dbContext.DatVes.Add(datVe);
         await dbContext.SaveChangesAsync(ct);
@@ -238,7 +246,12 @@ public class BookingController(AppDbContext dbContext) : Controller
             SoGhe = "Tự động",
             HangVe = model.Flight.FareName,
             GiaVe = model.Price.BaseFare,
-            TrangThai = TrangThaiVe.DaPhatHanh
+            TrangThai = TrangThaiVe.DaPhatHanh,
+            NgayPhatHanh = now,
+            HanhLyXachTayKg = 10,
+            HanhLyKyGuiKg = 23,
+            PhiDoi = FlightMapping.ChangeFee,
+            PhiHoan = FlightMapping.RefundFee
         });
         dbContext.ThanhToans.Add(new ThanhToan
         {

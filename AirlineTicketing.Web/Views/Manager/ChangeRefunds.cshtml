@@ -88,7 +88,9 @@
                             @foreach (var row in Model.Rows)
                             {
                                 <tr class="@(row.IsSelected ? "is-selected" : null)">
-                                    <td class="manager-flight-name">@row.Request</td>
+                                    <td class="manager-flight-name">
+                                        <a class="av-link" href="@(string.IsNullOrWhiteSpace(row.Href) ? $"/quan-ly/doi-hoan?id={row.Id}" : row.Href)">@row.Request</a>
+                                    </td>
                                     <td>@row.Customer</td>
                                     <td>@row.Type</td>
                                     <td>@row.Submitted</td>
@@ -158,6 +160,7 @@
                     <form class="av-card__body admin-card__body manager-decision"
                           method="post" action="/quan-ly/doi-hoan/tu-choi">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="yeu-cau-id" value="@ViewData["SelectedRequestId"]" />
 
                         <h2 class="av-card__title">@Model.DecisionTitle</h2>
 
@@ -175,7 +178,7 @@
                                 @Model.RejectText
                             </button>
                             <a class="av-btn av-btn--primary"
-                               href="/quan-ly/doi-hoan?hop-thoai=duyet-hoan">@Model.ApproveText</a>
+                               href="/quan-ly/doi-hoan?tab=@Context.Request.Query["tab"]&id=@ViewData["SelectedRequestId"]&hop-thoai=duyet-hoan">@Model.ApproveText</a>
                         </div>
                     </form>
                 </article>
@@ -237,6 +240,7 @@
 
         <form class="av-modal__panel" method="post" action="/quan-ly/doi-hoan/duyet">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="yeu-cau-id" value="@ViewData["SelectedRequestId"]" />
 
             <div class="av-modal__head">
                 <div class="admin-modal__head-main">

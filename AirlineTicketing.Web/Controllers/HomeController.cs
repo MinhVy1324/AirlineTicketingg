@@ -1,14 +1,15 @@
 using System.Diagnostics;
-using AirlineTicketing.Web.Demo;
+using AirlineTicketing.DAL;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
-public class HomeController(IConfiguration configuration) : Controller
+public class HomeController(IConfiguration configuration, AppDbContext db) : Controller
 {
     [HttpGet("/")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
         // Each Docker test container can be pointed at one area. Requests to "/"
         // then land on the matching home page so every instance opens where the
@@ -25,7 +26,47 @@ public class HomeController(IConfiguration configuration) : Controller
             return Redirect("/quan-ly");
         }
 
-        return View(DemoCatalog.Home());
+        var now = DateTimeOffset.UtcNow;
+        var destinations = await db.TuyenBays
+            .AsNoTracking()
+            .Include(t => t.SanBayDen)
+            .Select(t => new
+            {
+                t.SanBayDen.ThanhPho,
+                t.SanBayDen.MaSanBay,
+                MinPrice = db.ChuyenBays
+                    .Where(c => c.TuyenBayId == t.Id && c.GioKhoiHanh >= now)
+                    .Select(c => (decimal?)c.GiaCoBan)
+                    .Min()
+            })
+            .Where(x => x.MinPrice != null)
+            .GroupBy(x => new { x.ThanhPho, x.MaSanBay })
+            .Select(g => new { g.Key.ThanhPho, g.Key.MaSanBay, Price = g.Min(x => x.MinPrice)!.Value })
+            .OrderBy(x => x.Price)
+            .Take(3)
+            .ToListAsync(ct);
+
+        var cards = destinations.Select(d => new DestinationCard(
+            d.ThanhPho, d.MaSanBay, d.Price,
+            d.MaSanBay switch { "HAN" => "dest-ha-noi.png", "DAD" => "dest-da-nang.png", "PQC" => "dest-phu-quoc.png", _ => "dest-ha-noi.png" }
+        )).ToList();
+        if (cards.Count == 0)
+        {
+            cards = new List<DestinationCard>
+            {
+                new("Hà Nội", "HAN", 1_950_000m, "dest-ha-noi.png"),
+                new("Đà Nẵng", "DAD", 1_290_000m, "dest-da-nang.png"),
+                new("Phú Quốc", "PQC", 1_150_000m, "dest-phu-quoc.png")
+            };
+        }
+
+        return View(new HomeViewModel
+        {
+            CustomerName = "Khách hàng",
+            CustomerInitials = "KH",
+            Search = new SearchFormModel(),
+            Destinations = cards
+        });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

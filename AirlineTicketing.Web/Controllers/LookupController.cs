@@ -35,6 +35,7 @@ public class LookupController(AppDbContext dbContext) : Controller
 
         try
         {
+            var emailLower = form.Email.ToLower();
             var booking = await dbContext.DatVes
                 .AsNoTracking()
                 .Include(x => x.KhachHang)
@@ -44,7 +45,8 @@ public class LookupController(AppDbContext dbContext) : Controller
                 .Include(x => x.Ves).ThenInclude(x => x.ChuyenBay).ThenInclude(x => x.MayBay)
                 .FirstOrDefaultAsync(x =>
                     x.MaDatVe.ToUpper() == form.Pnr
-                    && x.KhachHang.Email.ToLower() == form.Email.ToLower(),
+                    && ((x.EmailLienHe != null && x.EmailLienHe.ToLower() == emailLower)
+                        || x.KhachHang.Email.ToLower() == emailLower),
                     cancellationToken);
 
             if (booking is null || booking.Ves.Count == 0)

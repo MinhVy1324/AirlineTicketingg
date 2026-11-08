@@ -15,6 +15,8 @@
 
     <form class="booking-layout" method="post" action="/ve-cua-toi/yeu-cau-doi">
         @Html.AntiForgeryToken()
+        <input type="hidden" name="pnr" value="@booking.Pnr" />
+        <input type="hidden" name="newFlightId" value="@ViewData["NewFlightId"]" />
 
         <div class="booking-main">
             <section class="av-card">
