@@ -10,11 +10,19 @@
             <h1 class="admin-page-title">Quản lý tài khoản</h1>
             <p class="admin-page-subtitle">Cấp quyền truy cập phù hợp, theo dõi và bảo vệ tài khoản hệ thống.</p>
         </div>
-        <button type="button" class="av-btn av-btn--primary">
+        <a class="av-btn av-btn--primary" href="/admin/tai-khoan/tao">
             @Html.Icon("plus", 17)
             <span>Tạo tài khoản nhân sự</span>
-        </button>
+        </a>
     </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check" : "info", 20)</span>
+            <div class="av-alert__body"><span>@Model.Message</span></div>
+        </div>
+    }
 
     <section class="admin-kpis admin-kpis--compact" aria-label="Thống kê tài khoản">
         @foreach (var kpi in Model.Stats)
@@ -129,7 +137,10 @@
                 </div>
 
                 <div class="admin-detail-actions">
-                    <button type="button" class="av-btn av-btn--ghost">@Model.Detail.PrimaryActionText</button>
+                    @if (Model.Detail.Id > 0)
+                    {
+                        <a class="av-btn av-btn--ghost" href="@Model.Detail.PrimaryActionHref?id=@Model.Detail.Id">@Model.Detail.PrimaryActionText</a>
+                    }
                     <a class="av-btn av-btn--ghost admin-text-danger" href="@Model.Detail.DangerActionHref">@Model.Detail.DangerActionText</a>
                 </div>
             </div>
@@ -160,16 +171,18 @@
 
 @if (Model.ShowLockDialog)
 {
+    var isLocking = Model.LockDialog.RoleStatus.Contains("Hoạt động", StringComparison.OrdinalIgnoreCase);
     <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="lock-account-title">
         <a class="av-modal__backdrop" href="@Model.LockDialog.CancelHref" aria-label="Đóng hộp thoại"></a>
 
-        <form class="av-modal__panel" method="post" action="@Model.LockDialog.SubmitHref">
+        <form class="av-modal__panel" method="post" action="@Model.LockDialog.SubmitHref?id=@Context.Request.Query["id"]">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Context.Request.Query["id"]" />
 
             <div class="av-modal__head">
                 <div class="admin-modal__head-main">
-                    <h2 class="av-modal__title" id="lock-account-title">Khóa tài khoản @Model.LockDialog.AccountName?</h2>
-                    <p class="av-caption">Tài khoản / Xác nhận khóa · Thao tác chưa được thực hiện</p>
+                    <h2 class="av-modal__title" id="lock-account-title">@(isLocking ? "Khóa tài khoản" : "Mở khóa tài khoản") @Model.LockDialog.AccountName?</h2>
+                    <p class="av-caption">Tài khoản / Xác nhận thao tác</p>
                 </div>
                 <a class="admin-modal__close" href="@Model.LockDialog.CancelHref" aria-label="Đóng">
                     @Html.Icon("x", 24)
@@ -191,33 +204,63 @@
                 </div>
             </div>
 
-            <div class="av-alert av-alert--warning">
-                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+            <div class="av-alert @(isLocking ? "av-alert--warning" : "av-alert--info")">
+                <span class="av-alert__icon">@Html.Icon(isLocking ? "alert" : "info", 20)</span>
                 <div class="av-alert__body">
-                    <span class="av-alert__title">Tài khoản sẽ không thể tiếp tục truy cập</span>
-                    <span>
-                        Kết thúc tất cả phiên truy cập hiện tại và ngăn đăng nhập mới. Dữ liệu đặt chỗ và
-                        lịch sử xử lý vẫn được giữ nguyên; không xóa tài khoản.
-                    </span>
+                    <span class="av-alert__title">@(isLocking ? "Tài khoản sẽ không thể tiếp tục truy cập" : "Tài khoản sẽ có thể đăng nhập trở lại")</span>
+                    <span>@(isLocking ? "Các phiên hiện tại sẽ không còn hiệu lực mới. Dữ liệu đặt chỗ và lịch sử vẫn được giữ nguyên; không xóa tài khoản." : "Sau khi mở khóa, tài khoản có thể đăng nhập lại theo vai trò được cấp.")</span>
                 </div>
             </div>
 
             <label class="av-field">
-                <span class="av-label">Lý do khóa tài khoản <span class="req">*</span></span>
+                <span class="av-label">Lý do @(isLocking ? "khóa" : "mở khóa") <span class="req">*</span></span>
                 <span class="av-control av-control--area">
                     <textarea name="reason" rows="3" required>@Model.LockDialog.Reason</textarea>
                 </span>
-                <span class="av-field__hint">Bắt buộc nhập lý do. Thao tác và người thực hiện được ghi vào nhật ký.</span>
+                <span class="av-field__hint">Bắt buộc nhập lý do. Thao tác được ghi vào nhật ký.</span>
             </label>
 
             <p class="av-caption admin-modal__note">
-                Bạn đang thao tác với vai trò Admin · @DemoCatalog.AdminName. Không cho phép tự khóa Admin đang thao tác
-                hoặc khóa Admin hoạt động cuối cùng.
+                Thao tác thực hiện bởi quản trị viên đang đăng nhập. Không thể tự khóa tài khoản của mình hoặc khóa Admin hoạt động cuối cùng.
             </p>
 
             <div class="av-modal__foot">
                 <a class="av-btn av-btn--outline" href="@Model.LockDialog.CancelHref">Hủy thao tác</a>
-                <button type="submit" class="av-btn av-btn--danger">Khóa tài khoản</button>
+                <button type="submit" class="av-btn @(isLocking ? "av-btn--danger" : "av-btn--primary")">@(isLocking ? "Khóa tài khoản" : "Mở khóa tài khoản")</button>
+            </div>
+        </form>
+    </div>
+}
+
+@if (Model.ShowFormDialog)
+{
+    <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="account-form-title">
+        <a class="av-modal__backdrop" href="@Model.Form.CancelHref" aria-label="Đóng"></a>
+        <form class="av-modal__panel" method="post" action="@Model.Form.SubmitHref">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Form.Id" />
+            <div class="av-modal__head">
+                <div class="admin-modal__head-main">
+                    <h2 class="av-modal__title" id="account-form-title">@Model.Form.Title</h2>
+                    <p class="av-caption">Dữ liệu được lưu vào cơ sở dữ liệu (GĐ2).</p>
+                </div>
+                <a class="admin-modal__close" href="@Model.Form.CancelHref" aria-label="Đóng">@Html.Icon("x", 24)</a>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.Form.Error))
+            {
+                <div class="av-alert av-alert--danger"><div class="av-alert__body"><span>@Model.Form.Error</span></div></div>
+            }
+            <label class="av-field"><span class="av-label">Họ tên <span class="req">*</span></span><span class="av-control"><input name="hoTen" value="@Model.Form.HoTen" required /></span></label>
+            <label class="av-field"><span class="av-label">Tên đăng nhập <span class="req">*</span></span><span class="av-control"><input name="tenDangNhap" value="@Model.Form.TenDangNhap" required @(Model.Form.IsEdit ? "readonly" : "") /></span></label>
+            <label class="av-field"><span class="av-label">Email <span class="req">*</span></span><span class="av-control"><input name="email" type="email" value="@Model.Form.Email" required /></span></label>
+            <label class="av-field"><span class="av-label">Số điện thoại</span><span class="av-control"><input name="soDienThoai" value="@Model.Form.SoDienThoai" /></span></label>
+            <label class="av-field"><span class="av-label">Mã nhân sự</span><span class="av-control"><input name="maNhanSu" value="@Model.Form.MaNhanSu" /></span></label>
+            <label class="av-field"><span class="av-label">Vai trò</span><span class="av-control"><select name="vaiTro"><option value="Admin" selected="@(Model.Form.VaiTro=="Admin")">Admin</option><option value="Manager" selected="@(Model.Form.VaiTro=="Manager")">Manager</option><option value="KhachHang" selected="@(Model.Form.VaiTro=="KhachHang")">Khách hàng</option></select>@Html.Icon("chevron-down", 17)</span></label>
+            <label class="av-field"><span class="av-label">Trạng thái</span><span class="av-control"><select name="trangThai"><option value="HoatDong" selected="@(Model.Form.TrangThai=="HoatDong")">Hoạt động</option><option value="BiKhoa" selected="@(Model.Form.TrangThai=="BiKhoa")">Đã khóa</option></select>@Html.Icon("chevron-down", 17)</span></label>
+            <label class="av-field"><span class="av-label">Mật khẩu @(Model.Form.IsEdit ? "(để trống nếu không đổi)" : "") <span class="req">@(Model.Form.IsEdit ? "" : "*")</span></span><span class="av-control"><input name="matKhau" type="password" autocomplete="new-password" @(Model.Form.IsEdit ? null : "required") /></span></label>
+            <div class="av-modal__foot">
+                <a class="av-btn av-btn--outline" href="@Model.Form.CancelHref">Hủy</a>
+                <button type="submit" class="av-btn av-btn--primary">@(Model.Form.IsEdit ? "Lưu thay đổi" : "Tạo tài khoản")</button>
             </div>
         </form>
     </div>

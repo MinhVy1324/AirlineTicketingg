@@ -96,8 +96,10 @@ public sealed class AdminAccountDetailViewModel
     public string Subtitle { get; init; } = "Mã nhân sự NV-002 · Tạo ngày 15/09/2026";
     public IReadOnlyList<AdminDetailField> Fields { get; init; } = Array.Empty<AdminDetailField>();
     public string PrimaryActionText { get; init; } = "Chỉnh sửa tài khoản";
+    public string PrimaryActionHref { get; init; } = "/admin/tai-khoan/sua";
     public string DangerActionText { get; init; } = "Khóa tài khoản";
     public string DangerActionHref { get; init; } = "/admin/tai-khoan/khoa";
+    public int Id { get; init; }
 }
 
 public sealed class AdminLockDialogViewModel
@@ -108,6 +110,24 @@ public sealed class AdminLockDialogViewModel
     public string Reason { get; init; } = "Tạm ngừng quyền truy cập theo yêu cầu quản lý nhân sự.";
     public string SubmitHref { get; init; } = "/admin/tai-khoan/khoa";
     public string CancelHref { get; init; } = "/admin/tai-khoan";
+}
+
+public sealed record AdminAccountFormViewModel
+{
+    public int Id { get; init; }
+    public bool IsEdit => Id > 0;
+    public string Title { get; init; } = "Tạo tài khoản nhân sự";
+    public string SubmitHref { get; init; } = "/admin/tai-khoan/tao";
+    public string CancelHref { get; init; } = "/admin/tai-khoan";
+    public string HoTen { get; init; } = string.Empty;
+    public string TenDangNhap { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string SoDienThoai { get; init; } = string.Empty;
+    public string MaNhanSu { get; init; } = string.Empty;
+    public string VaiTro { get; init; } = "Manager";
+    public string TrangThai { get; init; } = "HoatDong";
+    public string MatKhau { get; init; } = string.Empty;
+    public string? Error { get; init; }
 }
 
 public sealed class AdminAccountsViewModel
@@ -121,6 +141,10 @@ public sealed class AdminAccountsViewModel
     public string StatusFilter { get; init; } = "Tất cả trạng thái";
     public bool ShowLockDialog { get; init; }
     public AdminLockDialogViewModel LockDialog { get; init; } = new();
+    public bool ShowFormDialog { get; init; }
+    public AdminAccountFormViewModel Form { get; init; } = new();
+    public string? Message { get; init; }
+    public string MessageTone { get; init; } = "info";
 }
 
 // ------------------------------------------------- 10 · vai trò & phân quyền
@@ -219,7 +243,7 @@ public sealed class AdminCatalogViewModel
 
 // ---------------------------------------------------------- 12 · cấu hình
 
-public sealed record AdminSettingField(string Label, string Value, string? Hint = null, string? Icon = null);
+public sealed record AdminSettingField(string Label, string Value, string? Hint = null, string? Icon = null, string? Name = null, string? FormValue = null);
 
 public sealed class AdminPaymentViewModel
 {

@@ -65,7 +65,7 @@
                     <h2 class="av-card__title">Sự kiện hệ thống</h2>
                     <span class="av-caption">Giờ Việt Nam (UTC+7) · Chỉ đọc, không sửa hoặc xóa</span>
                 </div>
-                <a class="av-link" href="/admin/nhat-ky">
+                <a class="av-link" href="/admin/nhat-ky?export=csv&tu-ngay=@Uri.EscapeDataString(Context.Request.Query["tu-ngay"].ToString())&nguoi-thuc-hien=@Uri.EscapeDataString(Context.Request.Query["nguoi-thuc-hien"].ToString())&loai-thao-tac=@Uri.EscapeDataString(Context.Request.Query["loai-thao-tac"].ToString())">
                     @Html.Icon("download", 15)
                     <span>@Model.ExportText</span>
                 </a>

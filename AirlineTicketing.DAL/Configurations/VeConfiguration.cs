@@ -21,9 +21,13 @@ public sealed class VeConfiguration : IEntityTypeConfiguration<Ve>
         builder.Property(x => x.GiaVe).HasPrecision(12, 2);
         builder.Property(x => x.LyDoHuy).HasMaxLength(300);
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
+        builder.Property(x => x.PhiDoi).HasPrecision(12, 2);
+        builder.Property(x => x.PhiHoan).HasPrecision(12, 2);
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_Ve_GiaVe", "\"GiaVe\" >= 0");
+            t.HasCheckConstraint("CK_Ve_HanhLy", "\"HanhLyXachTayKg\" >= 0 AND \"HanhLyKyGuiKg\" >= 0");
+            t.HasCheckConstraint("CK_Ve_Phi", "\"PhiDoi\" >= 0 AND \"PhiHoan\" >= 0");
             t.HasCheckConstraint("CK_Ve_TrangThai", "\"TrangThai\" IN ('TamGiu', 'DaPhatHanh', 'DaHuy', 'DaHoanTien')");
         });
 

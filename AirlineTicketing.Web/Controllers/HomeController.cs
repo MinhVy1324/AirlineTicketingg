@@ -1,107 +1,75 @@
 using System.Diagnostics;
 using AirlineTicketing.DAL;
-using AirlineTicketing.DTO;
-using AirlineTicketing.Web.Demo;
-using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
-public class HomeController(AppDbContext dbContext) : Controller
+public class HomeController(IConfiguration configuration, AppDbContext db) : Controller
 {
-    private static readonly (string Code, string Image)[] FeaturedDestinations =
-    [
-        ("HAN", "dest-ha-noi.png"),
-        ("DAD", "dest-da-nang.png"),
-        ("PQC", "dest-phu-quoc.png")
-    ];
-
     [HttpGet("/")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
-        var demo = DemoCatalog.Home();
+        // Each Docker test container can be pointed at one area. Requests to "/"
+        // then land on the matching home page so every instance opens where the
+        // tester expects it, while direct links to the other areas keep working.
+        var area = configuration["App:DefaultArea"];
 
-        try
+        if (string.Equals(area, "admin", StringComparison.OrdinalIgnoreCase))
         {
-            var destinations = await LoadDestinationsAsync(cancellationToken);
-            if (destinations.Count == 0)
-            {
-                return View(demo);
-            }
+            return Redirect("/admin");
+        }
 
-            return View(new HomeViewModel
-            {
-                CustomerName = demo.CustomerName,
-                CustomerInitials = demo.CustomerInitials,
-                Search = demo.Search,
-                Destinations = destinations
-            });
-        }
-        catch (Exception)
+        if (string.Equals(area, "manager", StringComparison.OrdinalIgnoreCase))
         {
-            // Trang chủ vẫn phải mở được khi CSDL chưa sẵn sàng; dùng dữ liệu minh hoạ.
-            return View(demo);
+            return Redirect("/quan-ly");
         }
+
+        var now = DateTimeOffset.UtcNow;
+        var destinations = await db.TuyenBays
+            .AsNoTracking()
+            .Include(t => t.SanBayDen)
+            .Select(t => new
+            {
+                t.SanBayDen.ThanhPho,
+                t.SanBayDen.MaSanBay,
+                MinPrice = db.ChuyenBays
+                    .Where(c => c.TuyenBayId == t.Id && c.GioKhoiHanh >= now)
+                    .Select(c => (decimal?)c.GiaCoBan)
+                    .Min()
+            })
+            .Where(x => x.MinPrice != null)
+            .GroupBy(x => new { x.ThanhPho, x.MaSanBay })
+            .Select(g => new { g.Key.ThanhPho, g.Key.MaSanBay, Price = g.Min(x => x.MinPrice)!.Value })
+            .OrderBy(x => x.Price)
+            .Take(3)
+            .ToListAsync(ct);
+
+        var cards = destinations.Select(d => new DestinationCard(
+            d.ThanhPho, d.MaSanBay, d.Price,
+            d.MaSanBay switch { "HAN" => "dest-ha-noi.png", "DAD" => "dest-da-nang.png", "PQC" => "dest-phu-quoc.png", _ => "dest-ha-noi.png" }
+        )).ToList();
+        if (cards.Count == 0)
+        {
+            cards = new List<DestinationCard>
+            {
+                new("Hà Nội", "HAN", 1_950_000m, "dest-ha-noi.png"),
+                new("Đà Nẵng", "DAD", 1_290_000m, "dest-da-nang.png"),
+                new("Phú Quốc", "PQC", 1_150_000m, "dest-phu-quoc.png")
+            };
+        }
+
+        return View(new HomeViewModel
+        {
+            CustomerName = "Khách hàng",
+            CustomerInitials = "KH",
+            Search = new SearchFormModel(),
+            Destinations = cards
+        });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error() =>
         View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-
-    private async Task<IReadOnlyList<DestinationCard>> LoadDestinationsAsync(CancellationToken cancellationToken)
-    {
-        var danhMuc = FlightServices.DanhMuc(dbContext);
-        var chuyenBay = FlightServices.ChuyenBay(dbContext);
-
-        var airports = await danhMuc.LaySanBayAsync(trangThai: "Hoạt động", cancellationToken: cancellationToken);
-        var routes = await danhMuc.LayTuyenBayAsync(trangThai: "Đang khai thác", cancellationToken: cancellationToken);
-        var origin = airports.FirstOrDefault(airport =>
-            string.Equals(airport.MaSanBay, "SGN", StringComparison.OrdinalIgnoreCase));
-
-        if (origin is null)
-        {
-            return Array.Empty<DestinationCard>();
-        }
-
-        var date = FlightMapping.TryParseDate("20/11/2026", out var parsed)
-            ? parsed
-            : DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
-
-        var cards = new List<DestinationCard>();
-
-        foreach (var (code, image) in FeaturedDestinations)
-        {
-            var destination = airports.FirstOrDefault(airport =>
-                string.Equals(airport.MaSanBay, code, StringComparison.OrdinalIgnoreCase));
-            var route = routes.FirstOrDefault(item =>
-                item.SanBayDiId == origin.Id && item.SanBayDenId == destination?.Id);
-
-            if (destination is null || route is null)
-            {
-                continue;
-            }
-
-            var flights = await chuyenBay.TimChuyenBayAsync(new TimChuyenBayDTO
-            {
-                SanBayDiId = route.SanBayDiId,
-                SanBayDenId = route.SanBayDenId,
-                NgayDi = date,
-                SoHanhKhach = 1
-            }, cancellationToken);
-
-            if (flights.Count == 0)
-            {
-                continue;
-            }
-
-            cards.Add(new DestinationCard(
-                destination.ThanhPho,
-                destination.MaSanBay,
-                flights.Min(item => item.GiaCoBan),
-                image));
-        }
-
-        return cards;
-    }
 }

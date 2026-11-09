@@ -14,6 +14,7 @@ public sealed class SanBayConfiguration : IEntityTypeConfiguration<SanBay>
         builder.Property(x => x.TenSanBay).HasMaxLength(150).IsRequired();
         builder.Property(x => x.ThanhPho).HasMaxLength(100).IsRequired();
         builder.Property(x => x.QuocGia).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.MuiGio).HasMaxLength(10).IsRequired().HasDefaultValue("UTC+7");
         builder.Property(x => x.DangHoatDong).HasDefaultValue(true);
     }
 }
