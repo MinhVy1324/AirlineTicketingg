@@ -1,3 +1,4 @@
+using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.Web.Infrastructure;
@@ -10,7 +11,7 @@ using System.Security.Claims;
 namespace AirlineTicketing.Web.Controllers;
 
 [Authorize]
-public class TicketsController(AppDbContext dbContext) : Controller
+public class TicketsController(AppDbContext dbContext, CauHinhHeThongBUS cauHinhHeThong) : Controller
 {
     [HttpGet("/ve-cua-toi")]
     public async Task<IActionResult> Index(string? tab, string? pnr, CancellationToken cancellationToken)
@@ -53,7 +54,8 @@ public class TicketsController(AppDbContext dbContext) : Controller
             : current.FirstOrDefault();
 
         var items = current.Select(b => ToListItem(b, selected is not null && b.Id == selected.Id, active)).ToList();
-        var detail = selected is not null ? ToDetail(selected) : EmptyDetail();
+        var chinhSach = await cauHinhHeThong.LayChinhSachAsync(cancellationToken);
+        var detail = selected is not null ? ToDetail(selected, chinhSach) : EmptyDetail();
 
         return View(new TicketsViewModel { Tabs = tabs, Tickets = items, Detail = detail });
     }
@@ -80,10 +82,11 @@ public class TicketsController(AppDbContext dbContext) : Controller
             .Where(c => c.TuyenBayId == f.TuyenBayId && c.Id != f.Id && c.GioKhoiHanh > DateTimeOffset.UtcNow && c.TrangThai != TrangThaiChuyenBay.BiHuy)
             .OrderBy(c => c.GioKhoiHanh).FirstOrDefaultAsync(cancellationToken) ?? f;
 
+        var chinhSach = await cauHinhHeThong.LayChinhSachAsync(cancellationToken);
         var model = new ChangeRequestViewModel
         {
-            Booking = ToBookingViewModel(booking, ve, f),
-            NewFlight = alt == f ? ToOffer(f, ve!) : ToOffer(alt, ve!),
+            Booking = ToBookingViewModel(booking, ve, f, chinhSach),
+            NewFlight = alt == f ? ToOffer(f, ve!, chinhSach) : ToOffer(alt, ve!, chinhSach),
             NewBaseFare = (alt == f ? f.GiaCoBan : alt.GiaCoBan),
             SeatBaggageText = $"{(string.IsNullOrWhiteSpace(ve?.SoGhe) ? "Chưa chọn ghế" : ve!.SoGhe)} · {FlightMapping.CabinBaggage} · {FlightMapping.CheckedBaggage}",
             AvailabilityText = alt == f ? "Chưa tìm chuyến thay thế tự động" : "Có chuyến thay thế tham khảo",
@@ -110,6 +113,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
         {
             var reason = (form["reason"].ToString() ?? "Thay đổi kế hoạch").Trim();
             int.TryParse(form["newFlightId"].ToString(), out var newFlightId);
+            var chinhSach = await cauHinhHeThong.LayChinhSachAsync(cancellationToken);
             dbContext.YeuCauDoiHoans.Add(new YeuCauDoiHoan
             {
                 MaYeuCau = $"CH-{DateTimeOffset.UtcNow:yyMMddHHmm}-{Random.Shared.Next(10,99)}",
@@ -118,7 +122,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
                 LyDo = string.IsNullOrWhiteSpace(reason) ? "Thay đổi kế hoạch" : reason,
                 ThongTinBoSung = (form["note"].ToString() ?? "").Trim(),
                 TrangThai = TrangThaiYeuCau.ChoDuyet,
-                PhiDoi = FlightMapping.ChangeFee,
+                PhiDoi = chinhSach.ChangeFee,
                 PhiDichVuKhongHoan = booking.PhiDichVu,
                 PhiHanhLyKhongHoan = booking.PhiHanhLy,
                 ChuyenBayMoiId = newFlightId > 0 ? newFlightId : null,
@@ -141,7 +145,8 @@ public class TicketsController(AppDbContext dbContext) : Controller
 
         var model = new RefundRequestViewModel
         {
-            Booking = ToBookingViewModel(booking, ve, f),
+            Booking = ToBookingViewModel(booking, ve, f,
+                await cauHinhHeThong.LayChinhSachAsync(cancellationToken)),
             SeatBaggageText = $"{(string.IsNullOrWhiteSpace(ve?.SoGhe) ? "Chưa chọn ghế" : ve!.SoGhe)} · {FlightMapping.CabinBaggage} · {FlightMapping.CheckedBaggage}",
             RefundToText = FormatRefundMethod(booking.ThanhToans.OrderByDescending(t => t.NgayTao).FirstOrDefault()),
             DeadlineText = $"Yêu cầu cần gửi trước giờ khởi hành theo điều kiện vé. Giờ khởi hành: {FlightMapping.ToVietnamTime(f.GioKhoiHanh):dd/MM/yyyy HH:mm} (UTC+7).",
@@ -164,7 +169,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
         if (!existing)
         {
             var reason = (form["reason"].ToString() ?? "Yêu cầu hoàn vé").Trim();
-            var refundFee = FlightMapping.RefundFee;
+            var refundFee = (await cauHinhHeThong.LayChinhSachAsync(cancellationToken)).RefundFee;
             var service = booking.PhiDichVu;
             var bag = booking.PhiHanhLy;
             dbContext.YeuCauDoiHoans.Add(new YeuCauDoiHoan
@@ -250,6 +255,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
         var processing = list.Count(r => r.TrangThai == TrangThaiYeuCau.ChoDuyet || r.TrangThai == TrangThaiYeuCau.DaDuyet);
         var done = list.Count(r => r.TrangThai == TrangThaiYeuCau.HoanTat || r.TrangThai == TrangThaiYeuCau.TuChoi);
         var paid = sel.DatVe?.TongTien ?? 0m;
+        var chinhSach = await cauHinhHeThong.LayChinhSachAsync(cancellationToken);
 
         return View(new RequestTrackingViewModel
         {
@@ -271,7 +277,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
             ReasonText = sel.LyDo,
             Events = BuildRequestEvents(sel),
             PaidTotal = paid,
-            RefundFee = sel.PhiHoan > 0 ? sel.PhiHoan : FlightMapping.RefundFee,
+            RefundFee = sel.PhiHoan > 0 ? sel.PhiHoan : chinhSach.RefundFee,
             ServiceFee = sel.PhiDichVuKhongHoan,
             BaggageFee = sel.PhiHanhLyKhongHoan,
             RefundToText = sel.PhuongThucHoan ?? "Nguồn thanh toán gốc",
@@ -337,11 +343,11 @@ public class TicketsController(AppDbContext dbContext) : Controller
         _ => (b.TrangThai.ToString(), "info")
     };
 
-    private static TicketDetailViewModel ToDetail(DatVe b)
+    private static TicketDetailViewModel ToDetail(DatVe b, ChinhSachDatVe chinhSach)
     {
         var ve = b.Ves.OrderBy(x => x.Id).FirstOrDefault();
         var f = ve?.ChuyenBay;
-        var flight = f is null ? EmptyFlight() : ToOffer(f, ve!);
+        var flight = f is null ? EmptyFlight() : ToOffer(f, ve!, chinhSach);
         var paid = b.ThanhToans.Where(t => t.TrangThai == TrangThaiThanhToan.ThanhCong).Sum(t => t.SoTien);
         var paymentText = paid > 0 ? $"Đã thanh toán · {Money.Vnd(paid)}" : "Chưa thanh toán";
 
@@ -355,15 +361,15 @@ public class TicketsController(AppDbContext dbContext) : Controller
             BaggageText = $"{FlightMapping.CabinBaggage} · {FlightMapping.CheckedBaggage}",
             PaymentText = paymentText,
             BookedAtText = FlightMapping.ToVietnamTime(b.NgayDat).ToString("dd/MM/yyyy · HH:mm '(UTC+7)'"),
-            ChangeFee = FlightMapping.ChangeFee,
-            RefundFee = FlightMapping.RefundFee,
-            ServiceFee = FlightMapping.ServiceFeePerPassenger,
+            ChangeFee = ve is { PhiDoi: > 0 } ? ve.PhiDoi : chinhSach.ChangeFee,
+            RefundFee = ve is { PhiHoan: > 0 } ? ve.PhiHoan : chinhSach.RefundFee,
+            ServiceFee = b.PhiDichVu > 0 ? b.PhiDichVu : chinhSach.ServiceFee,
             ExtraBaggageFee = 0m,
             CanManage = b.TrangThai is TrangThaiDatVe.DaXacNhan or TrangThaiDatVe.ChoThanhToan
         };
     }
 
-    private static FlightOffer ToOffer(ChuyenBay f, Ve ve)
+    private static FlightOffer ToOffer(ChuyenBay f, Ve ve, ChinhSachDatVe chinhSach)
     {
         var dep = FlightMapping.ToVietnamTime(f.GioKhoiHanh);
         var arr = FlightMapping.ToVietnamTime(f.GioHaCanh);
@@ -381,8 +387,8 @@ public class TicketsController(AppDbContext dbContext) : Controller
             Stops: "Bay thẳng",
             CabinBaggage: FlightMapping.CabinBaggage,
             CheckedBaggage: FlightMapping.CheckedBaggage,
-            ChangeFee: FlightMapping.ChangeFee,
-            RefundFee: FlightMapping.RefundFee);
+            ChangeFee: chinhSach.ChangeFee,
+            RefundFee: chinhSach.RefundFee);
     }
 
     private static FlightOffer EmptyFlight() => new(
@@ -446,7 +452,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
         catch { return null; }
     }
 
-    private static BookingViewModel ToBookingViewModel(DatVe b, Ve? ve, ChuyenBay f)
+    private static BookingViewModel ToBookingViewModel(DatVe b, Ve? ve, ChuyenBay f, ChinhSachDatVe chinhSach)
     {
         var dep = FlightMapping.ToVietnamTime(f.GioKhoiHanh);
         var passenger = ve?.HanhKhach;
@@ -463,7 +469,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
         var firstVe = ve ?? b.Ves.First();
         return new BookingViewModel
         {
-            Flight = ToOffer(f, firstVe),
+            Flight = ToOffer(f, firstVe, chinhSach),
             Criteria = new FlightSearchCriteria
             {
                 OriginCity = f.TuyenBay.SanBayDi.ThanhPho, OriginCode = f.TuyenBay.SanBayDi.MaSanBay,

@@ -20,7 +20,8 @@ public static class FlightMapping
 
     public static AirportInfo ToAirport(string code, string city, string name) => new(code, city, name);
 
-    public static FlightOffer ToOffer(ChuyenBayDTO dto, string fareName = "Phổ thông Tiêu chuẩn") => new(
+    public static FlightOffer ToOffer(ChuyenBayDTO dto, string fareName = "Phổ thông Tiêu chuẩn",
+        decimal? changeFee = null, decimal? refundFee = null) => new(
         Id: dto.Id.ToString(CultureInfo.InvariantCulture),
         AirlineName: AirlineNameFor(dto.SoHieu),
         FlightNumber: dto.SoHieu,
@@ -34,8 +35,8 @@ public static class FlightMapping
         Stops: "Bay thẳng",
         CabinBaggage: CabinBaggage,
         CheckedBaggage: CheckedBaggage,
-        ChangeFee: ChangeFee,
-        RefundFee: RefundFee);
+        ChangeFee: changeFee ?? ChangeFee,
+        RefundFee: refundFee ?? RefundFee);
 
     public static FlightCardModel ToCard(ChuyenBayDTO dto, bool highlighted = false) =>
         new(ToOffer(dto), Expanded: highlighted, Highlighted: highlighted);

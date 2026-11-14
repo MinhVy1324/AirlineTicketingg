@@ -8,7 +8,11 @@ using Npgsql;
 
 namespace AirlineTicketing.BUS;
 
-public sealed class DatVeBUS(AppDbContext dbContext, TimeProvider timeProvider, DatVeOptions options)
+public sealed class DatVeBUS(
+    AppDbContext dbContext,
+    TimeProvider timeProvider,
+    DatVeOptions options,
+    CauHinhHeThongBUS? cauHinhHeThong = null)
 {
     public async Task<DatVeDTO> TaoDatVeAsync(TaoDatVeDTO request, string? nguoiThucHien = null,
         CancellationToken cancellationToken = default)
@@ -24,6 +28,7 @@ public sealed class DatVeBUS(AppDbContext dbContext, TimeProvider timeProvider, 
             throw new NgoaiLeNghiepVu("DU_LIEU_KHONG_HOP_LE", "Thông tin liên hệ, hành khách và ghế không đầy đủ.");
 
         var now = timeProvider.GetUtcNow();
+        var thoiHanGiuCho = await LayThoiHanGiuChoAsync(cancellationToken);
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             IsolationLevel.ReadCommitted, cancellationToken);
         try
@@ -62,7 +67,7 @@ public sealed class DatVeBUS(AppDbContext dbContext, TimeProvider timeProvider, 
             var booking = new DatVe
             {
                 MaDatVe = TaoMa("DV", 10), KhachHang = customer, NgayDat = now,
-                HetHanGiuCho = now.Add(options.ThoiHanGiuCho),
+                HetHanGiuCho = now.Add(thoiHanGiuCho),
                 TrangThai = TrangThaiDatVe.ChoThanhToan, DonViTienTe = "VND"
             };
             foreach (var item in request.Ves)
@@ -193,10 +198,28 @@ public sealed class DatVeBUS(AppDbContext dbContext, TimeProvider timeProvider, 
     public async Task<int> HetHanCacDatVeAsync(CancellationToken cancellationToken = default)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        // Nhiều container web cùng chạy job quét hết hạn: khóa tư vấn theo transaction
+        // để chỉ một instance xử lý mỗi lượt, tránh ghi trùng lịch sử đặt vé.
+        if (dbContext.Database.IsNpgsql())
+        {
+            await dbContext.Database.ExecuteSqlRawAsync(
+                "SELECT pg_advisory_xact_lock(918273645)", cancellationToken);
+        }
+
         var count = await HetHanCacGiuChoAsync(timeProvider.GetUtcNow(), cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return count;
+    }
+
+    private async Task<TimeSpan> LayThoiHanGiuChoAsync(CancellationToken cancellationToken)
+    {
+        var macDinh = (int)Math.Max(1, options.ThoiHanGiuCho.TotalMinutes);
+        if (cauHinhHeThong is null) return TimeSpan.FromMinutes(macDinh);
+
+        var phut = await cauHinhHeThong.LaySoNguyenAsync(
+            "booking.hold_minutes", macDinh, cancellationToken);
+        return TimeSpan.FromMinutes(phut);
     }
 
     private async Task HetHanDatVeTheoMaAsync(string code, CancellationToken cancellationToken)

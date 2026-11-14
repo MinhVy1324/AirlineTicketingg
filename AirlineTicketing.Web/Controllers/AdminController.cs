@@ -1,3 +1,4 @@
+using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.Web.Infrastructure;
@@ -477,8 +478,8 @@ public class AdminController(AppDbContext db) : Controller
         var tax = Get("booking.tax_default", "380000");
         var changeFee = Get("policy.change_fee", "360000");
         var refundFee = Get("policy.refund_fee", "500000");
-        var hotline = Get("contact.hotline", "1900 636 063");
-        var email = Get("contact.email", "support@aeroviet.vn");
+        var hotline = Get("contact.hotline", ChinhSachDatVe.DefaultHotline);
+        var email = Get("contact.email", ChinhSachDatVe.DefaultSupportEmail);
         var sender = Get("notification.sender_email", Get("contact.sender_email", "no-reply@aeroviet.vn"));
         return View(new AdminSettingsViewModel
         {

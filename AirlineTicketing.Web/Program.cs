@@ -20,7 +20,7 @@ var cookieSecurePolicy = Enum.TryParse<CookieSecurePolicy>(
     : CookieSecurePolicy.SameAsRequest;
 
 // 1. Đăng ký Controllers, Views và Font tiếng Việt (UTF-8)
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options => options.Filters.Add<ContactInfoFilter>());
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -141,8 +141,10 @@ builder.Services.AddSingleton(new DatVeOptions
     ThoiHanGiuCho = TimeSpan.FromMinutes(
         builder.Configuration.GetValue<int?>("Booking:HoldMinutes") ?? 15)
 });
+builder.Services.AddScoped<CauHinhHeThongBUS>();
 builder.Services.AddScoped<DatVeBUS>();
 builder.Services.AddScoped<VeBUS>();
+builder.Services.AddHostedService<HoldExpiryService>();
 
 var app = builder.Build();
 

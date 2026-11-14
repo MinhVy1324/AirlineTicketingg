@@ -83,14 +83,14 @@
                             <span>
                                 Đặt chỗ @Model.Pnr đang chờ nhân viên đối soát giao dịch. Vé điện tử sẽ được
                                 phát hành sau khi xác nhận. Nếu quá thời gian giữ chỗ mà chưa đối soát xong,
-                                vui lòng gọi 1900 6868 và cung cấp mã PNR @Model.Pnr.
+                                vui lòng gọi @ViewData["SupportHotline"] và cung cấp mã PNR @Model.Pnr.
                             </span>
                         </div>
                     </div>
 
                     <div class="step-nav">
                         <a class="av-btn av-btn--ghost" href="/ve-cua-toi">@Html.Icon("arrow-left", 17) Về Vé của tôi</a>
-                        <a class="av-btn av-btn--outline" href="tel:19006868">@Html.Icon("phone", 17) Gọi hỗ trợ 1900 6868</a>
+                        <a class="av-btn av-btn--outline" href="tel:@ViewData["SupportHotlineTel"]">@Html.Icon("phone", 17) Gọi hỗ trợ @ViewData["SupportHotline"]</a>
                     </div>
                 }
                 else

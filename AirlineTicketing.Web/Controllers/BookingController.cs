@@ -14,7 +14,10 @@ using System.Text.Json;
 namespace AirlineTicketing.Web.Controllers;
 
 [AllowAnonymous]
-public class BookingController(AppDbContext dbContext, ILogger<BookingController> logger) : Controller
+public class BookingController(
+    AppDbContext dbContext,
+    CauHinhHeThongBUS cauHinhHeThong,
+    ILogger<BookingController> logger) : Controller
 {
     private const string KeyFlightId = "booking.flightId";
     private const string KeyPassenger = "booking.passenger";
@@ -409,7 +412,7 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             return RedirectToAction(nameof(Transfer), new { pnr = booking.MaDatVe });
         }
 
-        return View(ToBookingViewModel(booking));
+        return View(ToBookingViewModel(booking, await cauHinhHeThong.LayChinhSachAsync(cancellationToken)));
     }
 
     [HttpGet("/dat-ve/het-cho")]
@@ -437,7 +440,9 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
         var dto = await chuyenBayBus.LayChuyenBayAsync(flightId, ct);
         if (dto is null) return null;
 
-        var offer = FlightMapping.ToOffer(dto);
+        var chinhSach = await cauHinhHeThong.LayChinhSachAsync(ct);
+        var offer = FlightMapping.ToOffer(dto,
+            changeFee: chinhSach.ChangeFee, refundFee: chinhSach.RefundFee);
         passenger ??= new PassengerFormModel();
 
         SoDoGheDTO seatMap;
@@ -473,8 +478,8 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             {
                 Title = "Tổng tiền thanh toán",
                 BaseFare = dto.GiaCoBan,
-                Taxes = FlightMapping.TaxesPerPassenger,
-                ServiceFee = FlightMapping.ServiceFeePerPassenger,
+                Taxes = chinhSach.Tax,
+                ServiceFee = chinhSach.ServiceFee,
                 BaggageFee = baggageFee,
                 BaggageLabel = "Hành lý ký gửi bổ sung",
                 SeatFee = seatFee,
@@ -492,8 +497,8 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             PaymentMethod = "Thẻ ngân hàng",
             PaymentDisplayText = "Thẻ ngân hàng",
             Pnr = "—",
-            HoldUntilText = DateTimeOffset.UtcNow.AddHours(7).AddMinutes(15).ToString("HH:mm 'ngày' dd/MM/yyyy"),
-            HoldRemainingText = "Còn 15 phút",
+            HoldUntilText = DateTimeOffset.UtcNow.AddHours(7).Add(chinhSach.HoldDuration).ToString("HH:mm 'ngày' dd/MM/yyyy"),
+            HoldRemainingText = $"Còn {chinhSach.HoldMinutes} phút",
             CreatedAtText = DateTimeOffset.UtcNow.AddHours(7).ToString("HH:mm 'ngày' dd/MM/yyyy")
         };
     }
@@ -529,6 +534,7 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
         }
 
         var now = DateTimeOffset.UtcNow;
+        var chinhSach = await cauHinhHeThong.LayChinhSachAsync(ct);
         var email = string.IsNullOrWhiteSpace(passenger.Email) ? $"guest.{Guid.NewGuid():N}@example.local" : passenger.Email.Trim();
         var phone = passenger.Phone?.Trim() ?? string.Empty;
         var fullName = passenger.FullName;
@@ -585,7 +591,7 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             TrangThai = isTransfer ? TrangThaiDatVe.ChoThanhToan : TrangThaiDatVe.DaXacNhan,
             TongTien = model.Price.Total,
             DonViTienTe = "VND",
-            HetHanGiuCho = now.AddMinutes(15),
+            HetHanGiuCho = now.Add(chinhSach.HoldDuration),
             NgayXacNhan = isTransfer ? null : now,
             ThuePhi = model.Price.Taxes,
             PhiDichVu = model.Price.ServiceFee,
@@ -612,8 +618,8 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             NgayPhatHanh = isTransfer ? null : now,
             HanhLyXachTayKg = 10,
             HanhLyKyGuiKg = 23,
-            PhiDoi = FlightMapping.ChangeFee,
-            PhiHoan = FlightMapping.RefundFee
+            PhiDoi = chinhSach.ChangeFee,
+            PhiHoan = chinhSach.RefundFee
         });
         dbContext.ThanhToans.Add(new ThanhToan
         {
@@ -684,7 +690,7 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             .Include(x => x.Ves).ThenInclude(x => x.ChuyenBay).ThenInclude(x => x.MayBay)
             .FirstOrDefaultAsync(x => x.MaDatVe == pnr, ct);
 
-    private static BookingViewModel ToBookingViewModel(DatVe booking)
+    private static BookingViewModel ToBookingViewModel(DatVe booking, ChinhSachDatVe chinhSach)
     {
         var ve = booking.Ves.OrderBy(x => x.Id).First();
         var f = ve.ChuyenBay;
@@ -701,7 +707,7 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
                 new AirportInfo(f.TuyenBay.SanBayDi.MaSanBay, f.TuyenBay.SanBayDi.ThanhPho, f.TuyenBay.SanBayDi.TenSanBay),
                 new AirportInfo(f.TuyenBay.SanBayDen.MaSanBay, f.TuyenBay.SanBayDen.ThanhPho, f.TuyenBay.SanBayDen.TenSanBay),
                 dep, arr, ve.GiaVe > 0 ? ve.GiaVe : f.GiaCoBan, "Bay thẳng",
-                FlightMapping.CabinBaggage, FlightMapping.CheckedBaggage, FlightMapping.ChangeFee, FlightMapping.RefundFee),
+                FlightMapping.CabinBaggage, FlightMapping.CheckedBaggage, chinhSach.ChangeFee, chinhSach.RefundFee),
             Criteria = new FlightSearchCriteria
             {
                 OriginCity = f.TuyenBay.SanBayDi.ThanhPho, OriginCode = f.TuyenBay.SanBayDi.MaSanBay,
