@@ -247,7 +247,7 @@ pwsh ./scripts/smoke.ps1 -BaseUrl http://127.0.0.1:8080 -Pnr <PNR>
 
 Máy Windows chỉ có Windows PowerShell 5.1 (không có `pwsh`) thì chạy `powershell -ExecutionPolicy Bypass -File ./scripts/smoke.ps1`. Script trả mã thoát `0` khi mọi kiểm tra đạt và `1` khi có lỗi, nên dùng được trong terminal hoặc pipeline. Nếu không truyền `-Pnr`, script lấy một đặt chỗ `DaXacNhan` mới nhất từ container `db` (cần Docker đang chạy).
 
-GitHub Actions chạy `.github/workflows/ci.yml` cho mỗi push/PR: job `build-test` restore/build toàn solution và chạy unit test; job `postgres-integration` dựng PostgreSQL 16 tạm, đặt `AIRLINE_TEST_CONNECTION` trỏ database tên chứa `test` rồi chạy toàn bộ test, gồm cả test cạnh tranh ghế trên PostgreSQL thật. Chạy lại cục bộ:
+GitHub Actions chạy `.github/workflows/ci.yml` cho mỗi push/PR: job `build-test` restore/build toàn solution và chạy unit test; job `postgres-integration` dựng PostgreSQL 16 tạm, đặt `AIRLINE_TEST_CONNECTION` trỏ database tên chứa `test` rồi chạy toàn bộ test, gồm test cạnh tranh ghế và test tích hợp controller cho phân quyền/ownership (ẩn danh bị chuyển về đăng nhập, khách không vào `/quan-ly`, khách A không tải được vé khách B). Chạy lại cục bộ:
 
 ```powershell
 $env:AIRLINE_TEST_CONNECTION = "Host=localhost;Port=5432;Database=airline_ticketing_test;Username=airline_app;Password=<mật-khẩu>"
