@@ -1,3 +1,5 @@
+using AirlineTicketing.Web.Infrastructure;
+
 namespace AirlineTicketing.Web.ViewModels;
 
 public sealed record AirportInfo(string Code, string City, string Name)
@@ -79,9 +81,31 @@ public sealed class FlightResultsViewModel
 
     /// <summary>Total flights available on the route (the demo only materialises three cards).</summary>
     public int TotalCount { get; init; }
+
+    /// <summary>Kiểu sắp xếp đang áp dụng (xem <see cref="Infrastructure.FlightSort"/>).</summary>
+    public string SortKey { get; init; } = Infrastructure.FlightSort.Recommended;
+    public IReadOnlyList<FlightSortOption> SortOptions => Infrastructure.FlightSort.Options;
+    public string SortLabel => Infrastructure.FlightSort.LabelFor(SortKey);
+
+    /// <summary>Khoảng ngày của tuần đang hiển thị trên biểu đồ giá.</summary>
+    public string WeekRangeText => DayPrices.Count == 0
+        ? string.Empty
+        : $"{DayPrices[0].Date.ToString("dd/MM", System.Globalization.CultureInfo.InvariantCulture)} – " +
+          $"{DayPrices[^1].Date.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture)}";
+
+    public DateOnly? PreviousWeek => DayPrices.Count == 0 ? null : DayPrices[0].Date.AddDays(-7);
+    public DateOnly? NextWeek => DayPrices.Count == 0 ? null : DayPrices[^1].Date.AddDays(7);
 }
 
-public sealed record DayPriceChip(string DateText, decimal Price, bool IsActive);
+public sealed record DayPriceChip(
+    DateOnly Date,
+    string DateText,
+    string WeekdayText,
+    decimal Price,
+    bool IsActive)
+{
+    public bool HasPrice => Price > 0m;
+}
 
 public sealed class PassengerFormModel
 {
@@ -106,10 +130,12 @@ public sealed class PriceSummary
     public decimal ServiceFee { get; init; }
     public decimal BaggageFee { get; init; }
     public string BaggageLabel { get; init; } = "Hành lý thêm 10 kg";
+    public decimal SeatFee { get; init; }
+    public string SeatLabel { get; init; } = "Chọn chỗ ngồi";
     public string TotalLabel { get; init; } = "Tổng thanh toán";
     public string? Note { get; init; } = "Giá đã bao gồm thuế, phí · Thanh toán bằng VND";
 
-    public decimal Total => BaseFare + Taxes + ServiceFee + BaggageFee;
+    public decimal Total => BaseFare + Taxes + ServiceFee + BaggageFee + SeatFee;
 }
 
 public sealed record FlightTimelineModel(
@@ -129,8 +155,17 @@ public sealed class BookingViewModel
     public string SeatCode { get; init; } = "18A";
     public string SeatPosition { get; init; } = "Cạnh cửa sổ";
     public IReadOnlyList<SeatRow> SeatRows { get; init; } = Array.Empty<SeatRow>();
-    public string ExtraBaggage { get; init; } = "+10 kg";
+    public string SeatTypeName { get; init; } = "Ghế tiêu chuẩn";
+    public string? SeatError { get; set; }
+    public string ExtraBaggage { get; init; } = "Không";
+    public string BaggageText { get; init; } = "Không mua thêm";
     public string PaymentMethod { get; init; } = "Thẻ ngân hàng";
+    public string PaymentDisplayText { get; init; } = "Thẻ ngân hàng";
+    public string SelectedPayment { get; set; } = "card";
+    public string? PaymentError { get; set; }
+
+    /// <summary>Lỗi nghiệp vụ khi đặt vé (ví dụ hành khách đã có vé trên chuyến bay).</summary>
+    public string? BookingError { get; set; }
     public string CardBrand { get; init; } = "Visa";
     public string CardLast4 { get; init; } = "4242";
     public string Pnr { get; init; } = "AV8K2M";
@@ -149,7 +184,14 @@ public sealed class BookingViewModel
     public bool ShowValidationErrors { get; init; }
 }
 
-public sealed record SeatCell(string Label, SeatState State);
+public sealed record SeatCell(
+    string Label,
+    SeatState State,
+    string Code = "",
+    string Type = "TieuChuan",
+    string TypeName = "Ghế tiêu chuẩn",
+    decimal Surcharge = 0m,
+    string Position = "");
 
 public enum SeatState
 {
@@ -160,10 +202,28 @@ public enum SeatState
 
 public sealed record SeatRow(string Number, IReadOnlyList<SeatCell> Seats);
 
+public sealed class QrPaymentViewModel
+{
+    public string Pnr { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
+    public string AmountText => Money.Vnd(Amount);
+    public string BankName { get; init; } = "Vietcombank";
+    public string AccountNumber { get; init; } = "0123456789";
+    public string AccountName { get; init; } = "CONG TY AEROVIET";
+    public string Memo { get; init; } = string.Empty;
+    public string HoldUntilText { get; init; } = string.Empty;
+    public string QrUrl { get; init; } = string.Empty;
+    public string SeatCode { get; init; } = string.Empty;
+    public string FlightNumber { get; init; } = string.Empty;
+    public string PassengerName { get; init; } = string.Empty;
+    /// <summary>Khách đã báo chuyển khoản; đặt chỗ vẫn chờ nhân viên đối soát.</summary>
+    public bool Reported { get; init; }
+}
+
 public sealed class LoginViewModel
 {
-    public string Email { get; set; } = "minhanh@example.com";
-    public string Password { get; set; } = "aeroviet";
+    public string Email { get; set; } = "";
+    public string Password { get; set; } = "";
     public bool RememberMe { get; set; } = true;
     public string? ReturnUrl { get; set; }
     public string? ErrorMessage { get; set; }

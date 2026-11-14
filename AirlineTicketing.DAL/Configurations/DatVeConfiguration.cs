@@ -13,13 +13,22 @@ public sealed class DatVeConfiguration : IEntityTypeConfiguration<DatVe>
         builder.HasIndex(x => x.MaDatVe).IsUnique();
         builder.HasIndex(x => new { x.KhachHangId, x.NgayDat });
         builder.Property(x => x.NgayDat).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        builder.Property(x => x.HetHanGiuCho).HasColumnName("HanGiuCho").IsRequired();
+        builder.HasIndex(x => new { x.TrangThai, x.HetHanGiuCho });
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
         builder.Property(x => x.TongTien).HasPrecision(12, 2);
         builder.Property(x => x.DonViTienTe).HasMaxLength(3).IsFixedLength().IsRequired();
+        builder.Property(x => x.ThuePhi).HasPrecision(12, 2);
+        builder.Property(x => x.PhiDichVu).HasPrecision(12, 2);
+        builder.Property(x => x.PhiHanhLy).HasPrecision(12, 2);
+        builder.Property(x => x.EmailLienHe).HasMaxLength(254);
+        builder.Property(x => x.SoDienThoaiLienHe).HasMaxLength(20);
+        builder.Property(x => x.GhiChu).HasMaxLength(300);
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_DatVe_TongTien", "\"TongTien\" >= 0");
             t.HasCheckConstraint("CK_DatVe_DonViTienTe", "\"DonViTienTe\" ~ '^[A-Z]{3}$'");
+            t.HasCheckConstraint("CK_DatVe_Phi", "\"ThuePhi\" >= 0 AND \"PhiDichVu\" >= 0 AND \"PhiHanhLy\" >= 0");
             t.HasCheckConstraint("CK_DatVe_TrangThai", "\"TrangThai\" IN ('ChoThanhToan', 'DaXacNhan', 'DaHuy', 'HetHan', 'HoanTien')");
         });
 

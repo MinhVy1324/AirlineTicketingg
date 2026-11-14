@@ -13,6 +13,7 @@ public sealed class ChuyenBayConfiguration : IEntityTypeConfiguration<ChuyenBay>
         builder.HasIndex(x => new { x.SoHieu, x.GioKhoiHanh }).IsUnique();
         builder.HasIndex(x => new { x.TuyenBayId, x.GioKhoiHanh });
         builder.HasIndex(x => new { x.MayBayId, x.GioKhoiHanh });
+        builder.HasIndex(x => new { x.HangHangKhongId, x.GioKhoiHanh });
         builder.Property(x => x.GiaCoBan).HasPrecision(12, 2);
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
         builder.ToTable(t =>
@@ -25,5 +26,7 @@ public sealed class ChuyenBayConfiguration : IEntityTypeConfiguration<ChuyenBay>
             .HasForeignKey(x => x.TuyenBayId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.MayBay).WithMany(x => x.ChuyenBays)
             .HasForeignKey(x => x.MayBayId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.HangHangKhong).WithMany(x => x.ChuyenBays)
+            .HasForeignKey(x => x.HangHangKhongId).OnDelete(DeleteBehavior.Restrict);
     }
 }

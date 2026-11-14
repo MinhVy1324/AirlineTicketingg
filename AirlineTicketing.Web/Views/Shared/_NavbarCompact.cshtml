@@ -17,7 +17,15 @@
         </nav>
 
         <div class="av-nav__aside">
-            <a class="av-btn av-btn--outline" href="/dang-nhap">Đăng nhập</a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="av-nav__user" href="/ve-cua-toi"><span class="av-avatar">@User.Initials()</span><span>@User.DisplayName()</span></a>
+                <a class="av-btn av-btn--outline av-btn--sm" href="/dang-xuat">Đăng xuất</a>
+            }
+            else
+            {
+                <a class="av-btn av-btn--outline" href="/dang-nhap">Đăng nhập</a>
+            }
         </div>
     </div>
 </header>

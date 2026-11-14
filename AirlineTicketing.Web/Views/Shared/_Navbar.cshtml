@@ -22,11 +22,18 @@
                 <span>VI · VND</span>
             </span>
             <span class="av-nav__sep" aria-hidden="true"></span>
-            <a class="av-nav__user" href="/ve-cua-toi" aria-label="Tài khoản của Minh Anh">
-                <span class="av-avatar">@DemoCatalog.CustomerInitials</span>
-                <span>@DemoCatalog.CustomerName</span>
-                @Html.Icon("chevron-down", 14)
-            </a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="av-nav__user" href="/ve-cua-toi" aria-label="Tài khoản của @User.DisplayName()">
+                    <span class="av-avatar">@User.Initials()</span>
+                    <span>@User.DisplayName()</span>
+                </a>
+                <a class="av-btn av-btn--outline av-btn--sm" href="/dang-xuat">Đăng xuất</a>
+            }
+            else
+            {
+                <a class="av-btn av-btn--outline" href="/dang-nhap">Đăng nhập</a>
+            }
         </div>
     </div>
 </header>

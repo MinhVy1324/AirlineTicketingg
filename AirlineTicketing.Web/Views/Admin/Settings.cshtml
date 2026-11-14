@@ -23,6 +23,11 @@
         <span class="admin-settings-version__time">@Model.UpdatedText</span>
     </div>
 
+    @if (TempData["msg"] is string smsg)
+    {
+        <div class="av-alert av-alert--@(TempData["tone"] ?? "info")"><div class="av-alert__body"><span>@smsg</span></div></div>
+    }
+
     <form class="admin-page__form" method="post" action="/admin/cau-hinh">
         @Html.AntiForgeryToken()
 
@@ -40,7 +45,7 @@
                                 <label class="av-field">
                                     <span class="av-label">@field.Label</span>
                                     <span class="av-control">
-                                        <input type="text" value="@field.Value" />
+                                        <input type="text" name="@field.Name" value="@(field.FormValue ?? field.Value)" />
                                         @if (field.Icon is not null)
                                         {
                                             @Html.Icon(field.Icon, 17)
@@ -59,7 +64,7 @@
                             <label class="av-field">
                                 <span class="av-label">@field.Label</span>
                                 <span class="av-control">
-                                    <input type="text" value="@field.Value" />
+                                    <input type="text" name="@field.Name" value="@(field.FormValue ?? field.Value)" />
                                     @if (field.Icon is not null)
                                     {
                                         @Html.Icon(field.Icon, 17)
@@ -95,7 +100,7 @@
                                 <label class="av-field">
                                     <span class="av-label">@field.Label</span>
                                     <span class="av-control">
-                                        <input type="text" value="@field.Value" />
+                                        <input type="text" name="@field.Name" value="@(field.FormValue ?? field.Value)" />
                                     </span>
                                 </label>
                             }
@@ -169,7 +174,7 @@
                         <label class="av-field">
                             <span class="av-label">@Model.EmailSender.Label</span>
                             <span class="av-control">
-                                <input type="email" value="@Model.EmailSender.Value" />
+                                <input type="email" name="@(Model.EmailSender.Name ?? "notification.sender_email")" value="@(Model.EmailSender.FormValue ?? Model.EmailSender.Value)" />
                             </span>
                         </label>
                     </div>

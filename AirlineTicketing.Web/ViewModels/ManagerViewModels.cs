@@ -90,9 +90,13 @@ public sealed record ManagerScheduleRow(
     string StatusTone,
     string Seats,
     string Price,
-    bool IsSelected = false);
+    bool IsSelected = false,
+    int Id = 0,
+    string? Href = null);
 
 public sealed record ManagerFareRow(string Cabin, string Capacity, string Sold, string BasePrice);
+
+public sealed record ManagerSelectOption(string Value, string Label, bool IsSelected = false);
 
 public sealed class ManagerSchedulesViewModel
 {
@@ -146,11 +150,26 @@ public sealed class ManagerSchedulesViewModel
     public string ThresholdText { get; init; } =
         "Phổ thông: 900.000–3.500.000 ₫. Ngoài ngưỡng cần Admin phê duyệt.";
 
-    public bool ShowCancelDialog { get; init; }
-    public ManagerCancelFlightDialogViewModel CancelDialog { get; init; } = new();
+    public bool ShowCancelDialog { get; set; }
+    public ManagerCancelFlightDialogViewModel CancelDialog { get; set; } = new();
 
-    public bool ShowPriceDialog { get; init; }
-    public ManagerPriceDialogViewModel PriceDialog { get; init; } = new();
+    public bool ShowPriceDialog { get; set; }
+    public ManagerPriceDialogViewModel PriceDialog { get; set; } = new();
+
+    public IReadOnlyList<ManagerSelectOption> RouteOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> StatusOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> EditorRouteOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> EditorAircraftOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> EditorAirlineOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+
+    public bool EditorIsNew { get; init; }
+    public int SelectedFlightId { get; init; }
+    public int EditorRouteId { get; init; }
+    public int EditorAircraftId { get; init; }
+    public int EditorAirlineId { get; init; }
+    public string EditorFlightNumber { get; init; } = string.Empty;
+    public string? Message { get; init; }
+    public string MessageTone { get; init; } = "info";
 }
 
 public sealed class ManagerCancelFlightDialogViewModel
@@ -195,6 +214,7 @@ public sealed class ManagerPriceDialogViewModel
     public string CurrentValue { get; init; } = "1.500.000 VND";
     public string NewLabel { get; init; } = "Giá cơ bản mới / khách";
     public string NewValue { get; init; } = "1.650.000 VND";
+    public decimal NewAmount { get; init; } = 1_650_000m;
     public string DeltaLabel { get; init; } = "Mức tăng";
     public string DeltaValue { get; init; } = "+150.000 VND / khách (+10%)";
     public string ThresholdLabel { get; init; } = "Ngưỡng giá được cấp";
@@ -290,7 +310,9 @@ public sealed record ManagerRequestRow(
     string Submitted,
     string StatusText,
     string StatusTone,
-    bool IsSelected = false);
+    bool IsSelected = false,
+    int Id = 0,
+    string Href = "");
 
 public sealed record ManagerRefundRow(string Label, string Value, bool IsTotal = false);
 
@@ -312,40 +334,50 @@ public sealed class ManagerChangeRefundsViewModel
     public IReadOnlyList<ManagerRequestRow> Rows { get; init; } = Array.Empty<ManagerRequestRow>();
     public string ResultText { get; init; } = "Hiển thị 1–4 trong 18 yêu cầu";
 
-    public string DetailTitle { get; init; } = "Chi tiết yêu cầu · RF-1027";
-    public string DetailSubtitle { get; init; } =
+    public string DetailTitle { get; set; } = "Chi tiết yêu cầu · RF-1027";
+    public string DetailSubtitle { get; set; } =
         "Trần Mai Linh · AV4R6C · Vé 738 2400012751";
-    public IReadOnlyList<AdminDetailField> DetailFields { get; init; } = Array.Empty<AdminDetailField>();
-    public string EligibleTitle { get; init; } = "Đủ điều kiện gửi yêu cầu hoàn";
-    public string EligibleText { get; init; } =
+    public IReadOnlyList<AdminDetailField> DetailFields { get; set; } = Array.Empty<AdminDetailField>();
+    public string EligibleTitle { get; set; } = "Đủ điều kiện gửi yêu cầu hoàn";
+    public string EligibleText { get; set; } =
         "Vé đã thanh toán và chưa sử dụng. Yêu cầu gửi trước giờ bay hơn 3 tiếng.";
-    public string ConditionText { get; init; } =
+    public string EligibleTone { get; set; } = "success";
+    public string ConditionText { get; set; } =
         "Điều kiện: phí hoàn 500.000 ₫; không hoàn phí dịch vụ 70.000 ₫ và hành lý mua thêm 250.000 ₫.";
+
+    /// <summary>Chỉ yêu cầu đang chờ duyệt mới hiện form duyệt / từ chối.</summary>
+    public bool CanDecide { get; set; }
+
+    /// <summary>Yêu cầu hoàn mới cần hộp thoại xác nhận tạo lệnh hoàn tiền.</summary>
+    public bool IsRefundRequest { get; set; }
+
+    public string? Message { get; init; }
+    public string MessageTone { get; init; } = "info";
 
     public string DecisionTitle { get; init; } = "Phê duyệt / từ chối";
     public string ReasonLabel { get; init; } = "Lý do xử lý *";
-    public string ReasonValue { get; init; } = "Vé đủ điều kiện; khách xác nhận mức phí hoàn.";
+    public string ReasonValue { get; set; } = "Vé đủ điều kiện; khách xác nhận mức phí hoàn.";
     public string DecisionNote { get; init; } =
         "Khi từ chối, nêu rõ điều kiện không đáp ứng. Khi phê duyệt, hệ thống tạo lệnh hoàn và thông báo khách.";
     public string RejectText { get; init; } = "Từ chối yêu cầu";
-    public string ApproveText { get; init; } = "Phê duyệt hoàn vé";
-    public string ProcessTitle { get; init; } = "Quy trình đổi vé · 5 yêu cầu đang chờ";
-    public string ProcessText { get; init; } =
+    public string ApproveText { get; set; } = "Phê duyệt hoàn vé";
+    public string ProcessTitle { get; set; } = "Quy trình đổi vé · 5 yêu cầu đang chờ";
+    public string ProcessText { get; set; } =
         "Kiểm tra chỗ trên chuyến mới → tính phí đổi 360.000 ₫ + chênh lệch giá → khách xác nhận và " +
         "thanh toán thêm → xuất lại vé. Chưa thanh toán phần chênh lệch thì không xuất lại.";
 
-    public string RefundTitle { get; init; } = "Tính hoàn tiền dự kiến";
-    public IReadOnlyList<ManagerRefundRow> RefundRows { get; init; } = Array.Empty<ManagerRefundRow>();
+    public string RefundTitle { get; set; } = "Tính hoàn tiền dự kiến";
+    public IReadOnlyList<ManagerRefundRow> RefundRows { get; set; } = Array.Empty<ManagerRefundRow>();
     public string RefundMethodLabel { get; init; } = "Phương thức";
-    public string RefundMethodValue { get; init; } = "Visa · •••• 1762";
+    public string RefundMethodValue { get; set; } = "Visa · •••• 1762";
     public string RefundTimeLabel { get; init; } = "Thời gian dự kiến";
     public string RefundTimeValue { get; init; } = "7–15 ngày làm việc";
     public string WarningTitle { get; init; } = "Chưa thực hiện hoàn tiền";
     public string WarningText { get; init; } =
         "Phê duyệt chỉ chuyển sang “Đã duyệt · Chờ hoàn tiền”. Chỉ ghi nhận hoàn tất khi cổng thanh toán xác nhận.";
 
-    public bool ShowApproveDialog { get; init; }
-    public ManagerApproveRefundDialogViewModel ApproveDialog { get; init; } = new();
+    public bool ShowApproveDialog { get; set; }
+    public ManagerApproveRefundDialogViewModel ApproveDialog { get; set; } = new();
 }
 
 public sealed class ManagerApproveRefundDialogViewModel
@@ -414,8 +446,10 @@ public sealed class ManagerReportsViewModel
     public string PeriodValue { get; init; } = "01/10/2026 – 31/10/2026";
     public string AirlineLabel { get; init; } = "Hãng hàng không";
     public string AirlineValue { get; init; } = "Tất cả hãng";
+    public IReadOnlyList<ManagerSelectOption> AirlineOptions { get; init; } = Array.Empty<ManagerSelectOption>();
     public string RouteLabel { get; init; } = "Tuyến bay";
     public string RouteValue { get; init; } = "Tất cả tuyến";
+    public IReadOnlyList<ManagerSelectOption> RouteOptions { get; init; } = Array.Empty<ManagerSelectOption>();
     public string ViewText { get; init; } = "Xem báo cáo";
     public string ExportText { get; init; } = "Xuất báo cáo";
 

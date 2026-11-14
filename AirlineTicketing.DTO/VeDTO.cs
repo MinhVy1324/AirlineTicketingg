@@ -7,6 +7,11 @@ public sealed record VeDTO
     public string MaDatVe { get; init; } = string.Empty;
     public string SoHieuChuyenBay { get; init; } = string.Empty;
     public DateTimeOffset GioKhoiHanh { get; init; }
+    public DateTimeOffset GioHaCanh { get; init; }
+    public string MaSanBayDi { get; init; } = string.Empty;
+    public string TenThanhPhoDi { get; init; } = string.Empty;
+    public string MaSanBayDen { get; init; } = string.Empty;
+    public string TenThanhPhoDen { get; init; } = string.Empty;
     public string SoGhe { get; init; } = string.Empty;
     public string HangVe { get; init; } = string.Empty;
     public decimal GiaVe { get; init; }

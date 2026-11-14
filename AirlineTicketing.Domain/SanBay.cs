@@ -7,6 +7,7 @@ public class SanBay
     public string TenSanBay { get; set; } = string.Empty;
     public string ThanhPho { get; set; } = string.Empty;
     public string QuocGia { get; set; } = string.Empty;
+    public string MuiGio { get; set; } = "UTC+7";
     public bool DangHoatDong { get; set; } = true;
 
     public ICollection<TuyenBay> TuyenBayDi { get; set; } = new List<TuyenBay>();

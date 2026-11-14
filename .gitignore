@@ -11,8 +11,12 @@
 !.env.example
 **/.figma-token
 
+# Hộp thư demo và tệp sinh ra khi chạy nội bộ
+**/App_Data/
+
 # IDE and OS files
 .idea/
 .vscode/
 Thumbs.db
 Desktop.ini
+.DS_Store

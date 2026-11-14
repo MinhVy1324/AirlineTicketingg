@@ -65,9 +65,13 @@ public static partial class DemoCatalog
 
     public static readonly IReadOnlyList<DayPriceChip> DayPrices = new[]
     {
-        new DayPriceChip("19/11", 1_890_000m, false),
-        new DayPriceChip("20/11", 1_950_000m, true),
-        new DayPriceChip("21/11", 2_050_000m, false)
+        new DayPriceChip(new DateOnly(2026, 11, 17), "17/11", "T3", 1_890_000m, false),
+        new DayPriceChip(new DateOnly(2026, 11, 18), "18/11", "T4", 1_840_000m, false),
+        new DayPriceChip(new DateOnly(2026, 11, 19), "19/11", "T5", 1_975_000m, false),
+        new DayPriceChip(new DateOnly(2026, 11, 20), "20/11", "T6", 1_950_000m, true),
+        new DayPriceChip(new DateOnly(2026, 11, 21), "21/11", "T7", 2_050_000m, false),
+        new DayPriceChip(new DateOnly(2026, 11, 22), "22/11", "CN", 2_120_000m, false),
+        new DayPriceChip(new DateOnly(2026, 11, 23), "23/11", "T2", 1_980_000m, false)
     };
 
     public static readonly FlightSearchCriteria DefaultCriteria = new();

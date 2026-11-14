@@ -22,6 +22,16 @@
         }
     </nav>
 
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone">
+            <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+            <div class="av-alert__body">
+                <span>@Model.Message</span>
+            </div>
+        </div>
+    }
+
     <section class="av-card admin-card">
         <div class="av-card__body admin-card__body">
             <div class="admin-card__head-main">
@@ -52,9 +62,9 @@
                     <span class="av-label">@Model.TypeLabel</span>
                     <span class="av-control">
                         <select name="loai">
-                            <option selected>@Model.TypeValue</option>
-                            <option>Đổi vé</option>
-                            <option>Hoàn vé</option>
+                            <option value="" selected="@(Model.TypeValue == "Tất cả" ? "selected" : null)">Tất cả</option>
+                            <option value="Đổi vé" selected="@(Model.TypeValue == "Đổi vé" ? "selected" : null)">Đổi vé</option>
+                            <option value="Hoàn vé" selected="@(Model.TypeValue == "Hoàn vé" ? "selected" : null)">Hoàn vé</option>
                         </select>
                         @Html.Icon("chevron-down", 17)
                     </span>
@@ -88,7 +98,9 @@
                             @foreach (var row in Model.Rows)
                             {
                                 <tr class="@(row.IsSelected ? "is-selected" : null)">
-                                    <td class="manager-flight-name">@row.Request</td>
+                                    <td class="manager-flight-name">
+                                        <a class="av-link" href="@(string.IsNullOrWhiteSpace(row.Href) ? $"/quan-ly/doi-hoan?id={row.Id}" : row.Href)">@row.Request</a>
+                                    </td>
                                     <td>@row.Customer</td>
                                     <td>@row.Type</td>
                                     <td>@row.Submitted</td>
@@ -142,8 +154,8 @@
                             }
                         </div>
 
-                        <div class="av-alert av-alert--success">
-                            <span class="av-alert__icon">@Html.Icon("check-circle", 20)</span>
+                        <div class="av-alert av-alert--@Model.EligibleTone">
+                            <span class="av-alert__icon">@Html.Icon(Model.EligibleTone == "success" ? "check-circle" : "alert", 20)</span>
                             <div class="av-alert__body">
                                 <span class="av-alert__title">@Model.EligibleTitle</span>
                                 <span>@Model.EligibleText</span>
@@ -155,29 +167,59 @@
                 </article>
 
                 <article class="av-card admin-card">
-                    <form class="av-card__body admin-card__body manager-decision"
-                          method="post" action="/quan-ly/doi-hoan/tu-choi">
-                        @Html.AntiForgeryToken()
+                    @if (Model.CanDecide)
+                    {
+                        <form class="av-card__body admin-card__body manager-decision"
+                              method="post" action="/quan-ly/doi-hoan/tu-choi">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="yeu-cau-id" value="@ViewData["SelectedRequestId"]" />
 
-                        <h2 class="av-card__title">@Model.DecisionTitle</h2>
+                            <h2 class="av-card__title">@Model.DecisionTitle</h2>
 
-                        <label class="av-field">
-                            <span class="av-label">@Model.ReasonLabel</span>
-                            <span class="av-control av-control--area">
-                                <textarea name="ly-do" rows="2" required>@Model.ReasonValue</textarea>
-                            </span>
-                        </label>
+                            <label class="av-field">
+                                <span class="av-label">@Model.ReasonLabel</span>
+                                <span class="av-control av-control--area">
+                                    <textarea name="ly-do" rows="2" required>@Model.ReasonValue</textarea>
+                                </span>
+                            </label>
 
-                        <p class="av-caption admin-card__note">@Model.DecisionNote</p>
+                            <p class="av-caption admin-card__note">@Model.DecisionNote</p>
 
-                        <div class="admin-detail-actions">
-                            <button type="submit" class="av-btn av-btn--outline admin-text-danger">
-                                @Model.RejectText
-                            </button>
-                            <a class="av-btn av-btn--primary"
-                               href="/quan-ly/doi-hoan?hop-thoai=duyet-hoan">@Model.ApproveText</a>
+                            <div class="admin-detail-actions">
+                                <button type="submit" class="av-btn av-btn--outline admin-text-danger">
+                                    @Model.RejectText
+                                </button>
+                                @if (Model.IsRefundRequest)
+                                {
+                                    <a class="av-btn av-btn--primary"
+                                       href="/quan-ly/doi-hoan?tab=@Context.Request.Query["tab"]&id=@ViewData["SelectedRequestId"]&hop-thoai=duyet-hoan">@Model.ApproveText</a>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="av-btn av-btn--primary"
+                                            formaction="/quan-ly/doi-hoan/duyet">@Model.ApproveText</button>
+                                }
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="av-card__body admin-card__body">
+                            <h2 class="av-card__title">@Model.DecisionTitle</h2>
+                            <div class="av-alert av-alert--info">
+                                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                                <div class="av-alert__body">
+                                    <span>Yêu cầu này đã được xử lý, không thể duyệt hoặc từ chối thêm.</span>
+                                </div>
+                            </div>
+                            <div class="admin-detail-rows">
+                                <div class="admin-detail-rows__row">
+                                    <span class="admin-detail-rows__label">Ghi chú xử lý</span>
+                                    <span class="admin-detail-rows__value">@(string.IsNullOrWhiteSpace(Model.ReasonValue) ? "—" : Model.ReasonValue)</span>
+                                </div>
+                            </div>
                         </div>
-                    </form>
+                    }
                 </article>
 
                 <div class="av-alert av-alert--info manager-process-note">
@@ -237,6 +279,7 @@
 
         <form class="av-modal__panel" method="post" action="/quan-ly/doi-hoan/duyet">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="yeu-cau-id" value="@ViewData["SelectedRequestId"]" />
 
             <div class="av-modal__head">
                 <div class="admin-modal__head-main">

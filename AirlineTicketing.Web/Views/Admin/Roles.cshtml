@@ -12,6 +12,11 @@
         </div>
     </header>
 
+    @if (TempData["msg"] is string rmsg)
+    {
+        <div class="av-alert av-alert--@(TempData["tone"] ?? "info")"><div class="av-alert__body"><span>@rmsg</span></div></div>
+    }
+
     <section class="admin-roles" aria-label="Các vai trò trong hệ thống">
         @foreach (var role in Model.Roles)
         {

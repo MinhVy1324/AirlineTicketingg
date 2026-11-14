@@ -90,12 +90,32 @@
         <section class="ticket-detail" aria-label="Chi tiết đặt chỗ">
             <article class="av-card">
                 <div class="av-card__body av-stack av-gap-18">
+                    @if (TempData["TicketEmailMessage"] is string emailMessage)
+                    {
+                        <div class="av-alert av-alert--@(TempData["TicketEmailTone"] ?? "info")">
+                            <span class="av-alert__icon">@Html.Icon("mail", 20)</span>
+                            <div class="av-alert__body"><span>@emailMessage</span></div>
+                        </div>
+                    }
                     <div class="av-row av-row--between av-gap-12">
                         <h2 class="av-card__title">Chi tiết đặt chỗ · @detail.Pnr</h2>
-                        <button type="button" class="av-link">
-                            Tải vé PDF
-                            @Html.Icon("download", 15)
-                        </button>
+                        @if (detail.HasIssuedTicket)
+                        {
+                            <div class="av-row av-gap-8 av-wrap">
+                                <a class="av-link" href="/ve/@detail.Pnr/pdf">
+                                    Tải vé PDF
+                                    @Html.Icon("download", 15)
+                                </a>
+                                <form method="post" action="/ve/@detail.Pnr/gui-lai-email" style="display:inline-flex;margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="quayLai" value="/ve-cua-toi?pnr=@detail.Pnr" />
+                                    <button type="submit" class="av-link">
+                                        <span>Gửi lại email</span>
+                                        @Html.Icon("mail", 15)
+                                    </button>
+                                </form>
+                            </div>
+                        }
                     </div>
 
                     <div class="summary-flight">
@@ -157,11 +177,11 @@
                     @if (detail.CanManage)
                     {
                         <div class="av-row av-gap-12 av-wrap">
-                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi?pnr=@detail.Pnr">
                                 @Html.Icon("refresh", 17)
                                 <span>Yêu cầu đổi vé</span>
                             </a>
-                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan?pnr=@detail.Pnr">
                                 @Html.Icon("undo", 17)
                                 <span>Yêu cầu hoàn vé</span>
                             </a>
@@ -175,7 +195,7 @@
             </article>
 
             <div class="ticket-detail__foot">
-                <span class="av-caption">Hỗ trợ: 1900 6868 · support@aeroviet.vn</span>
+                <span class="av-caption">Hỗ trợ: @ViewData["SupportHotline"] · @ViewData["SupportEmail"]</span>
                 <a class="av-link" href="#dieu-kien">Xem chính sách đầy đủ @Html.Icon("arrow-right", 15)</a>
             </div>
         </section>

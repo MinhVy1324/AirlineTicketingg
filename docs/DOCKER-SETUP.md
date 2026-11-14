@@ -1,6 +1,8 @@
 # Docker và triển khai môi trường phát triển
 
-Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Máy host truy cập website qua `http://localhost:8080` và PostgreSQL qua `localhost:5432`.
+Hướng dẫn này áp dụng cho Windows, Docker Desktop, Docker Compose v2, ASP.NET Core/.NET 10 và PostgreSQL 16. Docker Compose chạy website và cơ sở dữ liệu trong cùng một network riêng; website kết nối PostgreSQL qua hostname `db`. Một image dùng chung được chạy thành **bốn container** để tiện test: một container đầy đủ ở `http://127.0.0.1:8080` và ba container theo từng khu vực ở `http://127.0.0.3` (khách hàng), `http://127.0.0.1` (admin), `http://127.0.0.2` (manager). PostgreSQL truy cập từ máy host qua `localhost:5432`.
+
+Hướng dẫn cài đặt theo hệ điều hành: [Windows](INSTALL-WINDOWS.md) · [macOS](INSTALL-MACOS.md) · [tổng quan và tài khoản demo](INSTALL.md).
 
 Thiết kế bảng, ERD và các DTO nằm trong [DATABASE-DESIGN.md](DATABASE-DESIGN.md).
 
@@ -37,11 +39,15 @@ Thay `POSTGRES_PASSWORD` trong `.env` bằng mật khẩu ngẫu nhiên riêng c
 | `POSTGRES_USER` | User ứng dụng của PostgreSQL | `airline_app` |
 | `POSTGRES_PASSWORD` | Mật khẩu local; phải thay trước khi chạy | Placeholder trong `.env.example` |
 | `POSTGRES_PORT` | Cổng PostgreSQL trên host | `5432` |
-| `ASPNETCORE_PORT` | Cổng website trên host | `8080` |
+| `ASPNETCORE_PORT` | Cổng của container đầy đủ (mọi khu vực) | `8080` |
+| `WEB_PORT_USER` | Cổng của container khách hàng | `80` |
+| `WEB_PORT_ADMIN` | Cổng của container admin | `80` |
+| `WEB_PORT_MANAGER` | Cổng của container manager | `80` |
 | `ASPNETCORE_ENVIRONMENT` | ASP.NET Core environment | `Development` |
-| `APPLY_DATABASE_MIGRATIONS` | Tự áp dụng EF Core migrations khi website khởi động | `true` cho Docker local |
 
-Nếu cổng 5432 hoặc 8080 đã được dùng, đổi giá trị tương ứng trong `.env`. Bên trong Compose, connection string luôn dùng `Host=db;Port=5432`; từ ứng dụng chạy trực tiếp trên Windows, dùng `Host=localhost` và cổng host trong `.env`.
+Không cần biến bật migration: Compose luôn chạy service một lần `migrate` trước khi khởi động các container web (xem mục 9).
+
+Nếu cổng 5432, 8080 hoặc 80 đã được dùng, đổi giá trị tương ứng trong `.env`. Bên trong Compose, connection string luôn dùng `Host=db;Port=5432`; từ ứng dụng chạy trực tiếp trên Windows, dùng `Host=localhost` và cổng host trong `.env`.
 
 ## 3. Chạy PostgreSQL — DOCKER-02, DOCKER-03
 
@@ -83,7 +89,9 @@ Biến môi trường chỉ tồn tại trong cửa sổ PowerShell đó. Không
 
 ## 5. Build Docker image cho website — DOCKER-05
 
-`AirlineTicketing.Web/Dockerfile` dùng build stage `dotnet/sdk:10.0` và runtime stage `dotnet/aspnet:10.0`. Docker build context ở thư mục gốc solution để các `ProjectReference` đến BUS, DAL, DTO và Domain được restore/publish cùng website. `.dockerignore` loại `bin/`, `obj/`, `.git`, `.env` và tài liệu khỏi build context.
+`AirlineTicketing.Web/Dockerfile` dùng build stage `dotnet/sdk:10.0` và runtime stage `dotnet/aspnet:10.0`. Docker build context ở thư mục gốc solution để các `ProjectReference` đến BUS, DAL, DTO và Domain được restore/publish cùng website. `.dockerignore` loại `bin/`, `obj/`, `.git`, `.env`, `App_Data`, test và tài liệu khỏi build context.
+
+Runtime chạy bằng user không phải root (`app`); thư mục `/app/App_Data` được tạo sẵn và cấp quyền ghi cho user này để hộp thư demo hoạt động khi `Email:Enabled=false`. Ứng dụng không ghi file nào khác ngoài thư mục đó.
 
 Build riêng website:
 
@@ -101,13 +109,57 @@ docker compose ps
 docker compose logs -f web
 ```
 
-Mở `http://localhost:8080`. Kiểm tra kết nối C# → PostgreSQL:
+Compose build **một image duy nhất** rồi chạy 4 container web cạnh nhau:
+
+| Địa chỉ | Khu vực | Mở `/` sẽ chuyển tới |
+|---|---|---|
+| http://127.0.0.1:8080 | Tất cả khu vực | Trang chủ khách hàng |
+| http://127.0.0.3 | Khách hàng | Trang chủ khách hàng |
+| http://127.0.0.1 | Admin | `/admin` |
+| http://127.0.0.2 | Manager | `/quan-ly` |
+
+Container `web-admin` và `web-manager` chỉ khác nhau ở biến `App__DefaultArea`, nên mỗi cổng mở thẳng vào đúng khu vực cần test. Các route còn lại vẫn truy cập được trên mọi container (ví dụ mở `http://127.0.0.3/admin`) để test chéo luồng.
+
+Mỗi trang hiển thị một badge nhỏ ở góc phải dưới (ví dụ `ADMIN ·  (admin · 127.0.0.1)`) để biết đang xem container nào. Response cũng có header `X-App-Area: customer|admin|manager|all`.
+
+Kiểm tra kết nối C# → PostgreSQL:
 
 ```powershell
-Invoke-RestMethod http://localhost:8080/health/database
+Invoke-RestMethod http://127.0.0.1:8080/health/database
+Invoke-RestMethod http://127.0.0.3/health/database
+Invoke-RestMethod http://127.0.0.1/health/database
+Invoke-RestMethod http://127.0.0.2/health/database
 ```
 
-Kết quả thành công có dạng `status: connected`, `database: PostgreSQL`. Compose đợi `db` đạt `healthy` trước khi tạo service `web`; nếu ứng dụng không khởi động, đọc log bằng `docker compose logs --tail 100 web db`.
+Kết quả thành công có dạng `status: connected`, `database: PostgreSQL`. Compose đợi `db` đạt `healthy` và service `migrate` chạy xong trước khi tạo các container web; nếu ứng dụng không khởi động, đọc log bằng `docker compose logs --tail 100 web-user web-admin web-manager db migrate`.
+
+> **Lưu ý về cookie:** cookie của trình duyệt gắn với host, không gắn với cổng, nên `127.0.0.3`, `127.0.0.1`, `127.0.0.2` dùng chung cookie. Khi thêm đăng nhập thật, hãy dùng ba profile trình duyệt riêng (hoặc thêm host alias `user.localhost`, `admin.localhost`, `manager.localhost`) nếu cần tách phiên đăng nhập.
+
+### Vé điện tử và hộp thư demo
+
+Sau khi thanh toán thẻ thành công hoặc nhân viên xác nhận chuyển khoản, hệ thống tạo PDF vé và gửi email. Mặc định chưa cấu hình SMTP nên email được ghi thành tệp `.eml` trong container:
+
+```powershell
+docker compose cp web:/app/App_Data/outbox/. ./outbox/
+docker compose exec web sh -c 'ls -l /app/App_Data/outbox'
+```
+
+Mở `.eml` bằng Outlook/Thunderbird để xem nội dung HTML và tệp đính kèm `ve-dien-tu-<PNR>.pdf`. Tệp này không nằm trong volume nên mất khi tạo lại container; đây là hộp thư dành cho demo/kiểm thử. Muốn gửi thật, cấu hình `Email__Enabled=true` cùng `Email__Host`, `Email__Port`, `Email__UserName`, `Email__Password` trong `.env` (không commit mật khẩu).
+
+Các endpoint liên quan:
+
+| Endpoint | Mô tả |
+|---|---|
+| `GET /ve/{pnr}/pdf` | Tải PDF; cho chủ vé, phiên vừa đặt chỗ hoặc Admin/Manager |
+| `POST /ve/{pnr}/gui-lai-email` | Gửi lại vé; giới hạn 3 lần/5 phút mỗi IP |
+
+Job nền `HoldExpiryService` chạy trong cả 4 container nhưng chỉ một instance thắng advisory lock mỗi lượt, tự giải phóng đặt chỗ quá hạn giữ. Chu kỳ quét đổi bằng `Booking__ExpirySweepSeconds` (15–3600 giây).
+
+Chỉ cần một khu vực thì chạy riêng service tương ứng:
+
+```powershell
+docker compose up -d web-admin
+```
 
 ## 7. Khởi động lại và bảo toàn dữ liệu — DOCKER-07
 
@@ -118,7 +170,7 @@ Kiểm tra restart:
 ```powershell
 docker compose restart db
 docker compose ps
-Invoke-RestMethod http://localhost:8080/health/database
+Invoke-RestMethod http://127.0.0.1:8080/health/database
 ```
 
 Named volume `postgres_data` tồn tại độc lập với container. Vì vậy các lệnh sau không xóa database:
@@ -140,14 +192,23 @@ notepad .env
 docker compose config --quiet
 docker compose up --build -d
 docker compose ps
-Invoke-RestMethod http://localhost:8080/health/database
+Invoke-RestMethod http://127.0.0.1:8080/health/database
 ```
 
-Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
+Sau khi chạy, mở một trong các địa chỉ ở mục 6: `http://127.0.0.1:8080` (tất cả), `http://127.0.0.3` (khách hàng), `http://127.0.0.1` (admin), `http://127.0.0.2` (manager). Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
 
 ## 9. EF Core migrations
 
-Migrations nằm trong `AirlineTicketing.DAL/Migrations`. Compose development đặt `APPLY_DATABASE_MIGRATIONS=true` để website áp dụng migrations khi khởi động sau khi PostgreSQL healthy. Sau khi thay đổi entity/configuration, tạo migration mới:
+Migrations nằm trong `AirlineTicketing.DAL/Migrations`. Compose có service một lần `migrate`: nó chạy `dotnet AirlineTicketing.Web.dll --migrate`, áp dụng migration sau khi PostgreSQL `healthy` rồi thoát. Bốn container web đặt `Database__ApplyMigrationsOnStartup=false` và chỉ khởi động khi `migrate` kết thúc thành công, nhờ vậy nhiều container không tranh nhau sửa schema.
+
+```powershell
+docker compose logs migrate
+docker compose run --rm migrate
+```
+
+Khi chạy trực tiếp bằng `dotnet run` mà không qua Docker, có thể bật tự động migration bằng `$env:Database__ApplyMigrationsOnStartup = 'true'` (xem mục 4).
+
+Sau khi thay đổi entity/configuration, tạo migration mới:
 
 ```powershell
 dotnet ef migrations add <MigrationName> `
@@ -156,7 +217,7 @@ dotnet ef migrations add <MigrationName> `
   --output-dir Migrations
 ```
 
-Commit migration cùng thay đổi model. Ở production, đặt `APPLY_DATABASE_MIGRATIONS=false` và chạy migration qua bước triển khai/DBA được kiểm soát thay vì tự động đổi schema khi ứng dụng khởi động.
+Commit migration cùng thay đổi model. Ở production, giữ `Database__ApplyMigrationsOnStartup=false` và chạy migration qua bước triển khai/DBA được kiểm soát (hoặc `docker compose run --rm migrate`) thay vì để mọi container tự đổi schema khi khởi động.
 
 ## 10. Lệnh thường dùng
 
@@ -164,9 +225,34 @@ Commit migration cùng thay đổi model. Ở production, đặt `APPLY_DATABASE
 |---|---|
 | Xem trạng thái | `docker compose ps` |
 | Theo dõi log | `docker compose logs -f web db` |
+| Chỉ chạy container khách hàng | `docker compose up -d web-user` |
+| Chỉ chạy container admin | `docker compose up -d web-admin` |
+| Chỉ chạy container manager | `docker compose up -d web-manager` |
+| Xem log migration | `docker compose logs migrate` |
 | Dừng, giữ dữ liệu | `docker compose down` |
 | Khởi động lại | `docker compose up -d` |
 | Build lại website | `docker compose up --build -d web` |
 | Xóa dữ liệu local có chủ đích | `docker compose down -v` |
 
 `compose.yaml` giới hạn các port publish trên `127.0.0.1`; cấu hình này dành cho phát triển trên cùng máy. Khi triển khai server, cần cấu hình reverse proxy/TLS, firewall, secret manager và chính sách sao lưu phù hợp.
+
+## 11. Smoke test và CI
+
+Sau khi stack chạy, kiểm tra nhanh các luồng chính (health, đăng nhập manager, tải PDF, chặn khách ẩn danh):
+
+```powershell
+pwsh ./scripts/smoke.ps1
+pwsh ./scripts/smoke.ps1 -BaseUrl http://127.0.0.1:8080 -Pnr <PNR>
+```
+
+Máy Windows chỉ có Windows PowerShell 5.1 (không có `pwsh`) thì chạy `powershell -ExecutionPolicy Bypass -File ./scripts/smoke.ps1`. Script trả mã thoát `0` khi mọi kiểm tra đạt và `1` khi có lỗi, nên dùng được trong terminal hoặc pipeline. Nếu không truyền `-Pnr`, script lấy một đặt chỗ `DaXacNhan` mới nhất từ container `db` (cần Docker đang chạy).
+
+GitHub Actions chạy `.github/workflows/ci.yml` cho mỗi push/PR: job `build-test` restore/build toàn solution và chạy unit test; job `postgres-integration` dựng PostgreSQL 16 tạm, đặt `AIRLINE_TEST_CONNECTION` trỏ database tên chứa `test` rồi chạy toàn bộ test, gồm cả test cạnh tranh ghế trên PostgreSQL thật. Chạy lại cục bộ:
+
+```powershell
+$env:AIRLINE_TEST_CONNECTION = "Host=localhost;Port=5432;Database=airline_ticketing_test;Username=airline_app;Password=<mật-khẩu>"
+dotnet test AirlineTicketing.Tests/AirlineTicketing.Tests.csproj
+Remove-Item Env:AIRLINE_TEST_CONNECTION
+```
+
+Không trỏ `AIRLINE_TEST_CONNECTION` vào database phát triển: test gọi `EnsureCreated` và tạo schema riêng trong database đó.

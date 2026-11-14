@@ -1,0 +1,9 @@
+@inject IConfiguration Configuration
+@{
+    var instanceLabel = Configuration["App:InstanceLabel"];
+    var instanceArea = Configuration["App:DefaultArea"] ?? "customer";
+}
+@if (!string.IsNullOrWhiteSpace(instanceLabel))
+{
+    <div class="av-instance-badge" data-area="@instanceArea" aria-hidden="true">@instanceLabel</div>
+}

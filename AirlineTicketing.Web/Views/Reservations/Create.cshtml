@@ -1,0 +1,44 @@
+@model CreateReservationViewModel
+@{
+    ViewData["Title"] = "Thông tin hành khách";
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">Thông tin người đặt và hành khách</h1>
+        <p class="av-page-subtitle">Giá cuối cùng và thời hạn giữ ghế sẽ được máy chủ xác nhận.</p>
+    </header>
+
+    <form method="post" class="booking-layout">
+        @Html.AntiForgeryToken()
+        <div class="booking-main av-card">
+            <div class="av-card__body av-stack av-gap-18">
+                <div asp-validation-summary="ModelOnly" class="av-alert av-alert--danger"></div>
+                <input asp-for="ChuyenBayId" type="hidden" />
+
+                <h2 class="av-card__title">Người liên hệ</h2>
+                <label class="av-field"><span class="av-label">Họ tên</span><input asp-for="HoTenLienHe" required /></label>
+                <span asp-validation-for="HoTenLienHe"></span>
+                <label class="av-field"><span class="av-label">Email</span><input asp-for="Email" required /></label>
+                <span asp-validation-for="Email"></span>
+                <label class="av-field"><span class="av-label">Số điện thoại</span><input asp-for="SoDienThoai" required /></label>
+                <span asp-validation-for="SoDienThoai"></span>
+
+                <hr class="av-divider" />
+                <h2 class="av-card__title">Hành khách</h2>
+                <label class="av-field"><span class="av-label">Họ tên trên giấy tờ</span><input asp-for="HoTenHanhKhach" required /></label>
+                <label class="av-field"><span class="av-label">Ngày sinh</span><input asp-for="NgaySinh" /></label>
+                <label class="av-field"><span class="av-label">Quốc tịch</span><input asp-for="QuocTich" /></label>
+                <label class="av-field"><span class="av-label">Hộ chiếu/giấy tờ</span><input asp-for="SoHoChieu" /></label>
+                <label class="av-field"><span class="av-label">Ghế</span><input asp-for="SoGhe" required /></label>
+                <label class="av-field">
+                    <span class="av-label">Hạng vé</span>
+                    <select asp-for="HangVe"><option value="PhoThong">Phổ thông</option><option value="ThuongGia">Thương gia</option></select>
+                </label>
+                <button class="av-btn av-btn--primary av-btn--lg" type="submit">Giữ ghế và xác nhận giá</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

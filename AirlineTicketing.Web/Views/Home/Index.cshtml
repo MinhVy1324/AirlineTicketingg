@@ -17,7 +17,7 @@
         </p>
     </section>
 
-    <form class="search-card" method="get" action="/chuyen-bay" role="search" aria-label="Tìm chuyến bay">
+    <form class="search-card" id="tim-chuyen" method="get" action="/chuyen-bay" role="search" aria-label="Tìm chuyến bay">
         <div class="search-card__types">
             <div class="av-toggle">
                 <label class="av-toggle__item is-active">
@@ -118,7 +118,7 @@
             @foreach (var dest in Model.Destinations)
             {
                 <a class="dest-card" asp-controller="Flights" asp-action="Index"
-                   asp-route-to="@dest.Name" asp-route-depart="20/11/2026">
+                   asp-route-to="@dest.Name" asp-route-depart="@Model.Search.DepartDate">
                     <span class="dest-card__media" style="background-image:url('/img/@dest.ImageFile')" role="img"
                           aria-label="Ảnh @dest.Name"></span>
                     <span class="dest-card__body">
@@ -126,15 +126,124 @@
                             <strong>@dest.Name</strong>
                             <span class="dest-card__code">@dest.Code</span>
                         </span>
-                        <span class="dest-card__price">
-                            <span>Một chiều · từ</span>
-                            <strong>@Money.Vnd(dest.FromPrice)</strong>
-                        </span>
-                        <span class="av-micro">Giá tham khảo đã gồm thuế, phí</span>
                     </span>
                 </a>
             }
         </div>
+    </section>
+
+    <section class="av-stack av-gap-20" id="huong-dan" aria-labelledby="home-steps-title">
+        <header class="dest-head">
+            <div class="dest-head__main">
+                <h2 class="dest-head__title" id="home-steps-title">Hướng dẫn đặt vé</h2>
+                <p class="av-page-subtitle">Bốn bước từ tìm chuyến đến nhận vé điện tử.</p>
+            </div>
+            <a class="av-link" href="#tim-chuyen">Bắt đầu tìm chuyến @Html.Icon("arrow-right", 15)</a>
+        </header>
+
+        <ol class="step-list">
+            <li class="step-card">
+                <span class="step-card__num">1</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">Tìm chuyến bay</span>
+                    <span class="step-card__text">Nhập nơi đi, nơi đến, ngày bay và số hành khách. Giá hiển thị đã gồm thuế, phí.</span>
+                </div>
+            </li>
+            <li class="step-card">
+                <span class="step-card__num">2</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">Chọn chuyến &amp; hạng vé</span>
+                    <span class="step-card__text">So sánh giờ bay, hạng Phổ thông Tiết kiệm / Tiêu chuẩn và hành lý đi kèm.</span>
+                </div>
+            </li>
+            <li class="step-card">
+                <span class="step-card__num">3</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">Nhập thông tin hành khách</span>
+                    <span class="step-card__text">Họ tên trùng giấy tờ tùy thân, email và số điện thoại dùng để nhận vé.</span>
+                </div>
+            </li>
+            <li class="step-card">
+                <span class="step-card__num">4</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">Thanh toán &amp; nhận vé</span>
+                    <span class="step-card__text">Chỗ được giữ 15 phút. Thanh toán thành công, vé điện tử được gửi tới email của bạn.</span>
+                </div>
+            </li>
+        </ol>
+    </section>
+
+    <section class="av-stack av-gap-20" id="quy-tac" aria-labelledby="home-rules-title">
+        <header class="dest-head">
+            <div class="dest-head__main">
+                <h2 class="dest-head__title" id="home-rules-title">Quy tắc &amp; thủ tục</h2>
+                <p class="av-page-subtitle">Những điều cần biết trước khi khởi hành.</p>
+            </div>
+            <a class="av-link" href="/tra-cuu">Tra cứu đặt chỗ @Html.Icon("arrow-right", 15)</a>
+        </header>
+
+        <div class="rule-grid">
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("id-card", 20)</span>
+                        <h3 class="rule-card__title">Giấy tờ &amp; check-in</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>CCCD hoặc hộ chiếu còn hiệu lực; trẻ dưới 14 tuổi cần giấy khai sinh hoặc hộ chiếu.</li>
+                        <li>Có mặt tại sân bay trước 2 giờ (nội địa) và 3 giờ (quốc tế) so với giờ khởi hành.</li>
+                        <li>Check-in trực tuyến mở trước 24 giờ và đóng 45 phút trước giờ bay.</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("luggage", 20)</span>
+                        <h3 class="rule-card__title">Hành lý</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>Hành lý xách tay: 7 kg (Tiết kiệm) hoặc 10 kg (Tiêu chuẩn).</li>
+                        <li>Hành lý ký gửi: 0 kg (Tiết kiệm) hoặc 23 kg (Tiêu chuẩn); mua thêm ở bước đặt vé.</li>
+                        <li>Chất lỏng, pin dự phòng và vật phẩm cấm tuân theo quy định an ninh hàng không.</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("refresh", 20)</span>
+                        <h3 class="rule-card__title">Đổi / hoàn vé</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>Gửi yêu cầu trước giờ bay ít nhất 3 tiếng; không áp dụng khi không có mặt (no-show).</li>
+                        <li>Phí đổi từ 360.000 ₫/khách + chênh lệch giá; phí hoàn từ 500.000 ₫/khách.</li>
+                        <li>Phí dịch vụ và hành lý mua thêm không hoàn. Số tiền cuối cùng được xác nhận khi xử lý.</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("credit-card", 20)</span>
+                        <h3 class="rule-card__title">Thanh toán &amp; hoàn tiền</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>Thanh toán qua VNPay bằng thẻ ngân hàng hoặc chuyển khoản/QR; không lưu thông tin thẻ.</li>
+                        <li>Ghế chỉ được giữ tối đa 15 phút kể từ khi bắt đầu thanh toán.</li>
+                        <li>Tiền hoàn về phương thức ban đầu trong 7–15 ngày làm việc; trạng thái “Đã duyệt” chưa phải đã nhận tiền.</li>
+                    </ul>
+                </div>
+            </article>
+        </div>
+
+        <p class="rules__note">
+            <strong>Cần hỗ trợ?</strong>
+            Tổng đài @ViewData["SupportHotline"] (06:00–22:00) hoặc email @ViewData["SupportEmail"]. Khi liên hệ, vui lòng cung cấp mã đặt chỗ (PNR).
+        </p>
     </section>
 
     <section class="benefits" aria-label="Dịch vụ đồng hành">
@@ -156,7 +265,7 @@
             @Html.Icon("headset", 24)
             <div class="benefit__body">
                 <span class="benefit__title">Luôn sẵn sàng hỗ trợ</span>
-                <span class="benefit__text">Tổng đài 1900 6868 · 06:00–22:00.</span>
+                <span class="benefit__text">Tổng đài @ViewData["SupportHotline"] · 06:00–22:00.</span>
             </div>
         </div>
     </section>

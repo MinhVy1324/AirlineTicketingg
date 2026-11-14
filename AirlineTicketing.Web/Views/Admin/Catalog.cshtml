@@ -21,11 +21,22 @@
             <h1 class="admin-page-title">Danh mục hệ thống</h1>
             <p class="admin-page-subtitle">Quản lý dữ liệu nền dùng chung cho tìm kiếm, đặt vé và lịch khai thác.</p>
         </div>
-        <button type="button" class="av-btn av-btn--primary">
+        <a class="av-btn av-btn--primary" href="/admin/danh-muc?tab=@tabQuery&id=0">
             @Html.Icon("plus", 17)
             <span>@Model.AddText</span>
-        </button>
+        </a>
     </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check" : "info", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@(Model.MessageTone == "success" ? "Đã cập nhật" : "Không thể lưu")</span>
+                <span>@Model.Message</span>
+            </div>
+        </div>
+    }
 
     <nav class="admin-tabs" aria-label="Nhóm dữ liệu danh mục">
         @foreach (var tab in Model.Tabs)
@@ -58,7 +69,8 @@
                     <label class="av-field">
                         <span class="av-label">@Model.SearchLabel</span>
                         <span class="av-control">
-                            <input type="search" name="q" placeholder="@Model.SearchPlaceholder" autocomplete="off" />
+                            <input type="search" name="q" value="@Context.Request.Query["q"]"
+                                   placeholder="@Model.SearchPlaceholder" autocomplete="off" />
                             @Html.Icon("search", 17)
                         </span>
                     </label>
@@ -91,9 +103,25 @@
                             @foreach (var row in Model.Rows)
                             {
                                 <tr class="@(row.IsSelected ? "is-selected" : null)">
-                                    <td class="admin-catalog-code">@row.Code</td>
+                                    <td class="admin-catalog-code">
+                                        @if (!string.IsNullOrWhiteSpace(row.Href))
+                                        {
+                                            <a class="av-link" href="@row.Href">@row.Code</a>
+                                        }
+                                        else
+                                        {
+                                            @row.Code
+                                        }
+                                    </td>
                                     <td>
-                                        <span class="admin-catalog-name">@row.Title</span>
+                                        @if (!string.IsNullOrWhiteSpace(row.Href))
+                                        {
+                                            <a class="admin-catalog-name" href="@row.Href">@row.Title</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="admin-catalog-name">@row.Title</span>
+                                        }
                                         @if (!string.IsNullOrWhiteSpace(row.Subtitle))
                                         {
                                             <span class="admin-catalog-sub">@row.Subtitle</span>
@@ -101,6 +129,12 @@
                                     </td>
                                     <td>@row.Meta</td>
                                     <td class="admin-table__result admin-table__result--@statusTone(row.StatusText)">@row.StatusText</td>
+                                </tr>
+                            }
+                            @if (Model.Rows.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="4" class="av-caption">Chưa có dữ liệu phù hợp bộ lọc.</td>
                                 </tr>
                             }
                         </tbody>
@@ -123,6 +157,7 @@
                 <form class="av-card__body admin-card__body admin-editor" method="post" action="/admin/danh-muc">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="tab" value="@tabQuery" />
+                    <input type="hidden" name="id" value="@Model.EditorId" />
 
                     <div class="admin-card__head-main">
                         <h2 class="av-card__title">@Model.EditorTitle</h2>
@@ -130,49 +165,35 @@
                     </div>
 
                     <div class="admin-editor__fields">
-                        @for (var i = 0; i < Model.EditorFields.Count; i++)
+                        @foreach (var field in Model.EditorFields)
                         {
-                            var field = Model.EditorFields[i];
-                            var isPair = field.Label == "Quốc gia"
-                                && i + 1 < Model.EditorFields.Count
-                                && Model.EditorFields[i + 1].Label == "Múi giờ";
-
-                            if (isPair)
-                            {
-                                var second = Model.EditorFields[i + 1];
-                                <div class="admin-editor__row">
-                                    <label class="av-field">
-                                        <span class="av-label">@field.Label</span>
-                                        <span class="av-control">
-                                            <input type="text" value="@field.Value" />
-                                        </span>
-                                    </label>
-                                    <label class="av-field">
-                                        <span class="av-label">@second.Label</span>
-                                        <span class="av-control">
-                                            <input type="text" value="@second.Value" />
-                                        </span>
-                                    </label>
-                                </div>
-                                i++;
-                            }
-                            else
-                            {
-                                <label class="av-field">
-                                    <span class="av-label">@field.Label</span>
-                                    <span class="av-control">
-                                        <input type="text" value="@field.Value" />
-                                        @if (field.Icon is not null)
-                                        {
-                                            @Html.Icon(field.Icon, 17)
-                                        }
-                                    </span>
-                                    @if (field.Hint is not null)
+                            <label class="av-field">
+                                <span class="av-label">@field.Label</span>
+                                <span class="av-control">
+                                    @if (field.Options is { Count: > 0 })
                                     {
-                                        <span class="av-field__hint">@field.Hint</span>
+                                        <select name="@field.Name">
+                                            @foreach (var option in field.Options)
+                                            {
+                                                <option selected="@(option == field.Value)">@option</option>
+                                            }
+                                        </select>
                                     }
-                                </label>
-                            }
+                                    else
+                                    {
+                                        <input type="text" name="@field.Name" value="@field.Value"
+                                               required="@(field.IsRequired ? "required" : null)" />
+                                    }
+                                    @if (field.Icon is not null)
+                                    {
+                                        @Html.Icon(field.Icon, 17)
+                                    }
+                                </span>
+                                @if (field.Hint is not null)
+                                {
+                                    <span class="av-field__hint">@field.Hint</span>
+                                }
+                            </label>
                         }
                     </div>
 

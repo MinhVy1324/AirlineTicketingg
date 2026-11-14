@@ -2,8 +2,12 @@
 **/obj/
 **/TestResults/
 .git/
+.github/
 .vs/
 .vscode/
 .env
 .env.*
 docs/
+scripts/
+AirlineTicketing.Tests/
+**/App_Data/
