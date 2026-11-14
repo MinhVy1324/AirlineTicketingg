@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -33,6 +34,7 @@ public class AccountController(AppDbContext db) : Controller
 
     [HttpPost("/dang-nhap")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AppRateLimits.Login)]
     public async Task<IActionResult> Login(LoginViewModel model, CancellationToken ct)
     {
         model.Email = model.Email?.Trim() ?? string.Empty;

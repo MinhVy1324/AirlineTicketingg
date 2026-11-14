@@ -50,6 +50,8 @@ ASPNETCORE_ENVIRONMENT=Development
 
 `.env` đã nằm trong `.gitignore`; không commit hoặc gửi mật khẩu qua chat.
 
+Compose tự truyền `ConnectionStrings__DefaultConnection` vào container (ghép từ `POSTGRES_*` ở trên). Khi chạy `dotnet run` ngoài Docker, nạp biến này hoặc `POSTGRES_PASSWORD` trước khi chạy — `appsettings.json` không lưu mật khẩu. Chạy sau HTTPS thật thì đặt `Auth__CookieSecurePolicy=Always` để cookie chỉ gửi qua kết nối bảo mật.
+
 ## Lệnh thường dùng
 
 ```bash
