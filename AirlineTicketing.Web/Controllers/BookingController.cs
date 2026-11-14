@@ -21,6 +21,7 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
     private const string KeyBaggageFee = "booking.baggageFee";
     private const string KeySeat = "booking.seat";
     private const string KeyBookingId = "booking.bookingId";
+    private const string ReportedTransferAction = "KhachBaoDaChuyenKhoan";
 
     private const int SeatsPerRow = 6;
 
@@ -299,7 +300,8 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             QrUrl = Url.Action(nameof(TransferQr), new { pnr }) ?? string.Empty,
             SeatCode = ve?.SoGhe ?? "—",
             FlightNumber = ve?.ChuyenBay?.SoHieu ?? "—",
-            PassengerName = booking.KhachHang?.HoTen ?? "—"
+            PassengerName = booking.KhachHang?.HoTen ?? "—",
+            Reported = booking.LichSus.Any(x => x.HanhDong == ReportedTransferAction)
         };
 
         return View(model);
@@ -326,8 +328,10 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
     public async Task<IActionResult> ConfirmTransfer(string pnr, CancellationToken cancellationToken)
     {
         var booking = await dbContext.DatVes
+            .Include(x => x.KhachHang)
             .Include(x => x.Ves)
             .Include(x => x.ThanhToans)
+            .Include(x => x.LichSus)
             .FirstOrDefaultAsync(x => x.MaDatVe == pnr, cancellationToken);
 
         if (booking is null) return Redirect("/ve-cua-toi");
@@ -355,35 +359,25 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
             return RedirectToAction(nameof(PaymentFailed));
         }
 
-        payment.TrangThai = TrangThaiThanhToan.ThanhCong;
-        payment.NgayHoanTat = now;
-
-        foreach (var ticket in booking.Ves.Where(x => x.TrangThai == TrangThaiVe.TamGiu))
+        // Không tự đánh dấu đã thanh toán: chỉ ghi nhận khách báo đã chuyển khoản.
+        // Nhân viên đối soát sao kê ngân hàng rồi xác nhận ở khu quản lý.
+        if (!booking.LichSus.Any(x => x.HanhDong == ReportedTransferAction))
         {
-            ticket.TrangThai = TrangThaiVe.DaPhatHanh;
-            ticket.MaVe = GenerateTicketNumber(now);
-            ticket.NgayPhatHanh = now;
+            booking.LichSus.Add(new LichSuDatVe
+            {
+                DatVeId = booking.Id,
+                HanhDong = ReportedTransferAction,
+                TrangThaiTruoc = booking.TrangThai.ToString(),
+                TrangThaiSau = booking.TrangThai.ToString(),
+                LyDo = "Khách báo đã chuyển khoản, chờ nhân viên đối soát",
+                NguoiThucHien = User.Identity?.IsAuthenticated == true ? User.DisplayName() : "Khách vãng lai",
+                ThoiDiem = now,
+                DuLieuBoSung = JsonSerializer.Serialize(new { booking.MaDatVe, payment.MaGiaoDich })
+            });
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        var previous = booking.TrangThai;
-        booking.TrangThai = TrangThaiDatVe.DaXacNhan;
-        booking.NgayXacNhan = now;
-        booking.LichSus.Add(new LichSuDatVe
-        {
-            DatVeId = booking.Id,
-            HanhDong = "XacNhanChuyenKhoan",
-            TrangThaiTruoc = previous.ToString(),
-            TrangThaiSau = booking.TrangThai.ToString(),
-            LyDo = "Xác nhận chuyển khoản VietQR",
-            NguoiThucHien = "system",
-            ThoiDiem = now,
-            DuLieuBoSung = JsonSerializer.Serialize(new { booking.MaDatVe, payment.MaGiaoDich })
-        });
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-        HttpContext.Session.SetInt32(KeyBookingId, booking.Id);
-        HttpContext.Session.Remove(KeySeat);
-        return RedirectToAction(nameof(Success), new { pnr });
+        return RedirectToAction(nameof(Transfer), new { pnr });
     }
 
     [HttpGet("/dat-ve/thanh-cong")]
@@ -683,7 +677,7 @@ public class BookingController(AppDbContext dbContext, ILogger<BookingController
 
     private async Task<DatVe?> LoadBookingAsync(string pnr, CancellationToken ct) =>
         await dbContext.DatVes.AsNoTracking()
-            .Include(x => x.KhachHang).Include(x => x.ThanhToans)
+            .Include(x => x.KhachHang).Include(x => x.ThanhToans).Include(x => x.LichSus)
             .Include(x => x.Ves).ThenInclude(x => x.HanhKhach)
             .Include(x => x.Ves).ThenInclude(x => x.ChuyenBay).ThenInclude(x => x.TuyenBay).ThenInclude(x => x.SanBayDi)
             .Include(x => x.Ves).ThenInclude(x => x.ChuyenBay).ThenInclude(x => x.TuyenBay).ThenInclude(x => x.SanBayDen)

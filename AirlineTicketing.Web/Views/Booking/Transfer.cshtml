@@ -11,7 +11,7 @@
         <h1 class="av-page-title">Quét mã QR để chuyển khoản</h1>
         <p class="av-page-subtitle">
             Đặt chỗ @Model.Pnr đang được giữ đến @Model.HoldUntilText (UTC+7). Hoàn tất chuyển khoản
-            đúng số tiền và nội dung để xác nhận vé.
+            đúng số tiền và nội dung, sau đó báo cho bộ phận vận hành để đối soát và phát hành vé.
         </p>
     </header>
 
@@ -23,7 +23,9 @@
                         <span class="ticket__pnr-label">MÃ ĐẶT CHỖ (PNR)</span>
                         <strong class="ticket__pnr">@Model.Pnr</strong>
                     </div>
-                    <span class="av-badge av-badge--warning">Chờ thanh toán</span>
+                    <span class="av-badge av-badge--@(Model.Reported ? "info" : "warning")">
+                        @(Model.Reported ? "Chờ đối soát" : "Chờ thanh toán")
+                    </span>
                 </div>
 
                 <div class="qr-payment__body">
@@ -66,21 +68,44 @@
                         <span class="av-alert__title">Đây là môi trường minh họa</span>
                         <span>
                             Mã QR và tài khoản trên là dữ liệu mẫu, không phát sinh giao dịch thật.
-                            Sau khi chuyển khoản (hoặc bấm xác nhận trong bản demo), vé điện tử sẽ được phát hành.
+                            Sau khi chuyển khoản, bấm nút bên dưới để báo cho bộ phận vận hành.
+                            Vé điện tử chỉ được phát hành sau khi nhân viên đối soát xác nhận đã nhận tiền.
                         </span>
                     </div>
                 </div>
 
-                <form method="post" asp-controller="Booking" asp-action="ConfirmTransfer" asp-route-pnr="@Model.Pnr">
-                    @Html.AntiForgeryToken()
+                @if (Model.Reported)
+                {
+                    <div class="av-alert av-alert--success">
+                        <span class="av-alert__icon">@Html.Icon("check-circle", 20)</span>
+                        <div class="av-alert__body">
+                            <span class="av-alert__title">Đã ghi nhận thông báo chuyển khoản</span>
+                            <span>
+                                Đặt chỗ @Model.Pnr đang chờ nhân viên đối soát giao dịch. Vé điện tử sẽ được
+                                phát hành sau khi xác nhận. Nếu quá thời gian giữ chỗ mà chưa đối soát xong,
+                                vui lòng gọi 1900 6868 và cung cấp mã PNR @Model.Pnr.
+                            </span>
+                        </div>
+                    </div>
+
                     <div class="step-nav">
                         <a class="av-btn av-btn--ghost" href="/ve-cua-toi">@Html.Icon("arrow-left", 17) Về Vé của tôi</a>
-                        <button type="submit" class="av-btn av-btn--primary av-btn--lg">
-                            @Html.Icon("check", 17)
-                            <span>Tôi đã chuyển khoản @Model.AmountText</span>
-                        </button>
+                        <a class="av-btn av-btn--outline" href="tel:19006868">@Html.Icon("phone", 17) Gọi hỗ trợ 1900 6868</a>
                     </div>
-                </form>
+                }
+                else
+                {
+                    <form method="post" asp-controller="Booking" asp-action="ConfirmTransfer" asp-route-pnr="@Model.Pnr">
+                        @Html.AntiForgeryToken()
+                        <div class="step-nav">
+                            <a class="av-btn av-btn--ghost" href="/ve-cua-toi">@Html.Icon("arrow-left", 17) Về Vé của tôi</a>
+                            <button type="submit" class="av-btn av-btn--primary av-btn--lg">
+                                @Html.Icon("check", 17)
+                                <span>Tôi đã chuyển khoản @Model.AmountText</span>
+                            </button>
+                        </div>
+                    </form>
+                }
             </section>
         </div>
 

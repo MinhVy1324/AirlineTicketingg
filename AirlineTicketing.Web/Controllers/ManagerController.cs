@@ -1,12 +1,15 @@
 using System.Globalization;
+using System.Text.Json;
 using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
+using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
 using AirlineTicketing.Web.Demo;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
@@ -257,12 +260,122 @@ public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Cont
         View(new BookingAdminViewModel
         {
             TuKhoa = q,
-            DatVes = await datVeBUS.DanhSachQuanLyAsync(q, cancellationToken: cancellationToken)
+            DatVes = await datVeBUS.DanhSachQuanLyAsync(q, cancellationToken: cancellationToken),
+            Message = TempData["BookingMessage"] as string,
+            MessageTone = TempData["BookingTone"] as string ?? "info"
         });
 
     [HttpPost("/quan-ly/dat-ve")]
     [ValidateAntiForgeryToken]
     public IActionResult Bookings(IFormCollection form) => RedirectToAction(nameof(Bookings));
+
+    /// <summary>
+    /// Nhân viên đối soát sao kê ngân hàng rồi xác nhận thủ công. Đây là bước duy nhất
+    /// được phép chuyển một đặt chỗ chuyển khoản sang trạng thái đã thanh toán.
+    /// </summary>
+    [HttpPost("/quan-ly/dat-ve/xac-nhan-thanh-toan")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmTransferPayment(IFormCollection form, CancellationToken cancellationToken)
+    {
+        var pnr = form["pnr"].ToString().Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(pnr))
+        {
+            return BookingMessage("Mã đặt chỗ không hợp lệ.", "danger");
+        }
+
+        var booking = await dbContext.DatVes
+            .Include(x => x.Ves)
+            .Include(x => x.ThanhToans)
+            .Include(x => x.LichSus)
+            .FirstOrDefaultAsync(x => x.MaDatVe == pnr, cancellationToken);
+
+        if (booking is null)
+        {
+            return BookingMessage($"Không tìm thấy đặt chỗ {pnr}.", "danger");
+        }
+
+        if (booking.TrangThai == TrangThaiDatVe.DaXacNhan)
+        {
+            return BookingMessage($"Đặt chỗ {pnr} đã được xác nhận trước đó.", "info");
+        }
+
+        if (booking.TrangThai != TrangThaiDatVe.ChoThanhToan)
+        {
+            return BookingMessage($"Đặt chỗ {pnr} không còn chờ thanh toán (trạng thái {booking.TrangThai}).", "danger");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (booking.HetHanGiuCho <= now)
+        {
+            var previous = booking.TrangThai;
+            booking.TrangThai = TrangThaiDatVe.HetHan;
+            foreach (var ticket in booking.Ves.Where(x => x.TrangThai == TrangThaiVe.TamGiu))
+            {
+                ticket.TrangThai = TrangThaiVe.DaHuy;
+                ticket.NgayHuy = now;
+                ticket.LyDoHuy = "Hết thời hạn giữ chỗ";
+            }
+            booking.LichSus.Add(new LichSuDatVe
+            {
+                DatVeId = booking.Id,
+                HanhDong = "HetHanGiuCho",
+                TrangThaiTruoc = previous.ToString(),
+                TrangThaiSau = booking.TrangThai.ToString(),
+                LyDo = "Hết thời hạn giữ chỗ khi nhân viên đối soát",
+                NguoiThucHien = User.DisplayName(),
+                ThoiDiem = now
+            });
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return BookingMessage($"Đặt chỗ {pnr} đã hết hạn giữ chỗ, không thể xác nhận thanh toán.", "danger");
+        }
+
+        var payment = booking.ThanhToans.FirstOrDefault(x =>
+            x.PhuongThuc == PhuongThucThanhToan.ChuyenKhoan
+            && x.TrangThai == TrangThaiThanhToan.ChoXuLy);
+
+        if (payment is null)
+        {
+            return BookingMessage($"Đặt chỗ {pnr} không có giao dịch chuyển khoản đang chờ đối soát.", "danger");
+        }
+
+        payment.TrangThai = TrangThaiThanhToan.ThanhCong;
+        payment.NgayHoanTat = now;
+
+        foreach (var ticket in booking.Ves.Where(x => x.TrangThai == TrangThaiVe.TamGiu))
+        {
+            ticket.TrangThai = TrangThaiVe.DaPhatHanh;
+            ticket.MaVe = NewTicketNumber();
+            ticket.NgayPhatHanh = now;
+        }
+
+        var oldStatus = booking.TrangThai;
+        booking.TrangThai = TrangThaiDatVe.DaXacNhan;
+        booking.NgayXacNhan = now;
+        booking.LichSus.Add(new LichSuDatVe
+        {
+            DatVeId = booking.Id,
+            HanhDong = "XacNhanChuyenKhoan",
+            TrangThaiTruoc = oldStatus.ToString(),
+            TrangThaiSau = booking.TrangThai.ToString(),
+            LyDo = "Nhân viên đối soát xác nhận đã nhận chuyển khoản",
+            NguoiThucHien = User.DisplayName(),
+            ThoiDiem = now,
+            DuLieuBoSung = JsonSerializer.Serialize(new { booking.MaDatVe, payment.MaGiaoDich })
+        });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return BookingMessage($"Đã xác nhận thanh toán và phát hành vé cho đặt chỗ {pnr}.", "success");
+    }
+
+    private IActionResult BookingMessage(string message, string tone)
+    {
+        TempData["BookingMessage"] = message;
+        TempData["BookingTone"] = tone;
+        return RedirectToAction(nameof(Bookings));
+    }
+
+    private static string NewTicketNumber() =>
+        "VE" + Guid.NewGuid().ToString("N")[..12].ToUpperInvariant();
 
     [HttpGet("/quan-ly/doi-hoan")]
     public IActionResult ChangeRefunds(

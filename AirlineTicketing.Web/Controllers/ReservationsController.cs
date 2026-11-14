@@ -3,6 +3,7 @@ using AirlineTicketing.DTO;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AirlineTicketing.Web.Controllers;
 
@@ -93,11 +94,18 @@ public sealed class ReservationsController(DatVeBUS datVeBUS, VeBUS veBUS) : Con
     public async Task<IActionResult> Cancel(string maVe, string email, string lyDo,
         CancellationToken cancellationToken)
     {
+        var actorEmail = ResolveActorEmail(email);
+        if (actorEmail is null)
+        {
+            TempData["BookingError"] = "Vui lòng nhập email đặt chỗ để xác minh.";
+            return RedirectToAction(nameof(Manage));
+        }
+
         try
         {
             var ticket = await veBUS.HuyVeAsync(new HuyVeDTO { MaVe = maVe, LyDo = lyDo },
-                email, User.Identity?.Name, cancellationToken);
-            TempData["BookingEmail"] = email;
+                actorEmail, User.Identity?.Name, cancellationToken);
+            TempData["BookingEmail"] = actorEmail;
             return RedirectToAction(nameof(Confirmation), new { maDatVe = ticket.MaDatVe });
         }
         catch (NgoaiLeNghiepVu exception)
@@ -112,14 +120,21 @@ public sealed class ReservationsController(DatVeBUS datVeBUS, VeBUS veBUS) : Con
     public async Task<IActionResult> Change(int veId, int chuyenBayMoiId, string soGheMoi,
         string hangVeMoi, string email, string lyDo, CancellationToken cancellationToken)
     {
+        var actorEmail = ResolveActorEmail(email);
+        if (actorEmail is null)
+        {
+            TempData["BookingError"] = "Vui lòng nhập email đặt chỗ để xác minh.";
+            return RedirectToAction(nameof(Manage));
+        }
+
         try
         {
             var ticket = await veBUS.DoiVeAsync(new DoiVeDTO
             {
                 VeId = veId, ChuyenBayMoiId = chuyenBayMoiId, SoGheMoi = soGheMoi,
                 HangVeMoi = hangVeMoi, LyDo = lyDo
-            }, email, User.Identity?.Name, cancellationToken);
-            TempData["BookingEmail"] = email;
+            }, actorEmail, User.Identity?.Name, cancellationToken);
+            TempData["BookingEmail"] = actorEmail;
             return RedirectToAction(nameof(Confirmation), new { maDatVe = ticket.MaDatVe });
         }
         catch (NgoaiLeNghiepVu exception)
@@ -127,5 +142,22 @@ public sealed class ReservationsController(DatVeBUS datVeBUS, VeBUS veBUS) : Con
             TempData["BookingError"] = exception.Message;
             return RedirectToAction(nameof(Manage));
         }
+    }
+
+    /// <summary>
+    /// Khách đã đăng nhập chỉ thao tác trên đặt chỗ gắn với email của chính tài khoản,
+    /// không tin email do form gửi lên. Khách vãng lai vẫn xác minh bằng PNR + email.
+    /// </summary>
+    private string? ResolveActorEmail(string? submittedEmail)
+    {
+        var claimEmail = User.FindFirstValue(ClaimTypes.Email)?.Trim();
+        if (!string.IsNullOrWhiteSpace(claimEmail))
+        {
+            return claimEmail.ToLowerInvariant();
+        }
+
+        return string.IsNullOrWhiteSpace(submittedEmail)
+            ? null
+            : submittedEmail.Trim().ToLowerInvariant();
     }
 }

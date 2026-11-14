@@ -216,6 +216,8 @@ public sealed class QrPaymentViewModel
     public string SeatCode { get; init; } = string.Empty;
     public string FlightNumber { get; init; } = string.Empty;
     public string PassengerName { get; init; } = string.Empty;
+    /// <summary>Khách đã báo chuyển khoản; đặt chỗ vẫn chờ nhân viên đối soát.</summary>
+    public bool Reported { get; init; }
 }
 
 public sealed class LoginViewModel

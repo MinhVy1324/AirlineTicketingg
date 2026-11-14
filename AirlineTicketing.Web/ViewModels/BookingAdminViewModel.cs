@@ -6,4 +6,6 @@ public sealed class BookingAdminViewModel
 {
     public string? TuKhoa { get; init; }
     public IReadOnlyList<DatVeDTO> DatVes { get; init; } = Array.Empty<DatVeDTO>();
+    public string? Message { get; init; }
+    public string MessageTone { get; init; } = "info";
 }

@@ -2,6 +2,7 @@
 @using AirlineTicketing.Web.Infrastructure
 @{
     ViewData["Title"] = "Quản lý khách hàng, đặt chỗ và vé";
+    ViewData["ManagerNav"] = "bookings";
 }
 
 <div class="av-page av-container">
@@ -9,6 +10,17 @@
         <h1 class="av-page-title">Khách hàng, đặt chỗ và vé</h1>
         <p class="av-page-subtitle">Dữ liệu được đọc trực tiếp từ hệ thống đặt vé.</p>
     </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check-circle" : "info", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@(Model.MessageTone == "success" ? "Đã cập nhật" : "Thông báo")</span>
+                <span>@Model.Message</span>
+            </div>
+        </div>
+    }
 
     <section class="av-card"><div class="av-card__body">
         <form method="get" class="lookup-form">
@@ -28,19 +40,75 @@
     {
         @foreach (var booking in Model.DatVes)
         {
+            var pendingTransfer = booking.ThanhToans.FirstOrDefault(t =>
+                t.PhuongThuc == "ChuyenKhoan" && t.TrangThai == "ChoXuLy");
+            var statusText = booking.TrangThai switch
+            {
+                "ChoThanhToan" => "Chờ thanh toán",
+                "DaXacNhan" => "Đã xác nhận",
+                "DaHuy" => "Đã hủy",
+                "HoanTien" => "Đã hoàn tiền",
+                "HetHan" => "Hết hạn giữ chỗ",
+                _ => booking.TrangThai
+            };
+
             <section class="av-card"><div class="av-card__body av-stack av-gap-12">
                 <div class="av-row av-row--between av-wrap">
-                    <h2 class="av-card__title">@booking.MaDatVe · @booking.TrangThai</h2>
+                    <h2 class="av-card__title">@booking.MaDatVe · @statusText</h2>
                     <strong>@Money.Vnd(booking.TongTien)</strong>
                 </div>
                 <p>@booking.KhachHang.HoTen · @booking.KhachHang.Email · @booking.KhachHang.SoDienThoai</p>
                 <p class="av-caption">Đặt lúc @booking.NgayDat.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Hạn giữ @booking.HetHanGiuCho.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+
+                @if (booking.ThanhToans.Count > 0)
+                {
+                    <div class="av-stack av-gap-6">
+                        @foreach (var payment in booking.ThanhToans)
+                        {
+                            var paymentText = payment.TrangThai switch
+                            {
+                                "ChoXuLy" => "Chờ đối soát",
+                                "ThanhCong" => "Đã thanh toán",
+                                "ThatBai" => "Thất bại",
+                                _ => payment.TrangThai
+                            };
+                            <div class="av-rowline">
+                                <span>@payment.PhuongThuc · @payment.NhaCungCap · @(payment.MaGiaoDich ?? "—")</span>
+                                <strong>@paymentText · @Money.Vnd(payment.SoTien)</strong>
+                            </div>
+                        }
+                    </div>
+                }
+
                 @foreach (var ticket in booking.Ves)
                 {
                     <div class="av-rowline">
                         <span>@ticket.MaVe · @ticket.HanhKhach.HoTen · @ticket.SoHieuChuyenBay · ghế @ticket.SoGhe</span>
                         <strong>@ticket.TrangThai · @Money.Vnd(ticket.GiaVe)</strong>
                     </div>
+                }
+
+                @if (pendingTransfer is not null && booking.TrangThai == "ChoThanhToan")
+                {
+                    <div class="av-alert av-alert--warning">
+                        <span class="av-alert__icon">@Html.Icon("clock", 20)</span>
+                        <div class="av-alert__body">
+                            <span class="av-alert__title">Chờ đối soát chuyển khoản</span>
+                            <span>
+                                Chỉ xác nhận sau khi đã kiểm tra sao kê và thấy giao dịch
+                                @Money.Vnd(pendingTransfer.SoTien) với nội dung "AEROVIET @booking.MaDatVe".
+                            </span>
+                        </div>
+                    </div>
+
+                    <form method="post" asp-controller="Manager" asp-action="ConfirmTransferPayment">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="pnr" value="@booking.MaDatVe" />
+                        <button type="submit" class="av-btn av-btn--primary"
+                                onclick="return confirm('Xác nhận đã nhận đủ tiền chuyển khoản cho đặt chỗ @booking.MaDatVe?');">
+                            @Html.Icon("check", 17) Xác nhận đã nhận chuyển khoản
+                        </button>
+                    </form>
                 }
             </div></section>
         }
