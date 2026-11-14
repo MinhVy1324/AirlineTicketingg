@@ -6,6 +6,8 @@ using AirlineTicketing.DAL;
 using AirlineTicketing.DAL.Repositories;
 using AirlineTicketing.BUS;
 using AirlineTicketing.Web.Infrastructure;
+using AirlineTicketing.Web.Infrastructure.Email;
+using AirlineTicketing.Web.Infrastructure.Tickets;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -57,6 +59,11 @@ var loginPermitLimit = Math.Max(1, builder.Configuration.GetValue<int?>("Auth:Lo
 var loginWindow = TimeSpan.FromSeconds(
     Math.Max(1, builder.Configuration.GetValue<int?>("Auth:LoginWindowSeconds") ?? 60));
 
+// Gửi lại vé qua email là thao tác tốn tài nguyên: giới hạn theo IP để tránh lạm dụng.
+var resendPermitLimit = Math.Max(1, builder.Configuration.GetValue<int?>("Auth:ResendPermitLimit") ?? 3);
+var resendWindow = TimeSpan.FromSeconds(
+    Math.Max(1, builder.Configuration.GetValue<int?>("Auth:ResendWindowSeconds") ?? 300));
+
 builder.Services.AddRateLimiter(limiter =>
 {
     limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -71,13 +78,27 @@ builder.Services.AddRateLimiter(limiter =>
                 AutoReplenishment = true
             }));
 
+    limiter.AddPolicy(AppRateLimits.ResendTicket, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = resendPermitLimit,
+                Window = resendWindow,
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
     limiter.OnRejected = async (context, cancellationToken) =>
     {
         var response = context.HttpContext.Response;
         response.StatusCode = StatusCodes.Status429TooManyRequests;
         response.ContentType = "text/html; charset=utf-8";
 
-        var retryAfter = loginWindow;
+        // Chính sách đăng nhập và gửi lại vé có cửa sổ khác nhau, nên chọn mốc chờ theo đường dẫn.
+        var retryAfter = context.HttpContext.Request.Path.StartsWithSegments("/ve")
+            ? resendWindow
+            : loginWindow;
         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var metadataRetry))
         {
             retryAfter = metadataRetry;
@@ -88,10 +109,10 @@ builder.Services.AddRateLimiter(limiter =>
 
         await response.WriteAsync(
             "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"utf-8\" />" +
-            "<title>Thử lại sau</title></head><body>" +
-            "<h1>Bạn đã thử đăng nhập quá nhiều lần</h1>" +
+            "<title>Vui lòng thử lại sau</title></head><body>" +
+            "<h1>Bạn thao tác quá nhanh</h1>" +
             $"<p>Vì lý do an toàn, vui lòng chờ khoảng {Math.Ceiling(retryAfter.TotalSeconds)} giây rồi thử lại.</p>" +
-            "<p><a href=\"/dang-nhap\">Quay lại trang đăng nhập</a></p>" +
+            "<p><a href=\"/\">Về trang chủ</a></p>" +
             "</body></html>",
             cancellationToken);
     };
@@ -146,7 +167,24 @@ builder.Services.AddScoped<DatVeBUS>();
 builder.Services.AddScoped<VeBUS>();
 builder.Services.AddHostedService<HoldExpiryService>();
 
+// Email vé điện tử: dùng SMTP thật khi có cấu hình, ngược lại ghi ra hộp thư demo
+// (Email:OutboxPath) để vẫn kiểm thử được toàn bộ luồng gửi vé.
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+var emailOptions = builder.Configuration.GetSection("Email").Get<EmailOptions>() ?? new EmailOptions();
+if (emailOptions.CoCauHinhSmtp)
+{
+    builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+}
+else
+{
+    builder.Services.AddScoped<IEmailSender, FileEmailSender>();
+}
+builder.Services.AddScoped<GuiVeDienTuService>();
+
 var app = builder.Build();
+
+// Nạp font tiếng Việt và giấy phép QuestPDF trước khi phục vụ yêu cầu đầu tiên.
+VeDienTuPdf.KhoiTao(app.Environment);
 
 // 4. Chế độ một lần cho service "migrate" của Compose: áp dụng migration + seed
 // rồi thoát, để các container web không tranh nhau sửa schema.

@@ -3,6 +3,7 @@ using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
 using AirlineTicketing.Web.Infrastructure;
+using AirlineTicketing.Web.Infrastructure.Tickets;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,13 +18,14 @@ namespace AirlineTicketing.Web.Controllers;
 public class BookingController(
     AppDbContext dbContext,
     CauHinhHeThongBUS cauHinhHeThong,
+    GuiVeDienTuService guiVeDienTu,
     ILogger<BookingController> logger) : Controller
 {
     private const string KeyFlightId = "booking.flightId";
     private const string KeyPassenger = "booking.passenger";
     private const string KeyBaggageFee = "booking.baggageFee";
     private const string KeySeat = "booking.seat";
-    private const string KeyBookingId = "booking.bookingId";
+    private const string KeyBookingId = BookingSession.BookingId;
     private const string ReportedTransferAction = "KhachBaoDaChuyenKhoan";
 
     private const int SeatsPerRow = 6;
@@ -237,6 +239,16 @@ public class BookingController(
                 return RedirectToAction(nameof(Transfer), new { pnr = booking.MaDatVe });
             }
 
+            // Thẻ đã thanh toán thành công: gửi vé điện tử ngay. Lỗi gửi email
+            // không được làm hỏng luồng đặt vé, khách vẫn tải được PDF tại trang thành công.
+            var guiVe = await GuiVeDienTuAsync(booking.Id, cancellationToken);
+            TempData["TicketEmailMessage"] = guiVe switch
+            {
+                { ThanhCong: true } => $"Đã gửi vé điện tử tới {guiVe.Email}.",
+                { ThanhCong: false } => $"{guiVe.Loi} Bạn vẫn tải được vé PDF bên dưới.",
+                _ => null
+            };
+            TempData["TicketEmailTone"] = guiVe is { ThanhCong: false } ? "warning" : "success";
             return RedirectToAction(nameof(Success), new { pnr = booking.MaDatVe });
         }
         catch (InvalidOperationException)
@@ -637,6 +649,31 @@ public class BookingController(
 
         await transaction.CommitAsync(ct);
         return datVe;
+    }
+
+    /// <summary>Gửi vé điện tử và nuốt lỗi: luồng đặt vé không phụ thuộc vào dịch vụ email.</summary>
+    private async Task<KetQuaGuiVe?> GuiVeDienTuAsync(int datVeId, CancellationToken ct)
+    {
+        try
+        {
+            var ketQua = await guiVeDienTu.GuiAsync(
+                datVeId,
+                User.Identity?.IsAuthenticated == true ? User.DisplayName() : "Khách vãng lai",
+                cancellationToken: ct);
+            if (!ketQua.ThanhCong)
+            {
+                logger.LogWarning("Không gửi được vé điện tử cho đặt chỗ {DatVeId}: {Loi}",
+                    datVeId, ketQua.Loi);
+            }
+
+            return ketQua;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Lỗi không mong đợi khi gửi vé điện tử cho đặt chỗ {DatVeId}.",
+                datVeId);
+            return null;
+        }
     }
 
     private async Task ReleaseExpiredHoldsAsync(CancellationToken ct)

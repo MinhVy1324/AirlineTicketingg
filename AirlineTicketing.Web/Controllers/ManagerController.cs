@@ -8,6 +8,7 @@ using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
 using AirlineTicketing.Web.Infrastructure;
+using AirlineTicketing.Web.Infrastructure.Tickets;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,11 @@ using Microsoft.EntityFrameworkCore;
 namespace AirlineTicketing.Web.Controllers;
 
 [Authorize(Policy = "StaffOnly")]
-public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Controller
+public class ManagerController(
+    AppDbContext dbContext,
+    DatVeBUS datVeBUS,
+    GuiVeDienTuService guiVeDienTu,
+    ILogger<ManagerController> logger) : Controller
 {
     private const string DefaultDateText = "20/11/2026";
     private const string AllText = "Tất cả";
@@ -648,6 +653,22 @@ public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Cont
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Vé đã phát hành: gửi email kèm PDF cho khách, lỗi gửi không chặn việc xác nhận.
+        try
+        {
+            var ketQua = await guiVeDienTu.GuiAsync(booking.Id, User.DisplayName(),
+                cancellationToken: cancellationToken);
+            if (!ketQua.ThanhCong)
+            {
+                logger.LogWarning("Không gửi được vé điện tử cho {Pnr}: {Loi}", pnr, ketQua.Loi);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Lỗi khi gửi vé điện tử cho {Pnr}.", pnr);
+        }
+
         return BookingMessage($"Đã xác nhận thanh toán và phát hành vé cho đặt chỗ {pnr}.", "success");
     }
 

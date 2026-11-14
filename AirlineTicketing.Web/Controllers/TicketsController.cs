@@ -2,16 +2,21 @@ using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.Web.Infrastructure;
+using AirlineTicketing.Web.Infrastructure.Tickets;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AirlineTicketing.Web.Controllers;
 
 [Authorize]
-public class TicketsController(AppDbContext dbContext, CauHinhHeThongBUS cauHinhHeThong) : Controller
+public class TicketsController(
+    AppDbContext dbContext,
+    CauHinhHeThongBUS cauHinhHeThong,
+    GuiVeDienTuService guiVeDienTu) : Controller
 {
     [HttpGet("/ve-cua-toi")]
     public async Task<IActionResult> Index(string? tab, string? pnr, CancellationToken cancellationToken)
@@ -58,6 +63,56 @@ public class TicketsController(AppDbContext dbContext, CauHinhHeThongBUS cauHinh
         var detail = selected is not null ? ToDetail(selected, chinhSach) : EmptyDetail();
 
         return View(new TicketsViewModel { Tabs = tabs, Tickets = items, Detail = detail });
+    }
+
+    /// <summary>
+    /// Tải vé điện tử PDF. Người được phép: chủ vé đã đăng nhập, nhân viên quản lý,
+    /// hoặc chính phiên vừa đặt chỗ (session giữ mã đặt chỗ sau khi thanh toán).
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("/ve/{pnr}/pdf")]
+    public async Task<IActionResult> TicketPdf(string pnr, CancellationToken cancellationToken)
+    {
+        var booking = await FindBookingForTicketAsync(pnr, cancellationToken);
+        if (booking is null || booking.TrangThai != TrangThaiDatVe.DaXacNhan) return NotFound();
+        if (!CoQuyenXemVe(booking)) return NotFound();
+
+        var pdf = await guiVeDienTu.LayPdfAsync(booking.Id, cancellationToken);
+        if (pdf is null) return NotFound();
+
+        Response.Headers.CacheControl = "no-store";
+        return File(pdf, "application/pdf", $"ve-dien-tu-{booking.MaDatVe}.pdf");
+    }
+
+    [AllowAnonymous]
+    [HttpPost("/ve/{pnr}/gui-lai-email")]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting(AppRateLimits.ResendTicket)]
+    public async Task<IActionResult> ResendTicketEmail(
+        string pnr,
+        string? quayLai,
+        CancellationToken cancellationToken)
+    {
+        var booking = await FindBookingForTicketAsync(pnr, cancellationToken);
+        if (booking is null || !CoQuyenXemVe(booking)) return NotFound();
+
+        var nguoiThucHien = User.Identity?.IsAuthenticated == true ? User.DisplayName() : "Khách vãng lai";
+        var ketQua = await guiVeDienTu.GuiAsync(
+            booking.Id, nguoiThucHien, guiLai: true, cancellationToken);
+
+        TempData["TicketEmailMessage"] = ketQua.ThanhCong
+            ? (ketQua.BoQua ? ketQua.Loi : $"Đã gửi vé điện tử tới {ketQua.Email}.")
+            : ketQua.Loi;
+        TempData["TicketEmailTone"] = ketQua.ThanhCong ? "success" : "danger";
+
+        if (!string.IsNullOrWhiteSpace(quayLai) && Url.IsLocalUrl(quayLai))
+        {
+            return LocalRedirect(quayLai);
+        }
+
+        return User.Identity?.IsAuthenticated == true
+            ? RedirectToAction(nameof(Index), new { pnr = booking.MaDatVe })
+            : Redirect($"/dat-ve/thanh-cong?pnr={Uri.EscapeDataString(booking.MaDatVe)}");
     }
 
     [HttpGet("/ve-cua-toi/chuyen-doi-gio")]
@@ -365,7 +420,8 @@ public class TicketsController(AppDbContext dbContext, CauHinhHeThongBUS cauHinh
             RefundFee = ve is { PhiHoan: > 0 } ? ve.PhiHoan : chinhSach.RefundFee,
             ServiceFee = b.PhiDichVu > 0 ? b.PhiDichVu : chinhSach.ServiceFee,
             ExtraBaggageFee = 0m,
-            CanManage = b.TrangThai is TrangThaiDatVe.DaXacNhan or TrangThaiDatVe.ChoThanhToan
+            CanManage = b.TrangThai is TrangThaiDatVe.DaXacNhan or TrangThaiDatVe.ChoThanhToan,
+            HasIssuedTicket = b.TrangThai == TrangThaiDatVe.DaXacNhan
         };
     }
 
@@ -415,6 +471,37 @@ public class TicketsController(AppDbContext dbContext, CauHinhHeThongBUS cauHinh
     /// Chỉ trả về đặt chỗ thuộc khách đang đăng nhập. Nhân viên không có hồ sơ khách hàng
     /// sẽ không thấy đặt chỗ nào ở khu vực "Vé của tôi".
     /// </summary>
+    private async Task<DatVe?> FindBookingForTicketAsync(string pnr, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(pnr)) return null;
+        var code = pnr.Trim().ToUpperInvariant();
+
+        return await dbContext.DatVes.AsNoTracking()
+            .Include(x => x.KhachHang)
+            .FirstOrDefaultAsync(x => x.MaDatVe == code, ct);
+    }
+
+    /// <summary>Chủ vé (theo mã khách hàng/email), nhân viên, hoặc phiên vừa đặt chỗ.</summary>
+    private bool CoQuyenXemVe(DatVe booking)
+    {
+        if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Manager)) return true;
+
+        var khachHangId = User.KhachHangId();
+        if (khachHangId.HasValue && booking.KhachHangId == khachHangId.Value) return true;
+
+        var email = User.FindFirstValue(ClaimTypes.Email)?.Trim();
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            if (string.Equals(booking.KhachHang.Email?.Trim(), email, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(booking.EmailLienHe?.Trim(), email, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return HttpContext.Session.GetInt32(BookingSession.BookingId) == booking.Id;
+    }
+
     private IQueryable<DatVe> ScopedBookings()
     {
         IQueryable<DatVe> query = dbContext.DatVes.AsNoTracking();

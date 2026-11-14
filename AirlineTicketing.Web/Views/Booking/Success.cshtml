@@ -8,10 +8,18 @@
 <div class="av-page av-container">
     <partial name="_Stepper" model="4" />
 
+    @if (TempData["TicketEmailMessage"] is string emailMessage)
+    {
+        <div class="av-alert av-alert--@(TempData["TicketEmailTone"] ?? "info")">
+            <span class="av-alert__icon">@Html.Icon("mail", 20)</span>
+            <div class="av-alert__body"><span>@emailMessage</span></div>
+        </div>
+    }
+
     <section class="success-hero">
         <span class="success-hero__check">@Html.Icon("check-circle", 34)</span>
         <h1 class="success-hero__title">Đặt vé thành công. Hẹn gặp bạn trên mây!</h1>
-        <p class="success-hero__text">Vé điện tử đã được gửi đến @Model.Passenger.Email.</p>
+        <p class="success-hero__text">Vé điện tử đã được phát hành. Bạn có thể tải PDF hoặc gửi lại qua email ở bên dưới.</p>
     </section>
 
     <div class="success-layout">
@@ -132,10 +140,18 @@
     </div>
 
     <div class="post-actions">
-        <button type="button" class="av-btn av-btn--primary">
+        <a class="av-btn av-btn--primary" href="/ve/@Model.Pnr/pdf">
             @Html.Icon("download", 17)
             <span>Tải vé điện tử (PDF)</span>
-        </button>
+        </a>
+        <form method="post" action="/ve/@Model.Pnr/gui-lai-email" style="display:inline-flex;margin:0;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="quayLai" value="/dat-ve/thanh-cong?pnr=@Model.Pnr" />
+            <button type="submit" class="av-btn av-btn--outline">
+                @Html.Icon("mail", 17)
+                <span>Gửi lại vé qua email</span>
+            </button>
+        </form>
         <a class="av-btn av-btn--outline" href="/ve-cua-toi">
             @Html.Icon("ticket", 17)
             <span>Xem đặt chỗ của tôi</span>

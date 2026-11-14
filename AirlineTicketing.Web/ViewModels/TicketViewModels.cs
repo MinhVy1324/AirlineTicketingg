@@ -40,6 +40,9 @@ public sealed class TicketDetailViewModel
     public decimal ServiceFee { get; init; } = 70_000m;
     public decimal ExtraBaggageFee { get; init; } = 250_000m;
     public bool CanManage { get; init; } = true;
+
+    /// <summary>Vé đã phát hành nên có thể tải PDF và gửi lại qua email.</summary>
+    public bool HasIssuedTicket { get; init; }
 }
 
 // --------------------------------------------------- 20 · Chuyến vừa hết chỗ
