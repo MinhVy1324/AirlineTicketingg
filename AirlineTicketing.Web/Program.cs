@@ -9,10 +9,25 @@ using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.Infrastructure.Email;
 using AirlineTicketing.Web.Infrastructure.Tickets;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Khóa Data Protection dùng để mã hóa cookie đăng nhập, antiforgery và session.
+// Lưu xuống đĩa thay vì key ring tạm trong bộ nhớ: rebuild container không làm
+// mọi người bị đăng xuất, và compose gắn cùng volume cho bốn container web.
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys");
+}
+
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .SetApplicationName("AirlineTicketing")
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 
 // Cookie chỉ gửi qua HTTPS khi cấu hình "Always". Mặc định SameAsRequest để
 // stack Docker chạy HTTP nội bộ vẫn đăng nhập được; bật Always khi có TLS.

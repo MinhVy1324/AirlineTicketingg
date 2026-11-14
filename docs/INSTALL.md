@@ -61,6 +61,7 @@ Compose tự truyền `ConnectionStrings__DefaultConnection` vào container (gh�
 - **Thời hạn giữ chỗ:** job nền quét mỗi `Booking:ExpirySweepSeconds` giây (mặc định 60, kẹp 15–3600) và giải phóng các đặt chỗ quá `booking.hold_minutes`.
 - **Cấu hình nghiệp vụ:** phí dịch vụ, thuế, phí đổi/hoàn, hotline và email hỗ trợ đọc từ bảng `CauHinhHeThongs`; Admin sửa tại **Admin → Cấu hình**. Giá trị mặc định trùng seed trong `ChinhSachDatVe`.
 - **Font vé PDF:** Be Vietnam Pro nằm trong `AirlineTicketing.Web/wwwroot/fonts/ticket/` (giấy phép OFL). Không xóa thư mục này nếu muốn PDF hiển thị đúng tiếng Việt.
+- **Phiên đăng nhập:** khóa Data Protection lưu ở `App_Data/keys`; trong Docker, compose gắn volume `dataprotection` vào đường dẫn này nên rebuild container không đăng xuất người dùng. Đổi đường dẫn bằng `DataProtection__KeysPath`; xóa volume `dataprotection` khi muốn reset toàn bộ phiên.
 
 ## Lệnh thường dùng
 

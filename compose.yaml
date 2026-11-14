@@ -24,6 +24,9 @@ x-web-common: &web-common
       condition: service_healthy
     migrate:
       condition: service_completed_successfully
+  # Khóa mã hóa cookie dùng chung, nằm ngoài container nên rebuild không mất phiên.
+  volumes:
+    - dataprotection:/app/App_Data/keys
 
 services:
   db:
@@ -112,3 +115,4 @@ services:
 
 volumes:
   postgres_data:
+  dataprotection:
