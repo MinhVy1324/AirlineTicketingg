@@ -63,9 +63,14 @@ public sealed class PostgresSeatConcurrencyTests
         var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         var from = new SanBay { MaSanBay = $"A{suffix}"[..3], TenSanBay = "Race A", ThanhPho = "A", QuocGia = "VN" };
         var to = new SanBay { MaSanBay = $"B{suffix}"[..3], TenSanBay = "Race B", ThanhPho = "B", QuocGia = "VN" };
+        var airline = new HangHangKhong
+        {
+            MaHang = $"H{suffix}"[..5], TenHang = "Race Air", QuocGia = "VN"
+        };
         var flight = new ChuyenBay
         {
             SoHieu = $"RC{suffix}", TuyenBay = new TuyenBay { SanBayDi = from, SanBayDen = to },
+            HangHangKhong = airline,
             MayBay = new MayBay { MaMayBay = $"MB{suffix}", TenMayBay = "Test", HangSanXuat = "Test", SoGhe = 10 },
             GioKhoiHanh = new DateTimeOffset(2026, 12, 1, 1, 0, 0, TimeSpan.Zero),
             GioHaCanh = new DateTimeOffset(2026, 12, 1, 2, 0, 0, TimeSpan.Zero), GiaCoBan = 1_000_000m

@@ -40,14 +40,14 @@ Thay `POSTGRES_PASSWORD` trong `.env` bằng mật khẩu ngẫu nhiên riêng c
 | `POSTGRES_PASSWORD` | Mật khẩu local; phải thay trước khi chạy | Placeholder trong `.env.example` |
 | `POSTGRES_PORT` | Cổng PostgreSQL trên host | `5432` |
 | `ASPNETCORE_PORT` | Cổng của container đầy đủ (mọi khu vực) | `8080` |
-| `WEB_PORT_USER` | Cổng của container khách hàng | `8081` |
-| `WEB_PORT_ADMIN` | Cổng của container admin | `8082` |
-| `WEB_PORT_MANAGER` | Cổng của container manager | `8083` |
+| `WEB_PORT_USER` | Cổng của container khách hàng | `80` |
+| `WEB_PORT_ADMIN` | Cổng của container admin | `80` |
+| `WEB_PORT_MANAGER` | Cổng của container manager | `80` |
 | `ASPNETCORE_ENVIRONMENT` | ASP.NET Core environment | `Development` |
 
 Không cần biến bật migration: Compose luôn chạy service một lần `migrate` trước khi khởi động các container web (xem mục 9).
 
-Nếu cổng 5432 hoặc 8080 đã được dùng, đổi giá trị tương ứng trong `.env`. Bên trong Compose, connection string luôn dùng `Host=db;Port=5432`; từ ứng dụng chạy trực tiếp trên Windows, dùng `Host=localhost` và cổng host trong `.env`.
+Nếu cổng 5432, 8080 hoặc 80 đã được dùng, đổi giá trị tương ứng trong `.env`. Bên trong Compose, connection string luôn dùng `Host=db;Port=5432`; từ ứng dụng chạy trực tiếp trên Windows, dùng `Host=localhost` và cổng host trong `.env`.
 
 ## 3. Chạy PostgreSQL — DOCKER-02, DOCKER-03
 
@@ -89,7 +89,9 @@ Biến môi trường chỉ tồn tại trong cửa sổ PowerShell đó. Không
 
 ## 5. Build Docker image cho website — DOCKER-05
 
-`AirlineTicketing.Web/Dockerfile` dùng build stage `dotnet/sdk:10.0` và runtime stage `dotnet/aspnet:10.0`. Docker build context ở thư mục gốc solution để các `ProjectReference` đến BUS, DAL, DTO và Domain được restore/publish cùng website. `.dockerignore` loại `bin/`, `obj/`, `.git`, `.env` và tài liệu khỏi build context.
+`AirlineTicketing.Web/Dockerfile` dùng build stage `dotnet/sdk:10.0` và runtime stage `dotnet/aspnet:10.0`. Docker build context ở thư mục gốc solution để các `ProjectReference` đến BUS, DAL, DTO và Domain được restore/publish cùng website. `.dockerignore` loại `bin/`, `obj/`, `.git`, `.env`, `App_Data`, test và tài liệu khỏi build context.
+
+Runtime chạy bằng user không phải root (`app`); thư mục `/app/App_Data` được tạo sẵn và cấp quyền ghi cho user này để hộp thư demo hoạt động khi `Email:Enabled=false`. Ứng dụng không ghi file nào khác ngoài thư mục đó.
 
 Build riêng website:
 
@@ -133,6 +135,26 @@ Kết quả thành công có dạng `status: connected`, `database: PostgreSQL`.
 
 > **Lưu ý về cookie:** cookie của trình duyệt gắn với host, không gắn với cổng, nên `127.0.0.3`, `127.0.0.1`, `127.0.0.2` dùng chung cookie. Khi thêm đăng nhập thật, hãy dùng ba profile trình duyệt riêng (hoặc thêm host alias `user.localhost`, `admin.localhost`, `manager.localhost`) nếu cần tách phiên đăng nhập.
 
+### Vé điện tử và hộp thư demo
+
+Sau khi thanh toán thẻ thành công hoặc nhân viên xác nhận chuyển khoản, hệ thống tạo PDF vé và gửi email. Mặc định chưa cấu hình SMTP nên email được ghi thành tệp `.eml` trong container:
+
+```powershell
+docker compose cp web:/app/App_Data/outbox/. ./outbox/
+docker compose exec web sh -c 'ls -l /app/App_Data/outbox'
+```
+
+Mở `.eml` bằng Outlook/Thunderbird để xem nội dung HTML và tệp đính kèm `ve-dien-tu-<PNR>.pdf`. Tệp này không nằm trong volume nên mất khi tạo lại container; đây là hộp thư dành cho demo/kiểm thử. Muốn gửi thật, cấu hình `Email__Enabled=true` cùng `Email__Host`, `Email__Port`, `Email__UserName`, `Email__Password` trong `.env` (không commit mật khẩu).
+
+Các endpoint liên quan:
+
+| Endpoint | Mô tả |
+|---|---|
+| `GET /ve/{pnr}/pdf` | Tải PDF; cho chủ vé, phiên vừa đặt chỗ hoặc Admin/Manager |
+| `POST /ve/{pnr}/gui-lai-email` | Gửi lại vé; giới hạn 3 lần/5 phút mỗi IP |
+
+Job nền `HoldExpiryService` chạy trong cả 4 container nhưng chỉ một instance thắng advisory lock mỗi lượt, tự giải phóng đặt chỗ quá hạn giữ. Chu kỳ quét đổi bằng `Booking__ExpirySweepSeconds` (15–3600 giây).
+
 Chỉ cần một khu vực thì chạy riêng service tương ứng:
 
 ```powershell
@@ -173,7 +195,7 @@ docker compose ps
 Invoke-RestMethod http://127.0.0.1:8080/health/database
 ```
 
-Sau khi chạy, mở một trong các địa chỉ ở mục 6: `:8080` (tất cả), ` (customer · 127.0.0.3)` (khách hàng), ` (admin · 127.0.0.1)` (admin), ` (manager · 127.0.0.2)` (manager). Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
+Sau khi chạy, mở một trong các địa chỉ ở mục 6: `http://127.0.0.1:8080` (tất cả), `http://127.0.0.3` (khách hàng), `http://127.0.0.1` (admin), `http://127.0.0.2` (manager). Thành viên cần thay mật khẩu mẫu trong `.env` trước khi khởi động. Khi cần xem log, chạy `docker compose logs -f web db`; để dừng container mà giữ dữ liệu, chạy `docker compose down`.
 
 ## 9. EF Core migrations
 
@@ -213,3 +235,24 @@ Commit migration cùng thay đổi model. Ở production, giữ `Database__Apply
 | Xóa dữ liệu local có chủ đích | `docker compose down -v` |
 
 `compose.yaml` giới hạn các port publish trên `127.0.0.1`; cấu hình này dành cho phát triển trên cùng máy. Khi triển khai server, cần cấu hình reverse proxy/TLS, firewall, secret manager và chính sách sao lưu phù hợp.
+
+## 11. Smoke test và CI
+
+Sau khi stack chạy, kiểm tra nhanh các luồng chính (health, đăng nhập manager, tải PDF, chặn khách ẩn danh):
+
+```powershell
+pwsh ./scripts/smoke.ps1
+pwsh ./scripts/smoke.ps1 -BaseUrl http://127.0.0.1:8080 -Pnr <PNR>
+```
+
+Máy Windows chỉ có Windows PowerShell 5.1 (không có `pwsh`) thì chạy `powershell -ExecutionPolicy Bypass -File ./scripts/smoke.ps1`. Script trả mã thoát `0` khi mọi kiểm tra đạt và `1` khi có lỗi, nên dùng được trong terminal hoặc pipeline. Nếu không truyền `-Pnr`, script lấy một đặt chỗ `DaXacNhan` mới nhất từ container `db` (cần Docker đang chạy).
+
+GitHub Actions chạy `.github/workflows/ci.yml` cho mỗi push/PR: job `build-test` restore/build toàn solution và chạy unit test; job `postgres-integration` dựng PostgreSQL 16 tạm, đặt `AIRLINE_TEST_CONNECTION` trỏ database tên chứa `test` rồi chạy toàn bộ test, gồm cả test cạnh tranh ghế trên PostgreSQL thật. Chạy lại cục bộ:
+
+```powershell
+$env:AIRLINE_TEST_CONNECTION = "Host=localhost;Port=5432;Database=airline_ticketing_test;Username=airline_app;Password=<mật-khẩu>"
+dotnet test AirlineTicketing.Tests/AirlineTicketing.Tests.csproj
+Remove-Item Env:AIRLINE_TEST_CONNECTION
+```
+
+Không trỏ `AIRLINE_TEST_CONNECTION` vào database phát triển: test gọi `EnsureCreated` và tạo schema riêng trong database đó.

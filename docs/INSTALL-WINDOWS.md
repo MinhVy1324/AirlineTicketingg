@@ -58,7 +58,7 @@ Copy-Item .env.example .env
 notepad .env
 ```
 
-Sửa `POSTGRES_PASSWORD` thành mật khẩu riêng (tối thiểu 12 ký tự, không dùng mật khẩu mẫu). Các cổng mặc định `8080–8083`, `5432`; đổi nếu bị trùng.
+Sửa `POSTGRES_PASSWORD` thành mật khẩu riêng (tối thiểu 12 ký tự, không dùng mật khẩu mẫu). Cổng mặc định: `8080` cho container đầy đủ, `80` cho ba container khu vực (mỗi container một địa chỉ loopback `.1`/`.2`/`.3`) và `5432` cho PostgreSQL; đổi nếu bị trùng.
 
 ## 4. Chạy bằng Docker (khuyến nghị)
 

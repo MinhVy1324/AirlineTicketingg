@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, NgDang]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+
+jobs:
+  build-test:
+    name: Build và unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cài thư viện font cho QuestPDF
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      - run: dotnet restore AirlineTicketing.sln
+
+      - run: dotnet build AirlineTicketing.sln --configuration Release --no-restore
+
+      - name: Chạy test (bỏ qua test cần PostgreSQL)
+        run: >
+          dotnet test AirlineTicketing.Tests/AirlineTicketing.Tests.csproj
+          --configuration Release --no-build
+          --logger "trx;LogFileName=unit.trx"
+          --results-directory TestResults/unit
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: TestResults/unit/*.trx
+          if-no-files-found: ignore
+
+  postgres-integration:
+    name: Test tích hợp PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: airline_ticketing_test
+          POSTGRES_USER: airline_app
+          POSTGRES_PASSWORD: ci-test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U airline_app -d airline_ticketing_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # PostgresFact chỉ chạy khi tên database chứa "test".
+      AIRLINE_TEST_CONNECTION: "Host=localhost;Port=5432;Database=airline_ticketing_test;Username=airline_app;Password=ci-test-password"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Cài thư viện font cho QuestPDF
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      - run: dotnet restore AirlineTicketing.sln
+
+      - run: dotnet build AirlineTicketing.sln --configuration Release --no-restore
+
+      - name: Chạy toàn bộ test với PostgreSQL
+        run: >
+          dotnet test AirlineTicketing.Tests/AirlineTicketing.Tests.csproj
+          --configuration Release --no-build
+          --logger "trx;LogFileName=integration.trx"
+          --results-directory TestResults/integration
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: TestResults/integration/*.trx
+          if-no-files-found: ignore

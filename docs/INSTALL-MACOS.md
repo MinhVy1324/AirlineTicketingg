@@ -61,7 +61,7 @@ cp .env.example .env
 nano .env        # hoặc mở bằng VS Code: code .env
 ```
 
-Sửa `POSTGRES_PASSWORD` thành mật khẩu riêng. Cổng mặc định `8080–8083`, `5432`; đổi nếu bị trùng (`lsof -nP -iTCP:8080 -sTCP:LISTEN`).
+Sửa `POSTGRES_PASSWORD` thành mật khẩu riêng. Cổng mặc định: `8080` cho container đầy đủ, `80` cho ba container khu vực (mỗi container một địa chỉ loopback `.1`/`.2`/`.3`) và `5432` cho PostgreSQL; đổi nếu bị trùng (`lsof -nP -iTCP:8080 -sTCP:LISTEN`).
 
 ## 4. Chạy bằng Docker (khuyến nghị)
 
