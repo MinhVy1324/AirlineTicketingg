@@ -276,3 +276,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+// Cho phép project test dùng WebApplicationFactory<Program> để kiểm thử tích hợp
+// toàn bộ pipeline (middleware, xác thực, phân quyền, controller và view).
+public partial class Program;

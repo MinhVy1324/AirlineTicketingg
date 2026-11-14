@@ -11,6 +11,7 @@ namespace AirlineTicketing.Tests;
 /// Chạy bằng: AIRLINE_TEST_CONNECTION="...Database=airline_ticketing_test..." dotnet test
 /// Database phải dành riêng cho test. Test này xác minh unique index thật của PostgreSQL.
 /// </summary>
+[Collection(PostgresCollection.Name)]
 public sealed class PostgresSeatConcurrencyTests
 {
     [PostgresFact]
