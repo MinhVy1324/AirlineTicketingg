@@ -81,9 +81,31 @@ public sealed class FlightResultsViewModel
 
     /// <summary>Total flights available on the route (the demo only materialises three cards).</summary>
     public int TotalCount { get; init; }
+
+    /// <summary>Kiểu sắp xếp đang áp dụng (xem <see cref="Infrastructure.FlightSort"/>).</summary>
+    public string SortKey { get; init; } = Infrastructure.FlightSort.Recommended;
+    public IReadOnlyList<FlightSortOption> SortOptions => Infrastructure.FlightSort.Options;
+    public string SortLabel => Infrastructure.FlightSort.LabelFor(SortKey);
+
+    /// <summary>Khoảng ngày của tuần đang hiển thị trên biểu đồ giá.</summary>
+    public string WeekRangeText => DayPrices.Count == 0
+        ? string.Empty
+        : $"{DayPrices[0].Date.ToString("dd/MM", System.Globalization.CultureInfo.InvariantCulture)} – " +
+          $"{DayPrices[^1].Date.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture)}";
+
+    public DateOnly? PreviousWeek => DayPrices.Count == 0 ? null : DayPrices[0].Date.AddDays(-7);
+    public DateOnly? NextWeek => DayPrices.Count == 0 ? null : DayPrices[^1].Date.AddDays(7);
 }
 
-public sealed record DayPriceChip(string DateText, decimal Price, bool IsActive);
+public sealed record DayPriceChip(
+    DateOnly Date,
+    string DateText,
+    string WeekdayText,
+    decimal Price,
+    bool IsActive)
+{
+    public bool HasPrice => Price > 0m;
+}
 
 public sealed class PassengerFormModel
 {
@@ -141,6 +163,9 @@ public sealed class BookingViewModel
     public string PaymentDisplayText { get; init; } = "Thẻ ngân hàng";
     public string SelectedPayment { get; set; } = "card";
     public string? PaymentError { get; set; }
+
+    /// <summary>Lỗi nghiệp vụ khi đặt vé (ví dụ hành khách đã có vé trên chuyến bay).</summary>
+    public string? BookingError { get; set; }
     public string CardBrand { get; init; } = "Visa";
     public string CardLast4 { get; init; } = "4242";
     public string Pnr { get; init; } = "AV8K2M";

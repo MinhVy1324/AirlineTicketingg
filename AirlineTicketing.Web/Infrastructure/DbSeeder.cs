@@ -10,11 +10,19 @@ public static class DbSeeder
 
     public static async Task SeedAsync(AppDbContext db, CancellationToken ct = default)
     {
-        if (await db.TaiKhoans.AnyAsync(ct))
+        if (!await db.TaiKhoans.AnyAsync(ct))
         {
-            return;
+            await SeedDemoDataAsync(db, ct);
         }
 
+        // Lịch bay mẫu được bảo đảm cho mọi ngày trong tháng 11 và 12, kể cả khi
+        // database đã có dữ liệu seed từ trước. Hàm này idempotent: chỉ thêm
+        // những ngày/tuyến còn thiếu nên chạy lại nhiều lần không bị trùng.
+        await EnsureFlightScheduleAsync(db, ct);
+    }
+
+    private static async Task SeedDemoDataAsync(AppDbContext db, CancellationToken ct)
+    {
         var nowVn = new DateTimeOffset(2026, 11, 1, 10, 0, 0, Vn);
         var now = nowVn.ToUniversalTime();
         var rng = new Random(20261108);
@@ -369,6 +377,168 @@ public static class DbSeeder
         }
         db.NhatKyHoatDongs.AddRange(audits);
 
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Bảo đảm mỗi tuyến đang khai thác có chuyến bay vào mọi ngày của tháng 11
+    /// và tháng 12 (năm hiện tại). Ngày/tuyến đã có chuyến sẽ được bỏ qua, nên
+    /// hàm có thể chạy lặp lại sau mỗi lần migrate mà không sinh dữ liệu trùng.
+    /// </summary>
+    private static async Task EnsureFlightScheduleAsync(AppDbContext db, CancellationToken ct)
+    {
+        var year = DateTimeOffset.UtcNow.ToOffset(Vn).Year;
+        var firstDay = new DateTimeOffset(year, 11, 1, 0, 0, 0, Vn);
+        var lastDay = new DateTimeOffset(year, 12, 31, 0, 0, 0, Vn);
+        var windowStart = firstDay.ToUniversalTime();
+        var windowEnd = lastDay.AddDays(1).ToUniversalTime();
+
+        var routes = await db.TuyenBays
+            .AsNoTracking()
+            .Where(r => r.DangKhaiThac)
+            .OrderBy(r => r.Id)
+            .Select(r => new
+            {
+                r.Id,
+                r.ThoiLuongDuKienPhut,
+                Di = r.SanBayDi.MaSanBay,
+                Den = r.SanBayDen.MaSanBay
+            })
+            .ToListAsync(ct);
+        if (routes.Count == 0)
+        {
+            return;
+        }
+
+        var airlines = await db.HangHangKhongS
+            .AsNoTracking()
+            .Where(h => h.DangHoatDong)
+            .OrderBy(h => h.Id)
+            .ToListAsync(ct);
+        var aircraft = await db.MayBays
+            .AsNoTracking()
+            .Where(m => m.DangHoatDong)
+            .OrderBy(m => m.Id)
+            .ToListAsync(ct);
+        if (airlines.Count == 0 || aircraft.Count == 0)
+        {
+            return;
+        }
+
+        // Những ngày đã có ít nhất một chuyến trên tuyến thì giữ nguyên.
+        var covered = (await db.ChuyenBays
+                .AsNoTracking()
+                .Where(c => c.GioKhoiHanh >= windowStart && c.GioKhoiHanh < windowEnd)
+                .Select(c => new { c.TuyenBayId, c.GioKhoiHanh })
+                .ToListAsync(ct))
+            .Select(x => (x.TuyenBayId, DateOnly.FromDateTime(x.GioKhoiHanh.ToOffset(Vn).DateTime)))
+            .ToHashSet();
+
+        var timeSlots = new[] { (h: 6, m: 0), (h: 8, m: 30), (h: 11, m: 0), (h: 14, m: 15), (h: 17, m: 40), (h: 20, m: 10) };
+        var now = DateTimeOffset.UtcNow;
+        var newFlights = new List<ChuyenBay>();
+        var routeIdx = 0;
+
+        foreach (var route in routes)
+        {
+            var duration = route.ThoiLuongDuKienPhut ?? 95;
+            // Cùng cách phân loại giá/thời lượng với dữ liệu seed ban đầu.
+            var basePrice = duration <= 90 ? 950_000m : duration <= 110 ? 1_350_000m : 1_650_000m;
+            var trunkRoute = (route.Di is "SGN" or "HAN" or "DAD") && (route.Den is "SGN" or "HAN" or "DAD");
+            var slotsPerDay = trunkRoute ? 4 : 2;
+            var dayIdx = 0;
+
+            for (var day = firstDay; day <= lastDay; day = day.AddDays(1), dayIdx++)
+            {
+                if (covered.Contains((route.Id, DateOnly.FromDateTime(day.DateTime))))
+                {
+                    continue;
+                }
+
+                for (var s = 0; s < slotsPerDay; s++)
+                {
+                    var slot = timeSlots[(routeIdx + s) % timeSlots.Length];
+                    var departureVn = day.AddHours(slot.h).AddMinutes(slot.m);
+                    var departure = departureVn.ToUniversalTime();
+                    var arrival = departure.AddMinutes(duration + (s % 2 == 0 ? 0 : 10));
+
+                    var airline = airlines[(routeIdx + s + dayIdx) % airlines.Count];
+                    var plane = aircraft[(routeIdx * 2 + s) % aircraft.Count];
+                    var price = basePrice + (s % 3) * 150_000m + (dayIdx % 5) * 50_000m + (routeIdx % 4) * 25_000m;
+
+                    newFlights.Add(new ChuyenBay
+                    {
+                        // Số hiệu nằm trong dải 5xxx, không trùng dải 1xxx-2xxx của seed ban đầu.
+                        SoHieu = $"{airline.MaHang}{5000 + routeIdx * 12 + s}",
+                        TuyenBayId = route.Id,
+                        MayBayId = plane.Id,
+                        HangHangKhongId = airline.Id,
+                        GioKhoiHanh = departure,
+                        GioHaCanh = arrival,
+                        GiaCoBan = price,
+                        TrangThai = departure < now.AddHours(-3) ? TrangThaiChuyenBay.HoanTat
+                            : departure < now ? TrangThaiChuyenBay.DangBay
+                            : TrangThaiChuyenBay.DuKien
+                    });
+                }
+            }
+
+            routeIdx++;
+        }
+
+        if (newFlights.Count == 0)
+        {
+            return;
+        }
+
+        db.ChuyenBays.AddRange(newFlights);
+        await db.SaveChangesAsync(ct);
+
+        // Mỗi chuyến có hai hạng vé giống seed ban đầu để luồng đặt vé hoạt động.
+        var planes = aircraft.ToDictionary(x => x.Id, x => x.SoGhe);
+        var fareClasses = new List<HangVe>(newFlights.Count * 2);
+        for (var i = 0; i < newFlights.Count; i++)
+        {
+            var flight = newFlights[i];
+            var capacity = planes.TryGetValue(flight.MayBayId, out var seats) ? seats : 180;
+            var economySeats = Math.Max(20, capacity - 16);
+            var businessSeats = Math.Min(16, Math.Max(4, capacity - economySeats));
+            var economySold = (int)(economySeats * ((i * 7) % 30) / 100.0);
+            var businessSold = i % 4 == 0 ? Math.Min(businessSeats, 2) : 0;
+
+            fareClasses.Add(new HangVe
+            {
+                ChuyenBayId = flight.Id,
+                MaHang = "ECO",
+                TenHang = "Phổ thông Tiết kiệm",
+                NhomHang = "Phổ thông",
+                GiaCoBan = flight.GiaCoBan,
+                SoGhe = economySeats,
+                SoGheDaBan = economySold,
+                HanhLyXachTayKg = 7,
+                HanhLyKyGuiKg = 0,
+                PhiDoi = 360_000m,
+                PhiHoan = 500_000m,
+                DangMoBan = true
+            });
+            fareClasses.Add(new HangVe
+            {
+                ChuyenBayId = flight.Id,
+                MaHang = "STD",
+                TenHang = "Phổ thông Tiêu chuẩn",
+                NhomHang = "Phổ thông",
+                GiaCoBan = flight.GiaCoBan + 300_000m,
+                SoGhe = businessSeats,
+                SoGheDaBan = businessSold,
+                HanhLyXachTayKg = 10,
+                HanhLyKyGuiKg = 23,
+                PhiDoi = 200_000m,
+                PhiHoan = 350_000m,
+                DangMoBan = true
+            });
+        }
+
+        db.HangVes.AddRange(fareClasses);
         await db.SaveChangesAsync(ct);
     }
 

@@ -22,6 +22,7 @@ public class FlightsController(AppDbContext dbContext) : Controller
         string? passengers,
         string? cabin,
         string? trip,
+        string? sort,
         CancellationToken cancellationToken)
     {
         var fromText = string.IsNullOrWhiteSpace(from) ? DefaultFrom : from.Trim();
@@ -30,6 +31,7 @@ public class FlightsController(AppDbContext dbContext) : Controller
         var passengerCount = FlightMapping.ParsePassengers(passengers);
         var cabinText = FlightMapping.ParseCabin(cabin);
         var tripText = FlightMapping.ParseTrip(trip);
+        var sortKey = FlightSort.Normalize(sort);
 
         var danhMuc = FlightServices.DanhMuc(dbContext);
         var sanBayDi = await danhMuc.TimSanBayTheoTuKhoaAsync(fromText, cancellationToken);
@@ -73,7 +75,8 @@ public class FlightsController(AppDbContext dbContext) : Controller
                 SoHanhKhach = passengerCount
             }, cancellationToken);
 
-            var cards = results
+            var ordered = FlightSort.Apply(results, sortKey);
+            var cards = ordered
                 .Select((dto, index) => FlightMapping.ToCard(dto, highlighted: index == 0))
                 .ToArray();
 
@@ -86,6 +89,7 @@ public class FlightsController(AppDbContext dbContext) : Controller
                 DayPrices = dayPrices,
                 TotalCount = cards.Length,
                 IsEmpty = cards.Length == 0,
+                SortKey = sortKey,
                 EmptyTitle = "Chưa có chuyến phù hợp",
                 EmptyText = $"Không có chuyến {criteria.OriginCode} → {criteria.DestinationCode} " +
                             $"ngày {criteria.DepartDateText} còn đủ {passengerCount} ghế. " +
@@ -173,11 +177,15 @@ public class FlightsController(AppDbContext dbContext) : Controller
         DateOnly date,
         CancellationToken cancellationToken)
     {
-        var chips = new List<DayPriceChip>(3);
+        // Tuần cố định từ thứ Hai đến Chủ nhật. Các cột giữ nguyên khi khách chọn
+        // ngày khác trong cùng tuần, chỉ cột của ngày được chọn đổi màu tô sáng.
+        var daysFromMonday = ((int)date.DayOfWeek + 6) % 7;
+        var weekStart = date.AddDays(-daysFromMonday);
+        var chips = new List<DayPriceChip>(7);
 
-        for (var offset = -1; offset <= 1; offset++)
+        for (var i = 0; i < 7; i++)
         {
-            var day = date.AddDays(offset);
+            var day = weekStart.AddDays(i);
             IReadOnlyList<ChuyenBayDTO> items;
             try
             {
@@ -196,11 +204,24 @@ public class FlightsController(AppDbContext dbContext) : Controller
 
             var cheapest = items.Count == 0 ? 0m : items.Min(item => item.GiaCoBan);
             chips.Add(new DayPriceChip(
+                day,
                 day.ToString("dd/MM", System.Globalization.CultureInfo.InvariantCulture),
+                WeekdayText(day),
                 cheapest,
-                offset == 0));
+                day == date));
         }
 
         return chips;
     }
+
+    private static string WeekdayText(DateOnly day) => day.DayOfWeek switch
+    {
+        DayOfWeek.Monday => "T2",
+        DayOfWeek.Tuesday => "T3",
+        DayOfWeek.Wednesday => "T4",
+        DayOfWeek.Thursday => "T5",
+        DayOfWeek.Friday => "T6",
+        DayOfWeek.Saturday => "T7",
+        _ => "CN"
+    };
 }

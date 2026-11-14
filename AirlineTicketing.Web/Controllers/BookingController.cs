@@ -12,7 +12,7 @@ using System.Text.Json;
 
 namespace AirlineTicketing.Web.Controllers;
 
-public class BookingController(AppDbContext dbContext) : Controller
+public class BookingController(AppDbContext dbContext, ILogger<BookingController> logger) : Controller
 {
     private const string KeyFlightId = "booking.flightId";
     private const string KeyPassenger = "booking.passenger";
@@ -201,11 +201,30 @@ public class BookingController(AppDbContext dbContext) : Controller
             }
         }
 
+        // Mỗi hành khách chỉ được giữ 1 vé trên một chuyến bay (ràng buộc duy nhất
+        // IX_Ves_ChuyenBayId_HanhKhachId). Kiểm tra trước khi thanh toán để trả về
+        // thông báo rõ ràng thay vì để lỗi ràng buộc rơi vào trang "thanh toán thất bại".
+        var existingTicket = await FindActiveTicketAsync(id.Value, passenger.IdentityNumber, cancellationToken);
+        if (existingTicket is not null)
+        {
+            // Bấm "Thanh toán" lặp lại cho đúng chỗ vừa đặt: trả về đặt chỗ đã tạo.
+            if (IsRepeatSubmission(existingTicket, seatCode))
+            {
+                HttpContext.Session.SetInt32(KeyBookingId, existingTicket.DatVeId);
+                HttpContext.Session.Remove(KeySeat);
+                return RedirectToAction(nameof(Success), new { pnr = existingTicket.DatVe.MaDatVe });
+            }
+
+            model.BookingError = DuplicatePassengerMessage(passenger.FullName, existingTicket.DatVe.MaDatVe);
+            return View(model);
+        }
+
         try
         {
             var booking = await CreateBookingAsync(
                 model, passenger, seatCode, payment == "transfer", cardBrand, cardLast4, cancellationToken);
             HttpContext.Session.SetInt32(KeyBookingId, booking.Id);
+            HttpContext.Session.Remove(KeySeat);
 
             if (payment == "transfer")
             {
@@ -224,8 +243,20 @@ public class BookingController(AppDbContext dbContext) : Controller
             HttpContext.Session.Remove(KeySeat);
             return RedirectToAction(nameof(Passengers), new { loi = "ghe-da-bi-chon" });
         }
-        catch (Exception)
+        catch (DbUpdateException ex) when (IsDuplicatePassengerTicket(ex))
         {
+            logger.LogWarning(ex,
+                "Trùng hành khách trên cùng chuyến bay {FlightId} khi thanh toán", id.Value);
+            model.BookingError =
+                "Hành khách này vừa được đặt vé cho chuyến bay đang chọn ở một phiên khác. " +
+                "Mỗi hành khách chỉ được giữ một vé trên cùng một chuyến bay. " +
+                "Vui lòng chọn chuyến bay khác hoặc kiểm tra lại mục Vé của tôi.";
+            return View(model);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Thanh toán thất bại cho chuyến bay {FlightId}, ghế {SeatCode}", id.Value, seatCode);
             return RedirectToAction(nameof(PaymentFailed));
         }
     }
@@ -784,6 +815,47 @@ public class BookingController(AppDbContext dbContext) : Controller
             SqlState: PostgresErrorCodes.UniqueViolation,
             ConstraintName: "IX_Ves_ChuyenBayId_SoGhe"
         };
+
+    private static bool IsDuplicatePassengerTicket(DbUpdateException exception) =>
+        exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "IX_Ves_ChuyenBayId_HanhKhachId"
+        };
+
+    /// <summary>
+    /// Tìm vé còn hiệu lực (đang giữ chỗ hoặc đã phát hành) của hành khách trên chuyến bay.
+    /// </summary>
+    private async Task<Ve?> FindActiveTicketAsync(
+        int flightId,
+        string? identityNumber,
+        CancellationToken ct)
+    {
+        var document = identityNumber?.Trim();
+        if (string.IsNullOrWhiteSpace(document)) return null;
+
+        return await dbContext.Ves.AsNoTracking()
+            .Include(x => x.DatVe)
+            .Where(x => x.ChuyenBayId == flightId
+                && x.HanhKhach.SoHoChieu == document
+                && (x.TrangThai == TrangThaiVe.TamGiu || x.TrangThai == TrangThaiVe.DaPhatHanh))
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync(ct);
+    }
+
+    private static bool IsRepeatSubmission(Ve ticket, string seatCode) =>
+        ticket.TrangThai == TrangThaiVe.DaPhatHanh
+        && ticket.DatVe.TrangThai == TrangThaiDatVe.DaXacNhan
+        && string.Equals(ticket.SoGhe, seatCode, StringComparison.OrdinalIgnoreCase)
+        && ticket.DatVe.NgayDat >= DateTimeOffset.UtcNow.AddMinutes(-15);
+
+    private static string DuplicatePassengerMessage(string fullName, string pnr)
+    {
+        var name = string.IsNullOrWhiteSpace(fullName) ? "Hành khách này" : fullName.Trim();
+        return $"{name} đã có vé cho chuyến bay đang chọn (mã đặt chỗ {pnr}). " +
+               "Mỗi hành khách chỉ được giữ một vé trên cùng một chuyến bay. " +
+               "Vui lòng chọn chuyến bay khác hoặc kiểm tra lại mục Vé của tôi.";
+    }
 
     private static IReadOnlyList<SeatRow> BuildSeatRows(SoDoGheDTO seatMap, string? selectedSeat)
     {

@@ -35,6 +35,22 @@
         </div>
     }
 
+    @if (!string.IsNullOrWhiteSpace(Model.BookingError))
+    {
+        <div class="av-alert av-alert--warning" role="alert">
+            <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">Không thể đặt thêm vé cho hành khách này</span>
+                <span>@Model.BookingError</span>
+                <span>
+                    <a class="av-link" href="/ve-cua-toi">Xem vé của tôi</a>
+                    hoặc
+                    <a class="av-link" href="/chuyen-bay">chọn chuyến bay khác</a>.
+                </span>
+            </div>
+        </div>
+    }
+
     <form class="booking-layout" method="post" asp-controller="Booking" asp-action="Checkout">
         @Html.AntiForgeryToken()
 
@@ -138,8 +154,9 @@
                     </div>
 
                     <p class="av-caption">
-                        Thanh toán được xử lý qua cổng VNPay. Không lưu số thẻ hoặc mã bảo mật tại AeroViet.
-                        Thẻ Visa/Mastercard hợp lệ được chấp nhận ở cả chế độ thử nghiệm.
+                        Giao diện minh họa: hệ thống chỉ kiểm tra định dạng thẻ và ghi nhận thanh toán ngay,
+                        không kết nối cổng thanh toán thật và không lưu số thẻ. Dùng thẻ thử nghiệm
+                        <strong>4242 4242 4242 4242</strong> (Visa) để hoàn tất đặt vé.
                     </p>
                 </div>
 

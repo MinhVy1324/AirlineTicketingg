@@ -203,11 +203,34 @@
         format();
     }
 
+    // ------------------------------------------------------- sắp xếp chuyến bay
+
+    function initSort() {
+        var select = document.querySelector('[data-sort-select]');
+        if (!select) {
+            return;
+        }
+
+        var form = select.closest('form');
+        if (!form) {
+            return;
+        }
+
+        select.addEventListener('change', function () {
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+        });
+    }
+
     function init() {
         initFlightList();
         initSeatPicker();
         initPayment();
         initCardFormat();
+        initSort();
     }
 
     if (document.readyState === 'loading') {
