@@ -238,14 +238,31 @@ Commit migration cùng thay đổi model. Ở production, giữ `Database__Apply
 
 ## 11. Smoke test và CI
 
-Sau khi stack chạy, kiểm tra nhanh các luồng chính (health, đăng nhập manager, tải PDF, chặn khách ẩn danh):
+Sau khi stack chạy, `scripts/smoke.ps1` kiểm tra 36 điểm trên cả ba khu vực:
+
+- health `/health/database` và các trang công khai (chủ, tìm chuyến, tra cứu, đăng nhập);
+- ẩn danh bị chặn khỏi `/quan-ly`, `/admin`, `/ve-cua-toi` (302);
+- manager: dashboard, lịch bay, đặt chỗ, đổi/hoàn, báo cáo; bị chặn khỏi `/admin`;
+- admin: dashboard, tài khoản, vai trò, danh mục, cấu hình, nhật ký; vào được khu quản lý;
+- khách hàng: `/ve-cua-toi`; bị chặn khỏi khu quản lý và admin;
+- xuất CSV báo cáo, tải PDF bằng manager và bằng chủ vé, ẩn danh nhận 404;
+- tra cứu PNR + email đúng/sai.
 
 ```powershell
 pwsh ./scripts/smoke.ps1
 pwsh ./scripts/smoke.ps1 -BaseUrl http://127.0.0.1:8080 -Pnr <PNR>
 ```
 
-Máy Windows chỉ có Windows PowerShell 5.1 (không có `pwsh`) thì chạy `powershell -ExecutionPolicy Bypass -File ./scripts/smoke.ps1`. Script trả mã thoát `0` khi mọi kiểm tra đạt và `1` khi có lỗi, nên dùng được trong terminal hoặc pipeline. Nếu không truyền `-Pnr`, script lấy một đặt chỗ `DaXacNhan` mới nhất từ container `db` (cần Docker đang chạy).
+Máy Windows chỉ có Windows PowerShell 5.1 (không có `pwsh`) thì chạy `powershell -ExecutionPolicy Bypass -File ./scripts/smoke.ps1`. Script trả mã thoát `0` khi mọi kiểm tra đạt và `1` khi có lỗi, nên dùng được trong terminal hoặc pipeline. Nếu không truyền `-Pnr`, script lấy một đặt chỗ `DaXacNhan` mới nhất từ container `db` (cần Docker đang chạy). Script đăng nhập ba vai trò nên chạm giới hạn 5 lần/phút mỗi IP; chờ 60 giây rồi chạy lại nếu nhận `429`.
+
+Muốn đưa dữ liệu về trạng thái seed trước buổi demo:
+
+```powershell
+pwsh ./scripts/reset-demo.ps1            # hỏi xác nhận
+pwsh ./scripts/reset-demo.ps1 -Force     # dùng trong CI/script khác
+```
+
+Script xoá schema `public`, chạy lại migration, khởi động lại `web` để seed một lần, rồi khởi động lại ba instance còn lại. Mặc định script cũng xoá key ring Data Protection (đăng xuất mọi phiên) và outbox email; dùng `-KeepSessions`/`-KeepOutbox` để giữ lại. Không chạy trên dữ liệu thật.
 
 GitHub Actions chạy `.github/workflows/ci.yml` cho mỗi push/PR: job `build-test` restore/build toàn solution và chạy unit test; job `postgres-integration` dựng PostgreSQL 16 tạm, đặt `AIRLINE_TEST_CONNECTION` trỏ database tên chứa `test` rồi chạy toàn bộ test, gồm test cạnh tranh ghế và test tích hợp controller cho phân quyền/ownership (ẩn danh bị chuyển về đăng nhập, khách không vào `/quan-ly`, khách A không tải được vé khách B). Chạy lại cục bộ:
 
