@@ -41,6 +41,7 @@ public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Cont
 
         var routes = await danhMuc.LayTuyenBayAsync(cancellationToken: cancellationToken);
         var aircraft = await danhMuc.LayMayBayAsync(cancellationToken: cancellationToken);
+        var airlines = await danhMuc.LayHangHangKhongAsync(true, cancellationToken);
 
         var routeId = ResolveRouteId(routes, tuyen);
         var flights = await chuyenBay.LayLichBayAsync(date, routeId, trangThai, cancellationToken);
@@ -91,10 +92,15 @@ public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Cont
                 item.Id.ToString(CultureInfo.InvariantCulture),
                 $"{item.MaMayBay} · {item.TenMayBay} ({item.SoGhe} ghế)",
                 item.Id == selected?.MayBayId)).ToArray(),
+            EditorAirlineOptions = airlines.Select(item => new ManagerSelectOption(
+                item.Id.ToString(CultureInfo.InvariantCulture),
+                $"{item.MaHang} · {item.TenHang}",
+                item.Id == selected?.HangHangKhongId)).ToArray(),
             EditorIsNew = selected is null,
             SelectedFlightId = selected?.Id ?? 0,
             EditorRouteId = selected?.TuyenBayId ?? routes.FirstOrDefault()?.Id ?? 0,
             EditorAircraftId = selected?.MayBayId ?? aircraft.FirstOrDefault()?.Id ?? 0,
+            EditorAirlineId = selected?.HangHangKhongId ?? airlines.FirstOrDefault()?.Id ?? 0,
             EditorFlightNumber = selected?.SoHieu ?? string.Empty,
             EditorTitle = selected is null ? "Thêm lịch khai thác" : $"Chỉnh sửa chuyến · {selected.SoHieu}",
             EditorSubtitle = selected is null
@@ -175,6 +181,7 @@ public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Cont
                 SoHieu = form["so-hieu"].ToString(),
                 TuyenBayId = ParseInt(form["tuyen-bay-id"]),
                 MayBayId = ParseInt(form["may-bay-id"]),
+                HangHangKhongId = ParseInt(form["hang-hang-khong-id"]),
                 GioKhoiHanh = departure,
                 GioHaCanh = arrival,
                 GiaCoBan = price,

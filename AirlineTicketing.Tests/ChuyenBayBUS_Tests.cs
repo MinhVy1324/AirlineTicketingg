@@ -20,13 +20,15 @@ internal static class TestFixture
         new ChuyenBayDAL(db),
         new SanBayDAL(db),
         new MayBayDAL(db),
-        new TuyenBayDAL(db));
+        new TuyenBayDAL(db),
+        new HangHangKhongDAL(db));
 
     public static DanhMucBUS CreateCatalogBus(AppDbContext db) => new(
         new SanBayDAL(db),
         new MayBayDAL(db),
         new TuyenBayDAL(db),
-        new ChuyenBayDAL(db));
+        new ChuyenBayDAL(db),
+        new HangHangKhongDAL(db));
 
     public static (SanBay Sgn, SanBay Han, MayBay Aircraft, TuyenBay Route, ChuyenBay Flight) Seed(
         AppDbContext db,
@@ -67,6 +69,14 @@ internal static class TestFixture
             ThoiLuongDuKienPhut = 130,
             DangKhaiThac = routeActive
         };
+        var airline = new HangHangKhong
+        {
+            MaHang = "VN",
+            TenHang = "Vietnam Airlines",
+            MaIcao = "HVN",
+            QuocGia = "Việt Nam",
+            DangHoatDong = true
+        };
 
         var start = (departure ?? new DateTimeOffset(2026, 11, 20, 8, 0, 0, Vietnam)).ToUniversalTime();
         var flight = new ChuyenBay
@@ -74,6 +84,7 @@ internal static class TestFixture
             SoHieu = "VN210",
             TuyenBay = route,
             MayBay = aircraft,
+            HangHangKhong = airline,
             GioKhoiHanh = start,
             GioHaCanh = start.AddHours(2),
             GiaCoBan = 1_500_000m,

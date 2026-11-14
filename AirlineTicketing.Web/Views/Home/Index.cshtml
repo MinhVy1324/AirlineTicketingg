@@ -118,7 +118,7 @@
             @foreach (var dest in Model.Destinations)
             {
                 <a class="dest-card" asp-controller="Flights" asp-action="Index"
-                   asp-route-to="@dest.Name" asp-route-depart="20/11/2026">
+                   asp-route-to="@dest.Name" asp-route-depart="@Model.Search.DepartDate">
                     <span class="dest-card__media" style="background-image:url('/img/@dest.ImageFile')" role="img"
                           aria-label="Ảnh @dest.Name"></span>
                     <span class="dest-card__body">
@@ -126,11 +126,6 @@
                             <strong>@dest.Name</strong>
                             <span class="dest-card__code">@dest.Code</span>
                         </span>
-                        <span class="dest-card__price">
-                            <span>Một chiều · từ</span>
-                            <strong>@Money.Vnd(dest.FromPrice)</strong>
-                        </span>
-                        <span class="av-micro">Giá tham khảo đã gồm thuế, phí</span>
                     </span>
                 </a>
             }

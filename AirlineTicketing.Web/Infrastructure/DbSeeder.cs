@@ -251,7 +251,7 @@ public static class DbSeeder
                 TrangThai = state,
                 TongTien = total,
                 DonViTienTe = "VND",
-                HanGiuCho = state == TrangThaiDatVe.ChoThanhToan ? now.AddMinutes(15) : null,
+                HetHanGiuCho = state == TrangThaiDatVe.ChoThanhToan ? now.AddMinutes(15) : now.AddDays(-1),
                 NgayXacNhan = state == TrangThaiDatVe.DaXacNhan ? now.AddDays(-(i % 10)) : null,
                 ThuePhi = 380000m,
                 PhiDichVu = 70000m,

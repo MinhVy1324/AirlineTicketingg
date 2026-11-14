@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
+using AirlineTicketing.Domain;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -60,11 +62,26 @@ public class HomeController(IConfiguration configuration, AppDbContext db) : Con
             };
         }
 
+        // Ngày mặc định lấy theo chuyến gần nhất còn mở bán để danh sách kết quả
+        // luôn có dữ liệu thật thay vì một ngày cố định đã trôi qua.
+        var nextDeparture = await db.ChuyenBays
+            .AsNoTracking()
+            .Where(c => c.TrangThai == TrangThaiChuyenBay.DuKien && c.GioKhoiHanh > now)
+            .OrderBy(c => c.GioKhoiHanh)
+            .Select(c => (DateTimeOffset?)c.GioKhoiHanh)
+            .FirstOrDefaultAsync(ct);
+        var search = new SearchFormModel();
+        if (nextDeparture is { } departure)
+        {
+            search.DepartDate = departure.ToOffset(ChuyenBayBUS.VietnamOffset)
+                .ToString("dd/MM/yyyy");
+        }
+
         return View(new HomeViewModel
         {
             CustomerName = "Khách hàng",
             CustomerInitials = "KH",
-            Search = new SearchFormModel(),
+            Search = search,
             Destinations = cards
         });
     }

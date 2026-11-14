@@ -1,8 +1,11 @@
+using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
+using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
@@ -10,7 +13,6 @@ public class FlightsController(AppDbContext dbContext) : Controller
 {
     private const string DefaultFrom = "TP. Hồ Chí Minh (SGN)";
     private const string DefaultTo = "Hà Nội (HAN)";
-    private const string DefaultDate = "20/11/2026";
 
     [HttpGet("/chuyen-bay")]
     public async Task<IActionResult> Index(
@@ -24,7 +26,7 @@ public class FlightsController(AppDbContext dbContext) : Controller
     {
         var fromText = string.IsNullOrWhiteSpace(from) ? DefaultFrom : from.Trim();
         var toText = string.IsNullOrWhiteSpace(to) ? DefaultTo : to.Trim();
-        var departText = string.IsNullOrWhiteSpace(depart) ? DefaultDate : depart.Trim();
+        var departText = string.IsNullOrWhiteSpace(depart) ? string.Empty : depart.Trim();
         var passengerCount = FlightMapping.ParsePassengers(passengers);
         var cabinText = FlightMapping.ParseCabin(cabin);
         var tripText = FlightMapping.ParseTrip(trip);
@@ -35,7 +37,7 @@ public class FlightsController(AppDbContext dbContext) : Controller
 
         var date = FlightMapping.TryParseDate(departText, out var parsedDate)
             ? parsedDate
-            : new DateOnly(2026, 11, 20);
+            : await ResolveDefaultDateAsync(cancellationToken);
 
         var criteria = new FlightSearchCriteria
         {
@@ -120,7 +122,10 @@ public class FlightsController(AppDbContext dbContext) : Controller
                 {
                     seat.SoGhe,
                     seat.TrangThai,
-                    TrangThaiText = FlightMapping.SeatStateText(seat.TrangThai)
+                    TrangThaiText = FlightMapping.SeatStateText(seat.TrangThai),
+                    seat.LoaiGhe,
+                    seat.TenLoaiGhe,
+                    seat.PhuThu
                 })
             });
         }
@@ -128,6 +133,24 @@ public class FlightsController(AppDbContext dbContext) : Controller
         {
             return NotFound(new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Ngày mặc định khi người dùng chưa chọn: ngày gần nhất còn chuyến mở bán.
+    /// </summary>
+    private async Task<DateOnly> ResolveDefaultDateAsync(CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var next = await dbContext.ChuyenBays
+            .AsNoTracking()
+            .Where(x => x.TrangThai == TrangThaiChuyenBay.DuKien && x.GioKhoiHanh > now)
+            .OrderBy(x => x.GioKhoiHanh)
+            .Select(x => (DateTimeOffset?)x.GioKhoiHanh)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return next is { } value
+            ? DateOnly.FromDateTime(value.ToOffset(ChuyenBayBUS.VietnamOffset).DateTime)
+            : new DateOnly(2026, 11, 20);
     }
 
     private static FlightResultsViewModel EmptyModel(

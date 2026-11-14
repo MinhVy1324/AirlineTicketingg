@@ -86,17 +86,24 @@
             }
             else
             {
-                @foreach (var flight in Model.Flights)
+                @for (var i = 0; i < Model.Flights.Count; i++)
                 {
-                    <partial name="_FlightCard" model="flight" />
+                    <div class="flight-list__item @(i >= 3 ? "is-hidden" : null)" data-flight-item>
+                        <partial name="_FlightCard" model="Model.Flights[i]" />
+                    </div>
                 }
 
-                <div class="results-more">
-                    <button type="button" class="av-btn av-btn--outline">
-                        @Html.Icon("chevron-down", 17)
-                        <span>Xem thêm 3 chuyến</span>
-                    </button>
-                </div>
+                @if (Model.Flights.Count > 3)
+                {
+                    <div class="results-more">
+                        <button type="button" class="av-btn av-btn--outline"
+                                data-show-more data-step="3"
+                                data-total="@Model.Flights.Count">
+                            @Html.Icon("chevron-down", 17)
+                            <span data-show-more-label>Xem thêm @Math.Min(3, Model.Flights.Count - 3) chuyến</span>
+                        </button>
+                    </div>
+                }
             }
         </section>
     </div>

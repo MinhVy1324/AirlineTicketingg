@@ -11,6 +11,10 @@ public class Ve
     public string HangVe { get; set; } = string.Empty;
     public decimal GiaVe { get; set; }
     public TrangThaiVe TrangThai { get; set; } = TrangThaiVe.TamGiu;
+    public int HanhLyXachTayKg { get; set; }
+    public int HanhLyKyGuiKg { get; set; }
+    public decimal PhiDoi { get; set; }
+    public decimal PhiHoan { get; set; }
     public DateTimeOffset? NgayPhatHanh { get; set; }
     public DateTimeOffset? NgayHuy { get; set; }
     public string? LyDoHuy { get; set; }

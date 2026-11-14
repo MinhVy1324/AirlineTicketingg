@@ -152,8 +152,9 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
-                    b.Property<DateTimeOffset?>("HanGiuCho")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateTimeOffset>("HetHanGiuCho")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("HanGiuCho");
 
                     b.Property<int>("KhachHangId")
                         .HasColumnType("integer");
@@ -198,12 +199,12 @@ namespace AirlineTicketing.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HanGiuCho");
-
                     b.HasIndex("MaDatVe")
                         .IsUnique();
 
                     b.HasIndex("KhachHangId", "NgayDat");
+
+                    b.HasIndex("TrangThai", "HetHanGiuCho");
 
                     b.ToTable("DatVes", t =>
                         {
@@ -480,6 +481,59 @@ namespace AirlineTicketing.DAL.Migrations
                     b.HasIndex("SoDienThoai");
 
                     b.ToTable("KhachHangs");
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.LichSuDatVe", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("DatVeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DuLieuBoSung")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("HanhDong")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("LyDo")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("NguoiThucHien")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTimeOffset>("ThoiDiem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("TrangThaiSau")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TrangThaiTruoc")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("VeId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VeId");
+
+                    b.HasIndex("DatVeId", "ThoiDiem");
+
+                    b.ToTable("LichSuDatVes");
                 });
 
             modelBuilder.Entity("AirlineTicketing.Domain.MayBay", b =>
@@ -864,10 +918,17 @@ namespace AirlineTicketing.DAL.Migrations
                     b.Property<int>("HanhLyXachTayKg")
                         .HasColumnType("integer");
 
+                    b.Property<string>("LyDoHuy")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<string>("MaVe")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<DateTimeOffset?>("NgayHuy")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("NgayPhatHanh")
                         .HasColumnType("timestamp with time zone");
@@ -1079,6 +1140,24 @@ namespace AirlineTicketing.DAL.Migrations
                     b.Navigation("ThanhToan");
                 });
 
+            modelBuilder.Entity("AirlineTicketing.Domain.LichSuDatVe", b =>
+                {
+                    b.HasOne("AirlineTicketing.Domain.DatVe", "DatVe")
+                        .WithMany("LichSus")
+                        .HasForeignKey("DatVeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AirlineTicketing.Domain.Ve", "Ve")
+                        .WithMany()
+                        .HasForeignKey("VeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DatVe");
+
+                    b.Navigation("Ve");
+                });
+
             modelBuilder.Entity("AirlineTicketing.Domain.NhatKyHoatDong", b =>
                 {
                     b.HasOne("AirlineTicketing.Domain.TaiKhoan", "TaiKhoan")
@@ -1192,6 +1271,8 @@ namespace AirlineTicketing.DAL.Migrations
 
             modelBuilder.Entity("AirlineTicketing.Domain.DatVe", b =>
                 {
+                    b.Navigation("LichSus");
+
                     b.Navigation("ThanhToans");
 
                     b.Navigation("Ves");

@@ -12,6 +12,7 @@ public sealed record ChuyenBayDTO
     public string TenSanBayDen { get; init; } = string.Empty;
     public string ThanhPhoDen { get; init; } = string.Empty;
     public int MayBayId { get; init; }
+    public int HangHangKhongId { get; init; }
     public string MaMayBay { get; init; } = string.Empty;
     public string TenMayBay { get; init; } = string.Empty;
     public DateTimeOffset GioKhoiHanh { get; init; }

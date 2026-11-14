@@ -16,6 +16,13 @@
                 <span class="av-rowline__label">Phí dịch vụ</span>
                 <span class="av-rowline__value">@Money.Vnd(Model.ServiceFee)</span>
             </div>
+            @if (Model.SeatFee > 0)
+            {
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@Model.SeatLabel</span>
+                    <span class="av-rowline__value">@Money.Vnd(Model.SeatFee)</span>
+                </div>
+            }
             @if (Model.BaggageFee > 0)
             {
                 <div class="av-rowline">

@@ -628,6 +628,10 @@
 
 /* seat map */
 
+.is-hidden { display: none !important; }
+
+.flight-list__item { display: block; }
+
 .seat-area {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
@@ -640,6 +644,23 @@
   flex-direction: column;
   gap: 8px;
   width: 300px;
+}
+
+.seatmap__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--av-border-strong) transparent;
+}
+
+.seatmap__scroll::-webkit-scrollbar { width: 6px; }
+.seatmap__scroll::-webkit-scrollbar-thumb {
+  background: var(--av-border-strong);
+  border-radius: var(--av-r-pill);
 }
 
 .seatmap__cols,
@@ -676,19 +697,43 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color .12s ease, color .12s ease;
+  transition: background-color .12s ease, color .12s ease, border-color .12s ease;
+}
+
+/* Loại ghế: tiêu chuẩn · rộng chân · phổ thông đặc biệt */
+.seat--tieuchuan {
+  border-color: var(--av-border-strong);
+  color: var(--av-text);
+  background: #fff;
+}
+
+.seat--rong {
+  border-color: var(--av-warning);
+  color: var(--av-warning);
+  background: var(--av-warning-soft);
+}
+
+.seat--caocap {
+  border-color: #7C3AED;
+  color: #6D28D9;
+  background: #F3EEFF;
 }
 
 .seat:hover:not(:disabled) { background: var(--av-primary-soft); }
 
-.seat.is-taken {
+.seat--rong:hover:not(:disabled) { background: #FFEBBF; }
+.seat--caocap:hover:not(:disabled) { background: #E7DBFF; }
+
+.seat.is-taken,
+.seat.is-taken:hover {
   background: var(--av-border);
   border-color: var(--av-border);
   color: var(--av-text-disabled);
   cursor: not-allowed;
 }
 
-.seat.is-selected {
+.seat.is-selected,
+.seat.is-selected:hover {
   background: var(--av-primary);
   border-color: var(--av-primary);
   color: #fff;
@@ -701,8 +746,29 @@
   padding-top: 4px;
 }
 
-.seat-detail__title { font-size: var(--av-fs-body); line-height: 21px; }
+.seat-detail__title { font-size: var(--av-fs-body); font-weight: 600; line-height: 21px; }
 .seat-detail__text { font-size: var(--av-fs-caption); line-height: 18px; color: var(--av-text-muted); }
+.seat-detail__price { font-size: var(--av-fs-lg); font-weight: 700; line-height: 26px; color: var(--av-primary); }
+
+.legend--seats {
+  color: var(--av-text-muted);
+  gap: 12px;
+}
+
+.legend .seat-key {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--av-border-strong);
+  background: #fff;
+  display: inline-block;
+  flex: none;
+}
+
+.legend .seat-key--tieuchuan { border-color: var(--av-border-strong); background: #fff; }
+.legend .seat-key--rong { border-color: var(--av-warning); background: var(--av-warning-soft); }
+.legend .seat-key--caocap { border-color: #7C3AED; background: #F3EEFF; }
+.legend .seat-key.is-taken { border-color: var(--av-border); background: var(--av-border); }
 
 .legend {
   display: flex;
@@ -829,7 +895,89 @@
 
 .pay-methods { display: flex; gap: 6px; flex-wrap: wrap; }
 
+.av-chip { cursor: pointer; }
+
+.payment-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 4px;
+}
+
 .card-brands { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.transfer-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px dashed var(--av-border-strong);
+  border-radius: var(--av-r-control);
+  background: var(--av-page);
+}
+
+.transfer-box__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--av-r-control);
+  background: var(--av-primary-soft);
+  color: var(--av-primary);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.transfer-box__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.transfer-box__title { font-size: var(--av-fs-body); font-weight: 600; line-height: 21px; }
+.transfer-box__text { font-size: var(--av-fs-sm); line-height: 20px; color: var(--av-text-muted); }
+
+/* trang thanh toán QR */
+
+.qr-payment__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.qr-payment__body {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.qr-payment__code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-control);
+  background: #fff;
+  text-align: center;
+}
+
+.qr-payment__code img {
+  width: 216px;
+  height: 216px;
+  image-rendering: pixelated;
+}
+
+.qr-payment__info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
 
 .checkout-terms {
   display: flex;
@@ -1524,6 +1672,7 @@
   .dest-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .benefits { grid-template-columns: 1fr; }
   .seat-area { grid-template-columns: 1fr; }
+  .qr-payment__body { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 720px) {

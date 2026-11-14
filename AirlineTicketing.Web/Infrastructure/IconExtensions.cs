@@ -36,6 +36,7 @@ public static class IconExtensions
         ["undo"] = "<path d=\"M3 7v6h6\" /><path d=\"M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13\" />",
         ["lock"] = "<rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" /><path d=\"M7 11V7a5 5 0 0 1 10 0v4\" />",
         ["credit-card"] = "<rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\" /><path d=\"M2 10h20\" />",
+        ["qr"] = "<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\" /><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\" /><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\" /><path d=\"M14 14h3v3h-3zM20 14v.01M14 20h.01M20 20v.01M17 17h.01M20 17v.01\" />",
         ["users"] = "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /><circle cx=\"9\" cy=\"7\" r=\"4\" /><path d=\"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75\" />",
         ["user"] = "<path d=\"M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2\" /><circle cx=\"12\" cy=\"7\" r=\"4\" />",
         ["shield-check"] = "<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\" /><path d=\"m9 12 2 2 4-4\" />",

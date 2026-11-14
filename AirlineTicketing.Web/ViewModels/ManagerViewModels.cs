@@ -160,11 +160,13 @@ public sealed class ManagerSchedulesViewModel
     public IReadOnlyList<ManagerSelectOption> StatusOptions { get; init; } = Array.Empty<ManagerSelectOption>();
     public IReadOnlyList<ManagerSelectOption> EditorRouteOptions { get; init; } = Array.Empty<ManagerSelectOption>();
     public IReadOnlyList<ManagerSelectOption> EditorAircraftOptions { get; init; } = Array.Empty<ManagerSelectOption>();
+    public IReadOnlyList<ManagerSelectOption> EditorAirlineOptions { get; init; } = Array.Empty<ManagerSelectOption>();
 
     public bool EditorIsNew { get; init; }
     public int SelectedFlightId { get; init; }
     public int EditorRouteId { get; init; }
     public int EditorAircraftId { get; init; }
+    public int EditorAirlineId { get; init; }
     public string EditorFlightNumber { get; init; } = string.Empty;
     public string? Message { get; init; }
     public string MessageTone { get; init; } = "info";

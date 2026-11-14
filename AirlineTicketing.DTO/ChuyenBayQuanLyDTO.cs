@@ -14,6 +14,9 @@ public sealed record TaoChuyenBayDTO
     [Range(1, int.MaxValue)]
     public int MayBayId { get; init; }
 
+    /// <summary>Để 0 nếu muốn suy ra hãng hàng không từ số hiệu chuyến bay.</summary>
+    public int HangHangKhongId { get; init; }
+
     public DateTimeOffset GioKhoiHanh { get; init; }
     public DateTimeOffset GioHaCanh { get; init; }
 
@@ -55,6 +58,14 @@ public sealed record GheDTO
 
     /// <summary>Trong, DangGiu hoặc DaBan.</summary>
     public string TrangThai { get; init; } = "Trong";
+
+    /// <summary>TieuChuan, Rong hoặc CaoCap.</summary>
+    public string LoaiGhe { get; init; } = "TieuChuan";
+
+    public string TenLoaiGhe { get; init; } = "Ghế tiêu chuẩn";
+
+    /// <summary>Phụ thu chọn chỗ so với giá vé cơ bản.</summary>
+    public decimal PhuThu { get; init; }
 }
 
 public sealed record SoDoGheDTO

@@ -1,3 +1,5 @@
+using AirlineTicketing.Web.Infrastructure;
+
 namespace AirlineTicketing.Web.ViewModels;
 
 public sealed record AirportInfo(string Code, string City, string Name)
@@ -106,10 +108,12 @@ public sealed class PriceSummary
     public decimal ServiceFee { get; init; }
     public decimal BaggageFee { get; init; }
     public string BaggageLabel { get; init; } = "Hành lý thêm 10 kg";
+    public decimal SeatFee { get; init; }
+    public string SeatLabel { get; init; } = "Chọn chỗ ngồi";
     public string TotalLabel { get; init; } = "Tổng thanh toán";
     public string? Note { get; init; } = "Giá đã bao gồm thuế, phí · Thanh toán bằng VND";
 
-    public decimal Total => BaseFare + Taxes + ServiceFee + BaggageFee;
+    public decimal Total => BaseFare + Taxes + ServiceFee + BaggageFee + SeatFee;
 }
 
 public sealed record FlightTimelineModel(
@@ -129,8 +133,14 @@ public sealed class BookingViewModel
     public string SeatCode { get; init; } = "18A";
     public string SeatPosition { get; init; } = "Cạnh cửa sổ";
     public IReadOnlyList<SeatRow> SeatRows { get; init; } = Array.Empty<SeatRow>();
-    public string ExtraBaggage { get; init; } = "+10 kg";
+    public string SeatTypeName { get; init; } = "Ghế tiêu chuẩn";
+    public string? SeatError { get; set; }
+    public string ExtraBaggage { get; init; } = "Không";
+    public string BaggageText { get; init; } = "Không mua thêm";
     public string PaymentMethod { get; init; } = "Thẻ ngân hàng";
+    public string PaymentDisplayText { get; init; } = "Thẻ ngân hàng";
+    public string SelectedPayment { get; set; } = "card";
+    public string? PaymentError { get; set; }
     public string CardBrand { get; init; } = "Visa";
     public string CardLast4 { get; init; } = "4242";
     public string Pnr { get; init; } = "AV8K2M";
@@ -149,7 +159,14 @@ public sealed class BookingViewModel
     public bool ShowValidationErrors { get; init; }
 }
 
-public sealed record SeatCell(string Label, SeatState State);
+public sealed record SeatCell(
+    string Label,
+    SeatState State,
+    string Code = "",
+    string Type = "TieuChuan",
+    string TypeName = "Ghế tiêu chuẩn",
+    decimal Surcharge = 0m,
+    string Position = "");
 
 public enum SeatState
 {
@@ -159,6 +176,22 @@ public enum SeatState
 }
 
 public sealed record SeatRow(string Number, IReadOnlyList<SeatCell> Seats);
+
+public sealed class QrPaymentViewModel
+{
+    public string Pnr { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
+    public string AmountText => Money.Vnd(Amount);
+    public string BankName { get; init; } = "Vietcombank";
+    public string AccountNumber { get; init; } = "0123456789";
+    public string AccountName { get; init; } = "CONG TY AEROVIET";
+    public string Memo { get; init; } = string.Empty;
+    public string HoldUntilText { get; init; } = string.Empty;
+    public string QrUrl { get; init; } = string.Empty;
+    public string SeatCode { get; init; } = string.Empty;
+    public string FlightNumber { get; init; } = string.Empty;
+    public string PassengerName { get; init; } = string.Empty;
+}
 
 public sealed class LoginViewModel
 {

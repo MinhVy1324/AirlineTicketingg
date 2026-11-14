@@ -26,6 +26,13 @@ public interface IMayBayDAL
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
 
+public interface IHangHangKhongDAL
+{
+    Task<IReadOnlyList<HangHangKhong>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<HangHangKhong?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<HangHangKhong?> FindByCodeAsync(string maHang, CancellationToken cancellationToken = default);
+}
+
 public interface ITuyenBayDAL
 {
     Task<IReadOnlyList<TuyenBay>> GetAllWithAirportsAsync(CancellationToken cancellationToken = default);

@@ -12,12 +12,19 @@ public sealed class ChuyenBayBUS(
     IChuyenBayDAL chuyenBayDAL,
     ISanBayDAL sanBayDAL,
     IMayBayDAL mayBayDAL,
-    ITuyenBayDAL tuyenBayDAL)
+    ITuyenBayDAL tuyenBayDAL,
+    IHangHangKhongDAL hangHangKhongDAL)
 {
     public static readonly TimeSpan VietnamOffset = TimeSpan.FromHours(7);
 
     private const int SeatsPerRow = 6;
     private static readonly char[] SeatLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+    /// <summary>Phụ thu của ghế rộng chân (hàng thoát hiểm).</summary>
+    public const decimal ExtraLegroomSurcharge = 150_000m;
+
+    /// <summary>Phụ thu của ghế phổ thông đặc biệt (các hàng đầu).</summary>
+    public const decimal PremiumSeatSurcharge = 300_000m;
 
     public async Task<IReadOnlyList<ChuyenBayDTO>> TimChuyenBayAsync(
         TimChuyenBayDTO dto,
@@ -105,10 +112,14 @@ public sealed class ChuyenBayBUS(
                 }
 
                 var code = $"{row}{SeatLetters[column]}";
+                var loaiGhe = PhanLoaiGhe(row, rowCount);
                 seats.Add(new GheDTO
                 {
                     SoGhe = code,
-                    TrangThai = occupied.TryGetValue(code, out var state) ? state : "Trong"
+                    TrangThai = occupied.TryGetValue(code, out var state) ? state : "Trong",
+                    LoaiGhe = loaiGhe.Ma,
+                    TenLoaiGhe = loaiGhe.Ten,
+                    PhuThu = loaiGhe.PhuThu
                 });
             }
         }
@@ -168,6 +179,18 @@ public sealed class ChuyenBayBUS(
         }
 
         var soHieu = ChuanHoaSoHieu(dto.SoHieu);
+        var hangHangKhong = await ResolveHangHangKhongAsync(dto.HangHangKhongId, soHieu, cancellationToken);
+        if (hangHangKhong is null)
+        {
+            return KetQuaXuLy.ThatBai(
+                $"Không xác định được hãng hàng không từ số hiệu {soHieu}. Vui lòng chọn hãng hàng không.");
+        }
+
+        if (!hangHangKhong.DangHoatDong)
+        {
+            return KetQuaXuLy.ThatBai("Hãng hàng không đang tạm dừng khai thác.");
+        }
+
         var gioDi = dto.GioKhoiHanh.ToUniversalTime();
         var gioDen = dto.GioHaCanh.ToUniversalTime();
 
@@ -186,6 +209,7 @@ public sealed class ChuyenBayBUS(
             SoHieu = soHieu,
             TuyenBayId = dto.TuyenBayId,
             MayBayId = dto.MayBayId,
+            HangHangKhongId = hangHangKhong.Id,
             GioKhoiHanh = gioDi,
             GioHaCanh = gioDen,
             GiaCoBan = dto.GiaCoBan,
@@ -350,6 +374,48 @@ public sealed class ChuyenBayBUS(
         _ => trangThai.ToString()
     };
 
+    /// <summary>
+    /// Phân loại ghế theo hàng: hai hàng đầu là ghế phổ thông đặc biệt, hàng thoát hiểm
+    /// ở giữa là ghế rộng chân, còn lại là ghế tiêu chuẩn. Cách phân loại áp dụng cho
+    /// mọi tàu bay nên sơ đồ luôn đủ số ghế theo sức chứa thực tế.
+    /// </summary>
+    public static (string Ma, string Ten, decimal PhuThu) PhanLoaiGhe(int row, int rowCount)
+    {
+        if (row <= 2)
+        {
+            return ("CaoCap", "Ghế phổ thông đặc biệt", PremiumSeatSurcharge);
+        }
+
+        var exitRow = Math.Clamp(rowCount / 2, 3, Math.Max(3, rowCount));
+        if (row == exitRow)
+        {
+            return ("Rong", "Ghế rộng chân", ExtraLegroomSurcharge);
+        }
+
+        return ("TieuChuan", "Ghế tiêu chuẩn", 0m);
+    }
+
+    private async Task<HangHangKhong?> ResolveHangHangKhongAsync(
+        int hangHangKhongId,
+        string soHieu,
+        CancellationToken cancellationToken)
+    {
+        if (hangHangKhongId > 0)
+        {
+            return await hangHangKhongDAL.GetByIdAsync(hangHangKhongId, cancellationToken);
+        }
+
+        var maHang = new string(soHieu
+            .TakeWhile(char.IsLetterOrDigit)
+            .Take(2)
+            .ToArray())
+            .ToUpperInvariant();
+
+        return maHang.Length == 0
+            ? null
+            : await hangHangKhongDAL.FindByCodeAsync(maHang, cancellationToken);
+    }
+
     private async Task<string?> KiemTraSanBayDauMutAsync(
         TuyenBay tuyen,
         CancellationToken cancellationToken)
@@ -458,6 +524,7 @@ public sealed class ChuyenBayBUS(
         TenSanBayDen = entity.TuyenBay.SanBayDen.TenSanBay,
         ThanhPhoDen = entity.TuyenBay.SanBayDen.ThanhPho,
         MayBayId = entity.MayBayId,
+        HangHangKhongId = entity.HangHangKhongId,
         MaMayBay = entity.MayBay.MaMayBay,
         TenMayBay = entity.MayBay.TenMayBay,
         GioKhoiHanh = entity.GioKhoiHanh,

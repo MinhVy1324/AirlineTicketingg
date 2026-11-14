@@ -14,11 +14,13 @@ public static class FlightServices
         new ChuyenBayDAL(dbContext),
         new SanBayDAL(dbContext),
         new MayBayDAL(dbContext),
-        new TuyenBayDAL(dbContext));
+        new TuyenBayDAL(dbContext),
+        new HangHangKhongDAL(dbContext));
 
     public static DanhMucBUS DanhMuc(AppDbContext dbContext) => new(
         new SanBayDAL(dbContext),
         new MayBayDAL(dbContext),
         new TuyenBayDAL(dbContext),
-        new ChuyenBayDAL(dbContext));
+        new ChuyenBayDAL(dbContext),
+        new HangHangKhongDAL(dbContext));
 }

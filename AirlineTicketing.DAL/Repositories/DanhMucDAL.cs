@@ -86,6 +86,24 @@ public sealed class MayBayDAL(AppDbContext dbContext) : IMayBayDAL
         dbContext.SaveChangesAsync(cancellationToken);
 }
 
+public sealed class HangHangKhongDAL(AppDbContext dbContext) : IHangHangKhongDAL
+{
+    public async Task<IReadOnlyList<HangHangKhong>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        await dbContext.HangHangKhongS.AsNoTracking()
+            .OrderBy(x => x.MaHang)
+            .ToListAsync(cancellationToken);
+
+    public Task<HangHangKhong?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
+        dbContext.HangHangKhongS.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+    public Task<HangHangKhong?> FindByCodeAsync(string maHang, CancellationToken cancellationToken = default)
+    {
+        var upper = maHang.Trim().ToUpperInvariant();
+        return dbContext.HangHangKhongS.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.MaHang == upper, cancellationToken);
+    }
+}
+
 public sealed class TuyenBayDAL(AppDbContext dbContext) : ITuyenBayDAL
 {
     public async Task<IReadOnlyList<TuyenBay>> GetAllWithAirportsAsync(CancellationToken cancellationToken = default) =>

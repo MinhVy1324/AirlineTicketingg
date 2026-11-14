@@ -1,0 +1,121 @@
+@model QrPaymentViewModel
+@{
+    ViewData["Title"] = "Thanh toán chuyển khoản QR";
+    ViewData["Nav"] = "book";
+}
+
+<div class="av-page av-container">
+    <partial name="_Stepper" model="3" />
+
+    <header class="booking-title">
+        <h1 class="av-page-title">Quét mã QR để chuyển khoản</h1>
+        <p class="av-page-subtitle">
+            Đặt chỗ @Model.Pnr đang được giữ đến @Model.HoldUntilText (UTC+7). Hoàn tất chuyển khoản
+            đúng số tiền và nội dung để xác nhận vé.
+        </p>
+    </header>
+
+    <div class="booking-layout">
+        <div class="booking-main">
+            <section class="av-card passenger-block qr-payment">
+                <div class="qr-payment__head">
+                    <div class="av-stack av-gap-3">
+                        <span class="ticket__pnr-label">MÃ ĐẶT CHỖ (PNR)</span>
+                        <strong class="ticket__pnr">@Model.Pnr</strong>
+                    </div>
+                    <span class="av-badge av-badge--warning">Chờ thanh toán</span>
+                </div>
+
+                <div class="qr-payment__body">
+                    <div class="qr-payment__code">
+                        <img src="@Model.QrUrl" alt="Mã QR chuyển khoản cho đặt chỗ @Model.Pnr" width="248" height="248" />
+                        <span class="av-caption">Mở ứng dụng ngân hàng và quét mã VietQR</span>
+                    </div>
+
+                    <div class="qr-payment__info">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Ngân hàng</span>
+                            <span class="av-rowline__value">@Model.BankName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Số tài khoản</span>
+                            <span class="av-rowline__value"><strong>@Model.AccountNumber</strong></span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Chủ tài khoản</span>
+                            <span class="av-rowline__value">@Model.AccountName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Số tiền</span>
+                            <span class="av-rowline__value av-num"><strong>@Model.AmountText</strong></span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Nội dung chuyển khoản</span>
+                            <span class="av-rowline__value"><strong>@Model.Memo</strong></span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Chuyến bay / ghế</span>
+                            <span class="av-rowline__value">@Model.FlightNumber · Ghế @Model.SeatCode</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">Đây là môi trường minh họa</span>
+                        <span>
+                            Mã QR và tài khoản trên là dữ liệu mẫu, không phát sinh giao dịch thật.
+                            Sau khi chuyển khoản (hoặc bấm xác nhận trong bản demo), vé điện tử sẽ được phát hành.
+                        </span>
+                    </div>
+                </div>
+
+                <form method="post" asp-controller="Booking" asp-action="ConfirmTransfer" asp-route-pnr="@Model.Pnr">
+                    @Html.AntiForgeryToken()
+                    <div class="step-nav">
+                        <a class="av-btn av-btn--ghost" href="/ve-cua-toi">@Html.Icon("arrow-left", 17) Về Vé của tôi</a>
+                        <button type="submit" class="av-btn av-btn--primary av-btn--lg">
+                            @Html.Icon("check", 17)
+                            <span>Tôi đã chuyển khoản @Model.AmountText</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">Thông tin đặt chỗ</h2>
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Hành khách</span>
+                            <span class="av-rowline__value">@Model.PassengerName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Chuyến bay</span>
+                            <span class="av-rowline__value">@Model.FlightNumber</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Ghế</span>
+                            <span class="av-rowline__value">@Model.SeatCode</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">Giữ chỗ đến</span>
+                            <span class="av-rowline__value">@Model.HoldUntilText</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("clock", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">Ghế chỉ được giữ trong 15 phút</span>
+                    <span>Hết thời gian, đặt chỗ tự hủy và ghế được trả lại sơ đồ.</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>

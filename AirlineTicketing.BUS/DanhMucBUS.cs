@@ -10,7 +10,8 @@ public sealed class DanhMucBUS(
     ISanBayDAL sanBayDAL,
     IMayBayDAL mayBayDAL,
     ITuyenBayDAL tuyenBayDAL,
-    IChuyenBayDAL chuyenBayDAL)
+    IChuyenBayDAL chuyenBayDAL,
+    IHangHangKhongDAL hangHangKhongDAL)
 {
     private static readonly Regex MaSanBayRegex = new("^[A-Z]{3}$", RegexOptions.Compiled);
 
@@ -54,6 +55,21 @@ public sealed class DanhMucBUS(
         }
 
         query = LocTrangThai(query, trangThai, x => x.DangHoatDong);
+
+        return query.Select(Map).ToArray();
+    }
+
+    public async Task<IReadOnlyList<HangHangKhongDTO>> LayHangHangKhongAsync(
+        bool? dangHoatDong = null,
+        CancellationToken cancellationToken = default)
+    {
+        var items = await hangHangKhongDAL.GetAllAsync(cancellationToken);
+        var query = items.AsEnumerable();
+
+        if (dangHoatDong is not null)
+        {
+            query = query.Where(x => x.DangHoatDong == dangHoatDong);
+        }
 
         return query.Select(Map).ToArray();
     }
@@ -310,6 +326,16 @@ public sealed class DanhMucBUS(
 
         return active ? source.Where(isActive) : source.Where(x => !isActive(x));
     }
+
+    private static HangHangKhongDTO Map(HangHangKhong entity) => new()
+    {
+        Id = entity.Id,
+        MaHang = entity.MaHang,
+        TenHang = entity.TenHang,
+        QuocGia = entity.QuocGia,
+        MaIcao = entity.MaIcao,
+        DangHoatDong = entity.DangHoatDong
+    };
 
     private static SanBayDTO Map(SanBay entity) => new()
     {

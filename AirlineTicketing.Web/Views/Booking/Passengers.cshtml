@@ -135,10 +135,9 @@
                         <span class="av-label">Hành lý ký gửi bổ sung</span>
                         <span class="av-control">
                             <select name="baggage">
-                                <option selected value="250000">+10 kg · @Money.Vnd(250_000m)</option>
-                                <option value="0">Không mua thêm</option>
-                                <option>Không mua thêm</option>
-                                <option>+20 kg · @Money.Vnd(480_000m)</option>
+                                <option value="0" selected="@(Model.Price.BaggageFee == 0)">Không mua thêm</option>
+                                <option value="250000" selected="@(Model.Price.BaggageFee == 250_000)">+10 kg · @Money.Vnd(250_000m)</option>
+                                <option value="480000" selected="@(Model.Price.BaggageFee == 480_000)">+20 kg · @Money.Vnd(480_000m)</option>
                             </select>
                             @Html.Icon("chevron-down", 17)
                         </span>
@@ -147,7 +146,19 @@
 
                 <hr class="av-divider" />
 
-                <div class="seat-area">
+                @if (!string.IsNullOrWhiteSpace(Model.SeatError))
+                {
+                    <div class="av-alert av-alert--danger" role="alert">
+                        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                        <div class="av-alert__body">
+                            <span class="av-alert__title">Chưa thể tiếp tục</span>
+                            <span>@Model.SeatError</span>
+                        </div>
+                    </div>
+                }
+
+                <div class="seat-area" data-seat-area
+                     data-selected="@(Model.SeatCode == "Chưa chọn" ? "" : Model.SeatCode)">
                     <div class="seatmap" role="group" aria-label="Sơ đồ chỗ ngồi">
                         <div class="seatmap__cols" aria-hidden="true">
                             <span class="seatmap__col">A</span>
@@ -159,60 +170,86 @@
                             <span class="seatmap__col">F</span>
                         </div>
 
-                        @foreach (var row in Model.SeatRows)
-                        {
-                            <div class="seatmap__row">
-                                @for (var i = 0; i < row.Seats.Count; i++)
-                                {
-                                    if (i == 3)
+                        <div class="seatmap__scroll">
+                            @foreach (var row in Model.SeatRows)
+                            {
+                                <div class="seatmap__row">
+                                    @for (var i = 0; i < row.Seats.Count; i++)
                                     {
-                                        <span class="seatmap__aisle" aria-hidden="true">@row.Number</span>
+                                        if (i == 3)
+                                        {
+                                            <span class="seatmap__aisle" aria-hidden="true">@row.Number</span>
+                                        }
+
+                                        var seat = row.Seats[i];
+                                        var cls = seat.State switch
+                                        {
+                                            SeatState.Selected => "seat is-selected",
+                                            SeatState.Taken => "seat is-taken",
+                                            _ => "seat"
+                                        };
+                                        cls += $" seat--{seat.Type.ToLowerInvariant()}";
+                                        var label = seat.State switch
+                                        {
+                                            SeatState.Selected => "✓",
+                                            SeatState.Taken => "×",
+                                            _ => seat.Label
+                                        };
+                                        <button type="button" class="@cls"
+                                                data-seat-code="@seat.Code"
+                                                data-seat-type="@seat.Type"
+                                                data-seat-type-name="@seat.TypeName"
+                                                data-seat-surcharge="@seat.Surcharge"
+                                                data-seat-position="@seat.Position"
+                                                title="Ghế @seat.Code · @seat.TypeName@(seat.Surcharge > 0 ? $" · +{Money.Vnd(seat.Surcharge)}" : "")"
+                                                aria-label="Ghế @seat.Code · @seat.TypeName"
+                                                aria-pressed="@(seat.State == SeatState.Selected ? "true" : "false")"
+                                                disabled="@(seat.State == SeatState.Taken)">
+                                            @label
+                                        </button>
                                     }
+                                </div>
+                            }
+                        </div>
 
-                                    var seat = row.Seats[i];
-                                    var cls = seat.State switch
-                                    {
-                                        SeatState.Selected => "seat is-selected",
-                                        SeatState.Taken => "seat is-taken",
-                                        _ => "seat"
-                                    };
-                                    var label = seat.State switch
-                                    {
-                                        SeatState.Selected => "✓",
-                                        SeatState.Taken => "×",
-                                        _ => seat.Label
-                                    };
-                                    <button type="button" class="@cls"
-                                            aria-label="Ghế @row.Number@(seat.Label)"
-                                            aria-pressed="@(seat.State == SeatState.Selected ? "true" : "false")"
-                                            disabled="@(seat.State == SeatState.Taken)">
-                                        @label
-                                    </button>
-                                }
-                            </div>
-                        }
-
-                        <p class="av-micro">Sơ đồ minh họa 4 hàng · 18A đang được chọn.</p>
+                        <p class="av-micro">Sơ đồ đủ @Model.SeatRows.Sum(x => x.Seats.Count) ghế theo tàu bay @Model.Flight.Aircraft.</p>
                     </div>
 
                     <div class="seat-detail">
-                        <span class="seat-detail__title">Ghế @Model.SeatCode · @Model.SeatPosition</span>
-                        <span class="av-badge av-badge--info">Đã chọn · Miễn phí</span>
-                        <p class="seat-detail__text">
-                            Ghế tiêu chuẩn đã bao gồm trong hạng vé. Sơ đồ có thể thay đổi theo tàu bay thực tế.
+                        <span class="seat-detail__title" data-seat-title>
+                            @(Model.SeatCode == "Chưa chọn" ? "Chưa chọn chỗ ngồi" : $"Ghế {Model.SeatCode} · {Model.SeatTypeName}")
+                        </span>
+                        <span class="av-badge av-badge--info" data-seat-badge>
+                            @(Model.SeatCode == "Chưa chọn" ? "Vui lòng chọn ghế" : $"Đã chọn · {Model.SeatPosition}")
+                        </span>
+                        <p class="seat-detail__text" data-seat-text>
+                            Ghế tiêu chuẩn đã bao gồm trong hạng vé. Ghế phổ thông đặc biệt và ghế rộng chân có phụ thu,
+                            được cộng vào tổng tiền ở bước thanh toán.
                         </p>
-                        <div class="legend">
-                            <span><i></i>Trống</span>
-                            <span><i class="is-filled"></i>Đang chọn</span>
-                            <span><i class="is-taken"></i>Đã có khách</span>
+                        <p class="seat-detail__price" data-seat-price>
+                            @(Model.Price.SeatFee > 0 ? $"+{Money.Vnd(Model.Price.SeatFee)}" : "Miễn phí")
+                        </p>
+                        <div class="legend legend--seats">
+                            <span><i class="seat-key seat-key--tieuchuan"></i>Tiêu chuẩn · miễn phí</span>
+                            <span><i class="seat-key seat-key--rong"></i>Rộng chân · @Money.Vnd(150_000m)</span>
+                            <span><i class="seat-key seat-key--caocap"></i>Đặc biệt · @Money.Vnd(300_000m)</span>
+                            <span><i class="seat-key is-taken"></i>Đã có khách</span>
                         </div>
+                        <p class="av-caption" data-seat-hint>
+                            Bạn cần chọn một ghế trước khi tiếp tục thanh toán.
+                        </p>
                     </div>
                 </div>
             </section>
 
+            <input type="hidden" name="flightId" value="@Model.Flight.Id" />
+            <input type="hidden" name="seat" value="@(Model.SeatCode == "Chưa chọn" ? "" : Model.SeatCode)" data-seat-input />
+
             <div class="step-nav">
                 <a class="av-btn av-btn--ghost" href="/chuyen-bay">@Html.Icon("arrow-left", 17) Quay lại chọn chuyến</a>
-                <button type="submit" class="av-btn av-btn--primary av-btn--lg" disabled="@Model.ShowValidationErrors">
+                <button type="submit" class="av-btn av-btn--primary av-btn--lg"
+                        data-seat-submit
+                        disabled="@(Model.ShowValidationErrors || Model.SeatCode == "Chưa chọn")">
                     Tiếp tục thanh toán
                     @Html.Icon("arrow-right", 17)
                 </button>

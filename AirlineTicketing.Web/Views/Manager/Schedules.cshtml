@@ -159,13 +159,27 @@
 
                 @if (Model.EditorIsNew)
                 {
-                    <div class="manager-editor__row manager-editor__row--three">
+                    <div class="manager-editor__row manager-editor__row--two">
                         <label class="av-field">
                             <span class="av-label">Số hiệu chuyến bay *</span>
                             <span class="av-control">
                                 <input type="text" name="so-hieu" placeholder="Ví dụ VN210" required />
                             </span>
                         </label>
+                        <label class="av-field">
+                            <span class="av-label">Hãng hàng không *</span>
+                            <span class="av-control">
+                                <select name="hang-hang-khong-id" required>
+                                    @foreach (var option in Model.EditorAirlineOptions)
+                                    {
+                                        <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                                    }
+                                </select>
+                                @Html.Icon("chevron-down", 17)
+                            </span>
+                        </label>
+                    </div>
+                    <div class="manager-editor__row manager-editor__row--two">
                         <label class="av-field">
                             <span class="av-label">Tuyến bay *</span>
                             <span class="av-control">

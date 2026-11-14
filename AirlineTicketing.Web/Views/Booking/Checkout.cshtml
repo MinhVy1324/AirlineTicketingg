@@ -20,9 +20,20 @@
             <span class="av-alert__title">
                 Giữ chỗ đến @Model.HoldUntilText (UTC+7) · @Model.HoldRemainingText
             </span>
-            <span>Giá và chỗ chỉ được đảm bảo sau khi thanh toán thành công. Mã giữ chỗ: @Model.Pnr.</span>
+            <span>Giá và chỗ chỉ được đảm bảo sau khi thanh toán thành công. Ghế được giữ tạm trong 15 phút kể từ khi bắt đầu thanh toán.</span>
         </div>
     </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.PaymentError))
+    {
+        <div class="av-alert av-alert--danger" role="alert">
+            <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">Thông tin thanh toán chưa hợp lệ</span>
+                <span>@Model.PaymentError</span>
+            </div>
+        </div>
+    }
 
     <form class="booking-layout" method="post" asp-controller="Booking" asp-action="Checkout">
         @Html.AntiForgeryToken()
@@ -53,8 +64,12 @@
                         <span class="av-rowline__value">@passengerName</span>
                     </div>
                     <div class="av-rowline">
-                        <span class="av-rowline__label">Chỗ ngồi / hành lý</span>
-                        <span class="av-rowline__value">@Model.SeatCode · 23 kg + thêm 10 kg</span>
+                        <span class="av-rowline__label">Chỗ ngồi</span>
+                        <span class="av-rowline__value">@Model.SeatCode · @Model.SeatTypeName</span>
+                    </div>
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">Hành lý ký gửi</span>
+                        <span class="av-rowline__value">@Model.BaggageText</span>
                     </div>
                     <div class="av-rowline">
                         <span class="av-rowline__label">Email nhận vé</span>
@@ -73,56 +88,72 @@
                     <p class="av-page-subtitle">Giao diện minh họa · Không thu thập thông tin thẻ thật.</p>
                 </div>
 
-                <div class="pay-methods">
-                    <label class="av-chip is-active">
-                        <input type="radio" name="payment" value="card" checked class="av-visually-hidden" />
-                        <span>◉ Thẻ ngân hàng</span>
+                <div class="pay-methods" data-payment-methods>
+                    <label class="av-chip @(Model.SelectedPayment == "card" ? "is-active" : null)">
+                        <input type="radio" name="payment" value="card" checked="@(Model.SelectedPayment == "card")" class="av-visually-hidden" data-payment-input />
+                        <span>◉ Thẻ ngân hàng (Visa/Mastercard)</span>
                     </label>
-                    <label class="av-chip">
-                        <input type="radio" name="payment" value="transfer" class="av-visually-hidden" />
+                    <label class="av-chip @(Model.SelectedPayment == "transfer" ? "is-active" : null)">
+                        <input type="radio" name="payment" value="transfer" checked="@(Model.SelectedPayment == "transfer")" class="av-visually-hidden" data-payment-input />
                         <span>○ Chuyển khoản / QR</span>
                     </label>
                 </div>
 
-                <div class="card-brands">
-                    <span class="av-badge av-badge--info">VISA</span>
-                    <span class="av-badge av-badge--neutral">Mastercard</span>
-                    <span class="av-badge av-badge--neutral">Nội địa NAPAS</span>
+                <div data-card-fields class="payment-fields @(Model.SelectedPayment == "card" ? null : "is-hidden")">
+                    <div class="card-brands">
+                        <span class="av-badge av-badge--info">VISA</span>
+                        <span class="av-badge av-badge--neutral">Mastercard</span>
+                        <span class="av-badge av-badge--neutral">Nội địa NAPAS</span>
+                    </div>
+
+                    <label class="av-field">
+                        <span class="av-label">Số thẻ</span>
+                        <span class="av-control">
+                            <input type="text" name="cardNumber" value="4242 4242 4242 4242" inputmode="numeric"
+                                   autocomplete="cc-number" maxlength="23" placeholder="4242 4242 4242 4242" data-card-number />
+                            @Html.Icon("credit-card", 17)
+                        </span>
+                    </label>
+
+                    <div class="form-grid form-grid--3">
+                        <label class="av-field">
+                            <span class="av-label">Tên chủ thẻ</span>
+                            <span class="av-control">
+                                <input type="text" name="cardHolder" value="@passengerName" autocomplete="cc-name" />
+                            </span>
+                        </label>
+                        <label class="av-field">
+                            <span class="av-label">Ngày hết hạn</span>
+                            <span class="av-control">
+                                <input type="text" name="cardExpiry" value="12/28" autocomplete="cc-exp" placeholder="MM/YY" />
+                            </span>
+                        </label>
+                        <label class="av-field">
+                            <span class="av-label">CVV</span>
+                            <span class="av-control">
+                                <input type="password" name="cardCvv" value="123" autocomplete="cc-csc" inputmode="numeric" maxlength="4" />
+                                @Html.Icon("lock", 17)
+                            </span>
+                        </label>
+                    </div>
+
+                    <p class="av-caption">
+                        Thanh toán được xử lý qua cổng VNPay. Không lưu số thẻ hoặc mã bảo mật tại AeroViet.
+                        Thẻ Visa/Mastercard hợp lệ được chấp nhận ở cả chế độ thử nghiệm.
+                    </p>
                 </div>
 
-                <label class="av-field">
-                    <span class="av-label">Số thẻ</span>
-                    <span class="av-control">
-                        <input type="text" name="cardNumber" value="•••• •••• •••• @Model.CardLast4" inputmode="numeric" autocomplete="cc-number" />
-                        @Html.Icon("credit-card", 17)
-                    </span>
-                </label>
-
-                <div class="form-grid form-grid--3">
-                    <label class="av-field">
-                        <span class="av-label">Tên chủ thẻ</span>
-                        <span class="av-control">
-                            <input type="text" name="cardHolder" value="@passengerName" autocomplete="cc-name" />
+                <div class="transfer-box payment-fields @(Model.SelectedPayment == "transfer" ? null : "is-hidden")" data-transfer-fields>
+                    <span class="transfer-box__icon">@Html.Icon("qr", 22)</span>
+                    <div class="transfer-box__body">
+                        <span class="transfer-box__title">Chuyển khoản bằng mã QR VietQR</span>
+                        <span class="transfer-box__text">
+                            Sau khi bấm thanh toán, hệ thống tạo đặt chỗ và hiển thị mã QR kèm số tiền,
+                            nội dung chuyển khoản. Ghế được giữ trong 15 phút cho đến khi bạn xác nhận.
                         </span>
-                    </label>
-                    <label class="av-field">
-                        <span class="av-label">Ngày hết hạn</span>
-                        <span class="av-control">
-                            <input type="text" name="cardExpiry" value="12/28" autocomplete="cc-exp" />
-                        </span>
-                    </label>
-                    <label class="av-field">
-                        <span class="av-label">CVV</span>
-                        <span class="av-control">
-                            <input type="password" name="cardCvv" value="123" autocomplete="cc-csc" />
-                            @Html.Icon("lock", 17)
-                        </span>
-                    </label>
+                        <span class="av-caption">Ngân hàng: @VietQr.BankName · STK @VietQr.AccountNumber · @VietQr.AccountName</span>
+                    </div>
                 </div>
-
-                <p class="av-caption">
-                    Thanh toán được xử lý qua cổng VNPay. Không lưu số thẻ hoặc mã bảo mật tại AeroViet.
-                </p>
             </section>
 
             <div class="checkout-terms">
