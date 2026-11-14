@@ -2,11 +2,14 @@ using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[Authorize]
 public class TicketsController(AppDbContext dbContext) : Controller
 {
     [HttpGet("/ve-cua-toi")]
@@ -17,8 +20,7 @@ public class TicketsController(AppDbContext dbContext) : Controller
         List<DatVe> bookings;
         try
         {
-            bookings = await dbContext.DatVes
-                .AsNoTracking()
+            bookings = await ScopedBookings()
                 .Include(x => x.KhachHang)
                 .Include(x => x.ThanhToans)
                 .Include(x => x.Ves).ThenInclude(x => x.HanhKhach)
@@ -199,8 +201,23 @@ public class TicketsController(AppDbContext dbContext) : Controller
                 .Include(r => r.DatVe).ThenInclude(d => d.ThanhToans)
                 .OrderByDescending(r => r.NgayTao);
 
-            var khId = User.KhachHangId();
-            if (khId.HasValue) q = q.Where(r => r.DatVe.KhachHangId == khId.Value).OrderByDescending(r => r.NgayTao);
+            var khachHangId = User.KhachHangId();
+            var email = User.FindFirstValue(ClaimTypes.Email)?.Trim().ToLowerInvariant();
+            if (khachHangId.HasValue)
+            {
+                q = q.Where(r => r.DatVe.KhachHangId == khachHangId.Value);
+            }
+            else if (!string.IsNullOrEmpty(email))
+            {
+                q = q.Where(r => r.DatVe.KhachHang.Email.ToLower() == email
+                    || (r.DatVe.EmailLienHe != null && r.DatVe.EmailLienHe.ToLower() == email));
+            }
+            else
+            {
+                // Không xác định được khách hàng: không trả về dữ liệu nào.
+                q = q.Where(r => false);
+            }
+
             list = await q.Take(30).ToListAsync(cancellationToken);
         }
         catch (Exception) { list = []; }
@@ -388,12 +405,36 @@ public class TicketsController(AppDbContext dbContext) : Controller
         CanManage = false
     };
 
+    /// <summary>
+    /// Chỉ trả về đặt chỗ thuộc khách đang đăng nhập. Nhân viên không có hồ sơ khách hàng
+    /// sẽ không thấy đặt chỗ nào ở khu vực "Vé của tôi".
+    /// </summary>
+    private IQueryable<DatVe> ScopedBookings()
+    {
+        IQueryable<DatVe> query = dbContext.DatVes.AsNoTracking();
+
+        var khachHangId = User.KhachHangId();
+        if (khachHangId.HasValue)
+        {
+            return query.Where(x => x.KhachHangId == khachHangId.Value);
+        }
+
+        var email = User.FindFirstValue(ClaimTypes.Email)?.Trim().ToLowerInvariant();
+        if (!string.IsNullOrEmpty(email))
+        {
+            return query.Where(x => x.KhachHang.Email.ToLower() == email
+                || (x.EmailLienHe != null && x.EmailLienHe.ToLower() == email));
+        }
+
+        return query.Where(x => false);
+    }
+
     private async Task<DatVe?> FindBookingAsync(string? pnr, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(pnr)) return null;
         try
         {
-            return await dbContext.DatVes.AsNoTracking()
+            return await ScopedBookings()
                 .Include(x => x.KhachHang)
                 .Include(x => x.ThanhToans)
                 .Include(x => x.Ves).ThenInclude(x => x.HanhKhach)

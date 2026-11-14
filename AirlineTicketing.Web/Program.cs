@@ -31,6 +31,12 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole(AppRoles.Admin));
     options.AddPolicy("StaffOnly", policy => policy.RequireRole(AppRoles.Admin, AppRoles.Manager));
+
+    // Mặc định mọi endpoint đều yêu cầu đăng nhập; các trang công khai
+    // (trang chủ, tìm chuyến, đặt vé, tra cứu) được đánh dấu [AllowAnonymous].
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
 });
 builder.Services.AddSingleton<HtmlEncoder>(HtmlEncoder.Create(UnicodeRanges.All));
 
@@ -120,7 +126,7 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
-// 6. Endpoint kiểm tra sức khỏe CSDL
+// 6. Endpoint kiểm tra sức khỏe CSDL (healthcheck của Docker gọi ẩn danh)
 app.MapGet("/health/database", async Task<IResult> (
     AppDbContext dbContext,
     CancellationToken cancellationToken) =>
@@ -140,7 +146,7 @@ app.MapGet("/health/database", async Task<IResult> (
     return Results.Problem(
         title: "Database unavailable",
         statusCode: StatusCodes.Status503ServiceUnavailable);
-});
+}).AllowAnonymous();
 
 // 7. Route mặc định MVC
 app.MapControllerRoute(

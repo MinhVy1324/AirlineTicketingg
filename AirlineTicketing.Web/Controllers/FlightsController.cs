@@ -4,11 +4,13 @@ using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[AllowAnonymous]
 public class FlightsController(AppDbContext dbContext) : Controller
 {
     private const string DefaultFrom = "TP. Hồ Chí Minh (SGN)";

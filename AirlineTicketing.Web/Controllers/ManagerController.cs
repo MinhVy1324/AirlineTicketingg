@@ -5,10 +5,12 @@ using AirlineTicketing.DTO;
 using AirlineTicketing.Web.Demo;
 using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[Authorize(Policy = "StaffOnly")]
 public class ManagerController(AppDbContext dbContext, DatVeBUS datVeBUS) : Controller
 {
     private const string DefaultDateText = "20/11/2026";

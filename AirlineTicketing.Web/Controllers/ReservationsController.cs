@@ -1,10 +1,12 @@
 using AirlineTicketing.BUS;
 using AirlineTicketing.DTO;
 using AirlineTicketing.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[AllowAnonymous]
 public sealed class ReservationsController(DatVeBUS datVeBUS, VeBUS veBUS) : Controller
 {
     [HttpGet("/dat-ve/tao")]

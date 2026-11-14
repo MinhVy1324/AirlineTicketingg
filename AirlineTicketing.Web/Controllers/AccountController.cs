@@ -4,12 +4,14 @@ using AirlineTicketing.Web.Infrastructure;
 using AirlineTicketing.Web.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[AllowAnonymous]
 public class AccountController(AppDbContext db) : Controller
 {
     [HttpGet("/dang-nhap")]
@@ -71,9 +73,21 @@ public class AccountController(AppDbContext db) : Controller
             new(ClaimTypes.Email, account.Email),
             new(ClaimTypes.Role, account.VaiTro.ToString())
         };
-        if (account.KhachHangId.HasValue)
+
+        // Tài khoản khách hàng được seed chưa gắn hồ sơ KhachHang; tự liên kết theo email
+        // để trang "Vé của tôi" chỉ hiển thị đúng đặt chỗ của khách đang đăng nhập.
+        var khachHangId = account.KhachHangId;
+        if (account.VaiTro == VaiTro.KhachHang && !khachHangId.HasValue)
         {
-            claims.Add(new Claim("khach_hang_id", account.KhachHangId.Value.ToString()));
+            var email = account.Email.Trim().ToLowerInvariant();
+            var linked = await db.KhachHangs.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Email.ToLower() == email, ct);
+            if (linked is not null) khachHangId = linked.Id;
+        }
+
+        if (khachHangId.HasValue)
+        {
+            claims.Add(new Claim("khach_hang_id", khachHangId.Value.ToString()));
         }
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -89,6 +103,10 @@ public class AccountController(AppDbContext db) : Controller
         // Update last login (tracked in a separate lightweight operation)
         var tracked = await db.TaiKhoans.FirstAsync(x => x.Id == account.Id, ct);
         tracked.LanDangNhapCuoi = DateTimeOffset.UtcNow;
+        if (khachHangId.HasValue && !tracked.KhachHangId.HasValue)
+        {
+            tracked.KhachHangId = khachHangId;
+        }
         await db.SaveChangesAsync(ct);
         await WriteAuditAsync(account.Id, account.HoTen, account.VaiTro.ToString(), "Đăng nhập", account.TenDangNhap, KetQuaNhatKy.ThanhCong, null, ct);
 

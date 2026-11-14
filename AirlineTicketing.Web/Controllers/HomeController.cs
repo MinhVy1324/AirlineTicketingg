@@ -3,11 +3,13 @@ using AirlineTicketing.BUS;
 using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.Web.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.Web.Controllers;
 
+[AllowAnonymous]
 public class HomeController(IConfiguration configuration, AppDbContext db) : Controller
 {
     [HttpGet("/")]
