@@ -133,7 +133,7 @@ Invoke-RestMethod http://127.0.0.2/health/database
 
 Kết quả thành công có dạng `status: connected`, `database: PostgreSQL`. Compose đợi `db` đạt `healthy` và service `migrate` chạy xong trước khi tạo các container web; nếu ứng dụng không khởi động, đọc log bằng `docker compose logs --tail 100 web-user web-admin web-manager db migrate`.
 
-> **Lưu ý về cookie:** cookie của trình duyệt gắn với host, không gắn với cổng, nên `127.0.0.3`, `127.0.0.1`, `127.0.0.2` dùng chung cookie. Khi thêm đăng nhập thật, hãy dùng ba profile trình duyệt riêng (hoặc thêm host alias `user.localhost`, `admin.localhost`, `manager.localhost`) nếu cần tách phiên đăng nhập.
+> **Lưu ý về cookie:** cookie của trình duyệt gắn với host, không gắn với cổng, nên `127.0.0.3`, `127.0.0.1`, `127.0.0.2` dùng chung cookie. Khi thêm đăng nhập thật, hãy dùng ba profile trình duyệt riêng (hoặc thêm host alias `user.localhost`, `admin.localhost`, `manager.localhost`) nếu cần tách phiên đăng nhập. Khóa Data Protection nằm trong volume `dataprotection` (mount tại `/app/App_Data/keys`) nên **rebuild container không làm mất phiên đăng nhập**; `docker compose down -v` sẽ xóa volume này và buộc đăng nhập lại.
 
 ### Vé điện tử và hộp thư demo
 
@@ -180,7 +180,7 @@ docker compose down
 docker compose up -d
 ```
 
-Không thêm `-v` vào lệnh `docker compose down` nếu cần giữ dữ liệu. `docker compose down -v` xóa volume và toàn bộ dữ liệu PostgreSQL của môi trường local.
+Không thêm `-v` vào lệnh `docker compose down` nếu cần giữ dữ liệu. `docker compose down -v` xóa volume và toàn bộ dữ liệu PostgreSQL của môi trường local, đồng thời xóa volume `dataprotection` (mọi phiên đăng nhập bị đăng xuất).
 
 ## 8. Hướng dẫn clone và chạy cho thành viên — DOCKER-08
 

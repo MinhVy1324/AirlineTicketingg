@@ -18,9 +18,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Hộp thư demo (Email:Enabled=false) ghi vào App_Data/outbox. Ảnh runtime có sẵn
-# user không phải root tên "app"; cấp quyền ghi cho đúng thư mục này rồi hạ quyền.
-RUN mkdir -p /app/App_Data/outbox && chown -R app:app /app/App_Data
+# Hộp thư demo (Email:Enabled=false) ghi vào App_Data/outbox; khóa Data Protection
+# được lưu ở App_Data/keys và gắn volume chung trong compose để cookie sống qua rebuild.
+RUN mkdir -p /app/App_Data/outbox /app/App_Data/keys && chown -R app:app /app/App_Data
 
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
