@@ -72,8 +72,11 @@ docker compose logs -f web-user   # log container khách hàng
 docker compose down               # dừng, giữ dữ liệu
 docker compose down -v            # dừng và xoá dữ liệu PostgreSQL
 docker compose up -d --build web-admin   # chỉ build/chạy lại admin
-pwsh ./scripts/smoke.ps1          # health + đăng nhập manager + tải PDF
+pwsh ./scripts/smoke.ps1          # 36 kiểm tra: health, 3 vai trò, CSV, PDF, tra cứu
+pwsh ./scripts/reset-demo.ps1     # reset dữ liệu demo về trạng thái seed
 ```
+
+Máy chỉ có Windows PowerShell 5.1 dùng `powershell -ExecutionPolicy Bypass -File ./scripts/smoke.ps1`. Hai script cần Docker đang chạy: smoke đọc PNR từ container `db`, reset xoá schema rồi chạy lại migration. Chi tiết phạm vi kiểm tra: [Docker & vận hành §11](DOCKER-SETUP.md#11-smoke-test-và-ci).
 
 ## Tài liệu liên quan
 
