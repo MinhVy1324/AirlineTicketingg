@@ -27,10 +27,10 @@
             <span class="av-label">@Model.AirlineLabel</span>
             <span class="av-control">
                 <select name="hang">
-                    <option selected>@Model.AirlineValue</option>
-                    <option>Vietnam Airlines</option>
-                    <option>Vietjet Air</option>
-                    <option>Bamboo Airways</option>
+                    @foreach (var option in Model.AirlineOptions)
+                    {
+                        <option value="@option.Value" selected="@(option.IsSelected ? "selected" : null)">@option.Label</option>
+                    }
                 </select>
                 @Html.Icon("chevron-down", 17)
             </span>
@@ -40,11 +40,10 @@
             <span class="av-label">@Model.RouteLabel</span>
             <span class="av-control">
                 <select name="tuyen">
-                    <option selected>@Model.RouteValue</option>
-                    <option>SGN ↔ HAN</option>
-                    <option>SGN ↔ DAD</option>
-                    <option>HAN ↔ DAD</option>
-                    <option>SGN ↔ PQC</option>
+                    @foreach (var option in Model.RouteOptions)
+                    {
+                        <option value="@option.Value" selected="@(option.IsSelected ? "selected" : null)">@option.Label</option>
+                    }
                 </select>
                 @Html.Icon("chevron-down", 17)
             </span>
@@ -87,7 +86,7 @@
                     </div>
 
                     <div class="admin-chart__plot" role="img"
-                         aria-label="Doanh thu gộp từ tháng 05 đến tháng 10 năm 2026">
+                         aria-label="@Model.TrendTitle — @Model.TrendSubtitle">
                         @foreach (var bar in Model.Bars)
                         {
                             <div class="admin-chart__col">
