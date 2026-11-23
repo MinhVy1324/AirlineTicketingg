@@ -1,0 +1,143 @@
+@model JourneyBookingViewModel
+@{
+    ViewData["Title"] = T("Thông tin hành khách", "Passenger details");
+    ViewData["Nav"] = "book";
+    var types = Model.Selection.Party.Types;
+}
+<div class="av-page av-container">
+    <partial name="_Stepper" model="2" />
+    <header class="booking-title">
+        <h1 class="av-page-title">@T("Thông tin hành khách", "Passenger details")</h1>
+        <p class="av-page-subtitle">@BookingUiText.Party(Model.Selection.Party) · @BookingUiText.Text(JourneyRules.Cabin(Model.Selection.Cabin).Name) · @BookingUiText.LegCount(Model.Selection.LegCount)</p>
+    </header>
+    @if (Model.Errors.Count > 0)
+    {
+        <div class="av-alert av-alert--danger" role="alert" tabindex="-1" data-validation-summary><div class="av-alert__body">
+            <strong>@T("Vui lòng kiểm tra lại thông tin", "Review your details")</strong>
+            @foreach (var error in Model.Errors) { <a class="av-link" href="#@error.Key">@BookingUiText.Text(error.Value)</a> }
+        </div></div>
+    }
+    <div class="av-alert av-alert--info" id="journey"><div class="av-alert__body">
+        <span>@T("Ghế cả nhóm và tất cả chặng được giữ cùng lúc sau khi xác nhận. Chưa chọn đủ ghế sẽ chưa tạo đặt chỗ.", "Seats for the whole group are held on all flights once you confirm. Select all required seats to create the booking.")</span>
+        <span>@T("Giá demo: trẻ em 2–11 tuổi bằng 75% giá vé cơ bản; em bé từ 7 ngày đến dưới 2 tuổi bằng 10%, không có ghế riêng. Nhóm tuổi được kiểm tra ở từng ngày bay.", "Demo fares: children aged 2–11 pay 75% of the base fare. Infants aged 7 days to under 2 years pay 10% and sit on an adult's lap. Age is checked on each flight date.")</span>
+        <span>@T("Thương gia là mức giá demo dùng chung sơ đồ ghế. Mỗi em bé cần một người lớn riêng từ 18 tuổi đi cùng.", "Business is a demo fare that uses the same seat map. Each infant must travel with a different adult aged 18 or over.")</span>
+    </div></div>
+    <form method="post" action="/dat-ve/hanh-khach" class="booking-layout">
+        @Html.AntiForgeryToken()
+        <div class="booking-main">
+            <div class="journey-legs">
+                @for (var index = 0; index < Model.Legs.Count; index++)
+                {
+                    var leg = Model.Legs[index];
+                    <section class="av-card passenger-block">
+                        <h2 class="av-title-20">@BookingUiText.Text(leg.Label) · @leg.Flight.From.Code → @leg.Flight.To.Code</h2>
+                        <p>@leg.Flight.FlightNumber · @leg.Flight.Departure.ToString("dd/MM/yyyy HH:mm")–@leg.Flight.Arrival.ToString("HH:mm") (UTC+7)</p>
+                        <a class="av-link" href="#journey-seats-@index">@T("Đến sơ đồ ghế", "Go to seat map")</a>
+                    </section>
+                }
+            </div>
+            <section class="av-card passenger-block">
+                <h2 class="passenger-block__title">@T("Người liên hệ / nhận vé", "Booking contact")</h2>
+                <div class="journey-fields journey-fields--three">
+                    <label class="av-field" id="contactName"><span class="av-label">@T("Họ tên người liên hệ", "Contact name")</span><span class="av-control"><input name="ContactName" value="@Model.Form.ContactName" required maxlength="150" autocomplete="name" /></span></label>
+                    <label class="av-field" id="email"><span class="av-label">@T("Email nhận vé", "Ticket email")</span><span class="av-control"><input name="Email" value="@Model.Form.Email" type="email" required maxlength="254" autocomplete="email" /></span></label>
+                    <label class="av-field" id="phone"><span class="av-label">@T("Số điện thoại", "Phone number")</span><span class="av-control"><input name="Phone" value="@Model.Form.Phone" type="tel" required maxlength="20" autocomplete="tel" /></span></label>
+                </div>
+            </section>
+            @for (var i = 0; i < types.Count; i++)
+            {
+                var row = Model.Form.People[i];
+                var prefix = $"People[{i}]";
+                <section class="av-card passenger-block journey-person">
+                    <h2 class="passenger-block__title">@T($"Hành khách {i + 1}", $"Passenger {i + 1}") · @BookingUiText.Text(JourneyRules.TypeName(types[i]))</h2>
+                    <div class="journey-fields journey-fields--three">
+                        <label class="av-field" id="person-@i-lastName"><span class="av-label">@T("Họ và tên đệm", "Surname and middle name")</span><span class="av-control"><input name="@(prefix).Person.LastName" value="@row.Person.LastName" required maxlength="100" /></span></label>
+                        <label class="av-field" id="person-@i-firstName"><span class="av-label">@T("Tên", "Given name")</span><span class="av-control"><input name="@(prefix).Person.FirstName" value="@row.Person.FirstName" required maxlength="100" /></span></label>
+                        <label class="av-field" id="person-@i-dateOfBirth"><span class="av-label">@T("Ngày sinh (ngày/tháng/năm)", "Date of birth (day/month/year)")</span><span class="av-control"><input name="@(prefix).Person.DateOfBirth" value="@row.Person.DateOfBirth" required placeholder="dd/MM/yyyy" maxlength="10" /></span></label>
+                        <label class="av-field" id="person-@i-gender"><span class="av-label">@T("Giới tính", "Gender")</span><span class="av-control"><select name="@(prefix).Person.Gender"><option value="">@T("Chọn giới tính", "Select a gender")</option>@foreach (var gender in new[] { "Nam", "Nữ", "Khác" }) { <option value="@gender" selected="@(row.Person.Gender == gender)">@BookingUiText.Text(gender)</option> }</select></span></label>
+                        <label class="av-field" id="person-@i-nationality"><span class="av-label">@T("Quốc tịch", "Nationality")</span><span class="av-control"><input name="@(prefix).Person.Nationality" value="@row.Person.Nationality" required maxlength="100" /></span></label>
+                        <label class="av-field" id="person-@i-identityNumber"><span class="av-label">@T("Giấy tờ", "ID document") @(types[i] == LoaiHanhKhach.NguoiLon ? T("(bắt buộc)", "(required)") : T("(nếu có)", "(if available)"))</span><span class="av-control"><input name="@(prefix).Person.IdentityNumber" value="@row.Person.IdentityNumber" required="@(types[i] == LoaiHanhKhach.NguoiLon)" maxlength="30" /></span></label>
+                    </div>
+                    @if (types[i] == LoaiHanhKhach.EmBe)
+                    {
+                        <label class="av-field" id="companion-@i"><span class="av-label">@T("Người lớn đi cùng (từ 18 tuổi)", "Accompanying adult (18 or over)")</span><span class="av-control"><select name="@(prefix).CompanionIndex">
+                            @for (var a = 0; a < Model.Selection.Party.Adults; a++) { <option value="@a" selected="@(row.CompanionIndex == a)">@T($"Hành khách {a + 1}", $"Passenger {a + 1}") · @Model.Form.People[a].Person.FullName</option> }
+                        </select></span></label>
+                    }
+                    <div class="journey-legs">
+                        @for (var leg = 0; leg < Model.Legs.Count; leg++)
+                        {
+                            <div>
+                                <h3>@BookingUiText.Text(Model.Legs[leg].Label) · @Model.Legs[leg].Flight.FlightNumber</h3>
+                                @if (types[i] == LoaiHanhKhach.EmBe)
+                                {
+                                    <p id="seat-@i-@leg">@T("Đi cùng người lớn · không có ghế và hành lý riêng", "Travels with an adult · no separate seat or baggage")</p>
+                                    <input type="hidden" name="@(prefix).Seats[@leg]" value="" />
+                                    <input type="hidden" name="@(prefix).Baggage[@leg]" value="none" />
+                                }
+                                else
+                                {
+                                    <label class="av-field" id="baggage-@i-@leg"><span class="av-label">@T("Hành lý mua thêm", "Extra baggage")</span><span class="av-control"><select name="@(prefix).Baggage[@leg]">
+                                        @foreach (var bag in BaggageCatalog.Packages) { <option value="@bag.Code" selected="@(row.Baggage[leg] == bag.Code)">@BookingUiText.Text(bag.Label) · @Money.Vnd(bag.Price)</option> }
+                                    </select></span></label>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+            @for (var leg = 0; leg < Model.Legs.Count; leg++)
+            {
+                var flight = Model.Legs[leg];
+                var gridId = $"journey-seats-{leg}";
+                var seats = flight.SeatRows.SelectMany(row => row.Seats).Where(seat => seat.State != SeatState.Taken).ToArray();
+                <section class="av-card passenger-block" id="@gridId" data-seat-area aria-labelledby="@(gridId + "-heading")">
+                    <h2 class="passenger-block__title" id="@(gridId + "-heading")">@T("Chọn ghế", "Select a seat") · @BookingUiText.Text(flight.Label) · @flight.Flight.FlightNumber</h2>
+                    <div class="journey-seat-passengers" role="group" aria-label="@T("Hành khách chọn ghế", "Passenger seat selection")">
+                        @for (var i = 0; i < types.Count; i++)
+                        {
+                            if (types[i] == LoaiHanhKhach.EmBe) continue;
+                            var passenger = T($"Hành khách {i + 1}", $"Passenger {i + 1}");
+                            var name = Model.Form.People[i].Person.FullName;
+                            var label = string.IsNullOrWhiteSpace(name) ? passenger : $"{passenger} · {name}";
+                            <div id="seat-@i-@leg" data-seat-passenger>
+                                <button type="button" class="av-btn av-btn--outline journey-seat-passenger"
+                                        aria-pressed="false" aria-controls="@(gridId + "-grid")" data-seat-person data-seat-person-name="@passenger" hidden>
+                                    <span>@label</span><strong data-seat-choice>@T("Chưa chọn ghế", "No seat selected")</strong>
+                                </button>
+                                <label class="av-field" data-seat-fallback>
+                                    <span class="av-label">@T("Ghế", "Seat") @label</span>
+                                    <span class="av-control">
+                                        <select name="People[@i].Seats[@leg]" data-seat-input required>
+                                            <option value="">@T("Chọn ghế còn trống", "Select an available seat")</option>
+                                            @foreach (var seat in seats)
+                                            {
+                                                var seatLabel = $"{seat.Code} · {BookingUiText.Text(seat.TypeName)}" + (seat.Surcharge > 0 ? $" +{Money.Vnd(seat.Surcharge)}" : "");
+                                                <option value="@seat.Code" selected="@(Model.Form.People[i].Seats[leg] == seat.Code)">@seatLabel</option>
+                                            }
+                                        </select>
+                                    </span>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                    <div class="seat-area" data-seat-panel hidden>
+                        <partial name="_SeatGrid" model="new SeatGridViewModel(gridId, flight.Flight.Aircraft, flight.SeatRows)" />
+                        <div class="seat-detail">
+                            <strong data-seat-active-person></strong>
+                            <div class="av-stack av-gap-6" aria-live="polite" aria-atomic="true">
+                                <span class="seat-detail__title" data-seat-title>@T("Chưa chọn chỗ ngồi", "No seat selected")</span>
+                                <span class="av-badge av-badge--info" data-seat-badge>@T("Vui lòng chọn ghế", "Select a seat")</span>
+                                <span class="seat-detail__price" data-seat-price></span>
+                            </div>
+                            <partial name="_SeatLegend" />
+                            <p class="av-caption" data-seat-hint role="status">@T("Chọn ghế cho từng hành khách trên chặng này.", "Select a seat for each passenger on this flight.")</p>
+                        </div>
+                    </div>
+                </section>
+            }
+            <button class="av-btn av-btn--primary" type="submit">@T("Xác nhận cả nhóm & giữ ghế", "Confirm group and hold seats")</button>
+        </div>
+        <aside class="booking-aside"><partial name="_PriceSummary" model="Model.Price" /><p class="av-caption">@T("Tạm tính trước lựa chọn mới. Phụ thu ghế và hành lý sẽ được chốt tại trang kiểm tra trước thanh toán.", "This estimate excludes your new selections. Seat and baggage fees are confirmed on the checkout page.")</p></aside>
+    </form>
+</div>

@@ -1,0 +1,20 @@
+@model ChinhSachDatVe
+@{ ViewData["Title"] = T("Điều kiện đổi và hoàn vé", "Change and refund conditions"); }
+<article class="av-page av-container">
+    <section class="av-card policy-card">
+        <div class="av-card__body av-card__stack">
+            <h1 class="av-page-title">@ViewData["Title"]</h1>
+            <p>@T("Gửi yêu cầu cho vé đã xác nhận, chưa sử dụng và còn hơn 3 giờ trước chuyến khởi hành đầu tiên. Theo dõi kết quả trong Vé của tôi.", "Submit requests for confirmed, unused tickets more than 3 hours before the first departure. Track the request in My tickets.")</p>
+            <h2 class="av-title-20">@T("Đổi chuyến", "Flight changes")</h2>
+            <p>@T(
+                $"Đổi chuyến trực tuyến áp dụng cho đơn một khách, một chiều hạng Phổ thông đã thanh toán bằng thẻ mô phỏng. Phí hiện tại là {Money.Vnd(Model.ChangeFee)} cộng phần chênh lệch nếu giá chuyến mới cao hơn. Vé được phát hành lại khi bạn xác nhận báo giá đã duyệt và còn ghế tiêu chuẩn. Hãy cung cấp mã đặt chỗ cho bộ phận hỗ trợ nếu đơn cần xử lý riêng.",
+                $"Online changes are available for single-passenger, one-way Economy bookings paid with a demo card. The current fee is {Money.Vnd(Model.ChangeFee)} plus any fare increase. The ticket is reissued when you accept the approved quote and a standard seat is available. Give support your booking reference for special cases.")</p>
+            <h2 class="av-title-20">@T("Hoàn toàn bộ đặt chỗ", "Full booking refunds")</h2>
+            <p>@T(
+                $"Hoàn áp dụng cho tất cả khách và chặng cùng mã. Tiền hoàn dự kiến bằng tổng đã thanh toán trừ phí hoàn ({Money.Vnd(Model.RefundFee)} mỗi đơn theo cấu hình hiện tại), phí dịch vụ thực trả, hành lý mua thêm và phí đổi vé đã thu.",
+                $"Refunds cover all passengers and legs under the same reference. The estimated refund is the amount paid minus the refund fee (currently {Money.Vnd(Model.RefundFee)} per booking), paid service fees, extra baggage and any collected change fees.")</p>
+            <p>@T("Nhân viên duyệt yêu cầu rồi xác nhận hoàn khoản thanh toán mô phỏng. Lệnh hoàn VNPAY Sandbox đi qua quy trình đối soát của VNPAY.", "Staff approve the request and confirm the simulated refund. VNPAY Sandbox refunds go through VNPAY reconciliation.")</p>
+            <p><a class="av-btn av-btn--outline" href="/ve-cua-toi">@T("Mở Vé của tôi", "Open My tickets")</a></p>
+        </div>
+    </section>
+</article>

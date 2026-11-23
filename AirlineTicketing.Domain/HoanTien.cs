@@ -12,6 +12,11 @@ public class HoanTien
     public TrangThaiHoanTien TrangThai { get; set; } = TrangThaiHoanTien.ChoXuLy;
     public DateTimeOffset NgayTao { get; set; }
     public DateTimeOffset? NgayHoanTat { get; set; }
+    public DateTimeOffset? NgayGuiCongThanhToan { get; set; }
+    public string? MaGiaoDichNhaCungCap { get; set; }
+    public string? KetQuaNhaCungCap { get; set; }
+    public int? YeuCauDoiHoanId { get; set; }
+    public YeuCauDoiHoan? YeuCauDoiHoan { get; set; }
 
     public ThanhToan ThanhToan { get; set; } = null!;
 }

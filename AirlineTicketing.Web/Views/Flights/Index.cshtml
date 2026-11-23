@@ -1,22 +1,41 @@
 @model FlightResultsViewModel
 @{
-    ViewData["Title"] = "Kết quả tìm chuyến";
+    ViewData["Title"] = T("Kết quả tìm chuyến", "Flight search results");
     ViewData["Nav"] = "book";
     var criteria = Model.Criteria;
+<<<<<<< Updated upstream
+=======
+    var pricedDays = Model.DayPrices.Where(d => d.HasPrice).ToList();
+    var minPrice = pricedDays.Count > 0 ? pricedDays.Min(d => d.Price) : 0m;
+    var maxPrice = pricedDays.Count > 0 ? pricedDays.Max(d => d.Price) : 0m;
+>>>>>>> Stashed changes
 }
 
 <div class="av-page av-container">
+    @if (criteria.TripTypeText == "Khứ hồi")
+    {
+        <div class="av-alert av-alert--info"><div class="av-alert__body">
+            <strong>@(criteria.SelectingReturn ? T("Bước 2/2 · Chọn chiều về", "Step 2 of 2 · Select return flight") : T("Bước 1/2 · Chọn chiều đi", "Step 1 of 2 · Select outbound flight"))</strong>
+            <span>@T($"Đi {criteria.OutboundDateText} · Về {criteria.ReturnDateText}", $"Outbound {criteria.OutboundDateText} · Return {criteria.ReturnDateText}") · @BookingUiText.Party(criteria.EffectiveParty) · @BookingUiText.Text(criteria.Cabin)</span>
+            @if (Model.SelectedOutbound is { } selected)
+            {
+                <span>@T("Chiều đi đã chọn:", "Selected outbound flight:") @selected.FlightNumber · @selected.From.Code → @selected.To.Code · @Money.Time(selected.Departure)</span>
+                <a href="@FlightSearchUrl.Build(new FlightResultsViewModel { Criteria = criteria with { SelectedOutboundId = null, OriginCode = criteria.JourneyOriginCode!, DestinationCode = criteria.JourneyDestinationCode!, DepartDateText = criteria.OutboundDateText! }, Filters = Model.Filters, SortKey = Model.SortKey })">@T("Chọn lại chiều đi", "Change outbound flight")</a>
+            }
+            <span>@T("Chỗ được giữ sau khi xác nhận thông tin hành khách cho toàn bộ hành trình.", "Seats are held once you confirm the passenger details for the entire trip.")</span>
+        </div></div>
+    }
     @if (Model.IsEmpty)
     {
         <div class="av-stack av-gap-6">
-            <h1 class="av-page-title">Kết quả tìm chuyến</h1>
+            <h1 class="av-page-title">@T("Kết quả tìm chuyến", "Flight search results")</h1>
             <p class="av-page-subtitle">
-                @criteria.RouteText · @criteria.SummaryText
+                @criteria.RouteText · @BookingUiText.SearchSummary(criteria)
             </p>
         </div>
     }
 
-    <section class="search-summary" aria-label="Tìm kiếm hiện tại">
+    <section class="search-summary" aria-label="@T("Tìm kiếm hiện tại", "Current search")">
         <div class="search-summary__route">
             @Html.Icon("plane-takeoff", 20)
             <div class="av-stack av-gap-6">
@@ -24,18 +43,18 @@
                 <p class="search-summary__sub">
                     @if (Model.IsEmpty)
                     {
-                        <text>@criteria.DepartDateText · @criteria.Passengers người lớn · @criteria.Cabin</text>
+                        <text>@criteria.DepartDateText · @BookingUiText.Party(criteria.EffectiveParty) · @BookingUiText.Text(criteria.Cabin)</text>
                     }
                     else
                     {
-                        <text>@criteria.SummaryText</text>
+                        <text>@BookingUiText.SearchSummary(criteria)</text>
                     }
                 </p>
             </div>
         </div>
-        <a class="av-btn av-btn--outline" href="/">
+        <a class="av-btn av-btn--outline" href="@Model.SearchUrl(clearFilters: true).Replace("/chuyen-bay?", "/?")">
             @Html.Icon("sliders", 17)
-            <span>Chỉnh sửa tìm kiếm</span>
+            <span>@T("Chỉnh sửa tìm kiếm", "Edit search")</span>
         </a>
     </section>
 
@@ -44,9 +63,14 @@
 
         <section class="results-main">
             <div class="results-head">
-                <h2 class="results-head__count">
-                    @(Model.IsEmpty ? 0 : (Model.TotalCount > 0 ? Model.TotalCount : Model.ResultCount)) chuyến phù hợp
+                <h2 class="results-head__count" data-result-count="@Model.TotalCount" data-available-count="@Model.AvailableCount">
+                    @T($"{Model.TotalCount} chuyến phù hợp", $"{Model.TotalCount} matching flights")
+                    @if (Model.Filters.IsActive)
+                    {
+                        <span class="av-caption">/ @T($"{Model.AvailableCount} chuyến còn chỗ", $"{Model.AvailableCount} flights with seats available")</span>
+                    }
                 </h2>
+<<<<<<< Updated upstream
                 <span class="av-badge av-badge--info">Sắp xếp: Đề xuất @Html.Icon("chevron-down", 14)</span>
             </div>
 
@@ -58,6 +82,99 @@
                     </span>
                 }
             </div>
+=======
+
+                <div class="sort-form">
+                    <label class="sort-form__label" for="sort-select">@T("Sắp xếp", "Sort")</label>
+                    <span class="sort-form__control">
+                        <select class="sort-form__select" id="sort-select" name="sort" form="flight-filter-form" data-sort-select>
+                            @foreach (var option in Model.SortOptions)
+                            {
+                                <option value="@option.Key" selected="@(option.Key == Model.SortKey)">@BookingUiText.Text(option.Label)</option>
+                            }
+                        </select>
+                        @Html.Icon("chevron-down", 14)
+                    </span>
+                    <noscript>
+                        <button type="submit" form="flight-filter-form" class="av-btn av-btn--outline">@T("Sắp xếp", "Sort")</button>
+                    </noscript>
+                </div>
+            </div>
+
+            @if (Model.DayPrices.Count > 0)
+            {
+                <section class="price-week" aria-labelledby="price-week-title">
+                    <header class="price-week__head">
+                        <div class="price-week__heading">
+                            <h3 class="price-week__title" id="price-week-title">@T("Giá theo ngày", "Fares by date")</h3>
+                            <span class="price-week__range">@T("Tuần", "Week") @Model.WeekRangeText</span>
+                        </div>
+
+                        <div class="price-week__nav">
+                            @if (Model.PreviousWeek is { } previousWeek)
+                            {
+                                <a class="price-week__arrow"
+                                   href="@Model.SearchUrl(previousWeek)"
+                                   aria-label="@T("Xem tuần trước", "View previous week")">
+                                    @Html.Icon("chevron-left", 15)
+                                </a>
+                            }
+                            @if (Model.NextWeek is { } nextWeek)
+                            {
+                                <a class="price-week__arrow"
+                                   href="@Model.SearchUrl(nextWeek)"
+                                   aria-label="@T("Xem tuần sau", "View next week")">
+                                    @Html.Icon("chevron-right", 15)
+                                </a>
+                            }
+                        </div>
+                    </header>
+
+                    <div class="price-week__chart">
+                        @foreach (var day in Model.DayPrices)
+                        {
+                            var height = 0;
+                            if (day.HasPrice && maxPrice > 0)
+                            {
+                                height = maxPrice == minPrice
+                                    ? 70
+                                    : 28 + (int)Math.Round((double)((day.Price - minPrice) / (maxPrice - minPrice)) * 72);
+                            }
+
+                            var isCheapest = day.HasPrice && day.Price == minPrice;
+                            var css = "price-day"
+                                + (day.IsActive ? " is-active" : string.Empty)
+                                + (isCheapest ? " is-cheapest" : string.Empty)
+                                + (day.HasPrice ? string.Empty : " is-empty");
+
+                            <a class="@css"
+                               href="@Model.SearchUrl(day.Date)"
+                               aria-current="@(day.IsActive ? "true" : null)"
+                               title="@(day.HasPrice ? T($"Xem chuyến ngày {day.DateText} · từ {Money.Vnd(day.Price)}", $"View flights on {day.DateText} · from {Money.Vnd(day.Price)}") : T($"Chưa có chuyến ngày {day.DateText}", $"No flights on {day.DateText}"))">
+                                <span class="price-day__tag @(isCheapest && !day.IsActive ? null : "price-day__tag--ghost")">
+                                    @T("Rẻ nhất", "Lowest fare")
+                                </span>
+                                <span class="price-day__price">@(day.HasPrice ? Money.Vnd(day.Price) : "—")</span>
+                                <span class="price-day__track">
+                                    @if (day.HasPrice)
+                                    {
+                                        <span class="price-day__bar" style="height:@(height)%"></span>
+                                    }
+                                </span>
+                                <span class="price-day__date">
+                                    <strong>@(UiLanguage.IsEnglish ? day.Date.ToString("ddd", System.Globalization.CultureInfo.GetCultureInfo("en")) : day.WeekdayText)</strong>
+                                    <span>@day.DateText</span>
+                                </span>
+                            </a>
+                        }
+                    </div>
+
+                    <p class="price-week__hint">
+                        @T("Giá thấp nhất / người lớn theo hạng vé, bộ lọc và số ghế cần đặt · chọn ngày để xem chuyến.", "The lowest fare per adult for your cabin, filters and seat count. Select a date to view flights.")
+                    </p>
+                </section>
+            }
+>>>>>>> Stashed changes
 
             @if (Model.IsEmpty)
             {
@@ -67,27 +184,30 @@
                         <h3 class="av-empty__title">@Model.EmptyTitle</h3>
                         <p class="av-empty__text">@Model.EmptyText</p>
                         <div class="results-empty__actions">
-                            <a class="av-btn av-btn--primary" href="/chuyen-bay">Bỏ tất cả bộ lọc</a>
-                            <a class="av-btn av-btn--outline" href="/">Đổi ngày bay</a>
+                            <a class="av-btn av-btn--primary" href="@Model.SearchUrl(clearFilters: true)">@T("Bỏ tất cả bộ lọc", "Clear all filters")</a>
+                            <a class="av-btn av-btn--outline" href="/">@T("Đổi ngày bay", "Change travel date")</a>
                         </div>
                     </div>
                 </div>
 
+                @if (Model.AvailableCount > 0 && Model.Filters.IsValid)
+                {
                 <div class="av-alert av-alert--info">
                     <span class="av-alert__icon">@Html.Icon("info", 20)</span>
                     <div class="av-alert__body">
-                        <span class="av-alert__title">Vẫn muốn bay ngày @criteria.DepartDateText?</span>
+                        <span class="av-alert__title">@T($"Vẫn muốn bay ngày {criteria.DepartDateText}?", $"Still interested in flying on {criteria.DepartDateText}?")</span>
                         <span>
-                            Bỏ bộ lọc để xem các chuyến khác trên tuyến @criteria.OriginCode → @criteria.DestinationCode.
-                            Giá hiển thị theo từng ngày đã gồm thuế, phí; cần kiểm tra lại chỗ khi chọn.
+                            @T($"Bỏ bộ lọc để xem các chuyến khác trên tuyến {criteria.OriginCode} → {criteria.DestinationCode}. Giá hiển thị theo từng ngày đã gồm thuế, phí; cần kiểm tra lại chỗ khi chọn.", $"Clear your filters to see other flights from {criteria.OriginCode} to {criteria.DestinationCode}. Daily fares include taxes and fees. Check availability when you select a flight.")
                         </span>
                     </div>
                 </div>
+                }
             }
             else
             {
                 @foreach (var flight in Model.Flights)
                 {
+<<<<<<< Updated upstream
                     <partial name="_FlightCard" model="flight" />
                 }
 
@@ -97,6 +217,24 @@
                         <span>Xem thêm 3 chuyến</span>
                     </button>
                 </div>
+=======
+                    <div class="flight-list__item" data-flight-item data-flight-id="@Model.Flights[i].Flight.Id">
+                        <partial name="_FlightCard" model="Model.Flights[i]" />
+                    </div>
+                }
+
+                @if (Model.Flights.Count > 3)
+                {
+                    <div class="results-more" hidden>
+                        <button type="button" class="av-btn av-btn--outline"
+                                data-show-more data-step="3"
+                                data-total="@Model.Flights.Count">
+                            @Html.Icon("chevron-down", 17)
+                            <span data-show-more-label>@T($"Xem thêm {Math.Min(3, Model.Flights.Count - 3)} chuyến", $"Show {Math.Min(3, Model.Flights.Count - 3)} more flights")</span>
+                        </button>
+                    </div>
+                }
+>>>>>>> Stashed changes
             }
         </section>
     </div>

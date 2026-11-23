@@ -16,7 +16,7 @@
 
   /* Text */
   --av-text: #172D46;
-  --av-text-muted: #64758A;
+  --av-text-muted: #56677D;
   --av-text-disabled: #A2B2C4;
   --av-text-on-dark: #FFFFFF;
   --av-text-on-dark-muted: #CEDCED;
@@ -27,9 +27,9 @@
   --av-divider: #DFE6EE;
 
   /* Feedback */
-  --av-success: #087F83;
+  --av-success: #086D72;
   --av-success-soft: #E7F5F2;
-  --av-warning: #A56612;
+  --av-warning: #8A540E;
   --av-warning-soft: #FFF5E3;
   --av-danger: #BB4545;
   --av-danger-soft: #FCEEEE;

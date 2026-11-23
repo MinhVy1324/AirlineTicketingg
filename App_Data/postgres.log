@@ -1,0 +1,24 @@
+2026-11-20 15:00:07.895 +07 [25180] LOG:  starting PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35223, 64-bit
+2026-11-20 15:00:07.896 +07 [25180] LOG:  listening on IPv4 address "127.0.0.1", port 5433
+2026-11-20 15:00:07.964 +07 [35640] LOG:  database system was shut down at 2026-11-20 15:00:04 +07
+2026-11-20 15:00:07.970 +07 [25180] LOG:  database system is ready to accept connections
+2026-11-20 15:01:23.216 +07 [35740] ERROR:  relation "__EFMigrationsHistory" does not exist at character 46
+2026-11-20 15:01:23.216 +07 [35740] STATEMENT:  SELECT "MigrationId", "ProductVersion"
+	FROM "__EFMigrationsHistory"
+	ORDER BY "MigrationId"
+2026-11-20 15:01:27.141 +07 [35740] PANIC:  could not write to file "pg_wal/xlogtemp.35740": No space left on device
+2026-11-20 15:01:27.141 +07 [35740] STATEMENT:  COMMIT
+2026-11-20 15:01:33.235 +07 [25180] LOG:  client backend (PID 35740) was terminated by exception 0xC0000409
+2026-11-20 15:01:33.235 +07 [25180] DETAIL:  Failed process was running: COMMIT
+2026-11-20 15:01:33.235 +07 [25180] HINT:  See C include file "ntstatus.h" for a description of the hexadecimal value.
+2026-11-20 15:01:33.235 +07 [25180] LOG:  terminating any other active server processes
+2026-11-20 15:01:33.249 +07 [25180] LOG:  all server processes terminated; reinitializing
+2026-11-20 15:01:33.321 +07 [31644] LOG:  database system was interrupted; last known up at 2026-11-20 15:00:07 +07
+2026-11-20 15:01:33.653 +07 [31644] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-11-20 15:01:33.657 +07 [31644] LOG:  redo starts at 0/17F1540
+2026-11-20 15:01:33.880 +07 [31644] LOG:  redo done at 0/1FFFF80 system usage: CPU: user: 0.04 s, system: 0.04 s, elapsed: 0.22 s
+2026-11-20 15:01:33.946 +07 [31644] FATAL:  could not write to file "pg_wal/xlogtemp.31644": No space left on device
+2026-11-20 15:01:33.954 +07 [25180] LOG:  startup process (PID 31644) exited with exit code 1
+2026-11-20 15:01:33.954 +07 [25180] LOG:  terminating any other active server processes
+2026-11-20 15:01:33.959 +07 [25180] LOG:  shutting down due to startup process failure
+2026-11-20 15:01:33.963 +07 [25180] LOG:  database system is shut down

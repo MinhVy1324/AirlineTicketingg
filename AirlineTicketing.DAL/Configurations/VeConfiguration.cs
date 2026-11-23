@@ -13,13 +13,24 @@ public sealed class VeConfiguration : IEntityTypeConfiguration<Ve>
         builder.HasIndex(x => x.MaVe).IsUnique();
         builder.Property(x => x.SoGhe).HasMaxLength(5).IsRequired();
         builder.HasIndex(x => new { x.ChuyenBayId, x.SoGhe }).IsUnique()
-            .HasFilter("\"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
+            .HasFilter("\"SoGhe\" <> '' AND \"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
         builder.HasIndex(x => new { x.ChuyenBayId, x.HanhKhachId }).IsUnique()
             .HasFilter("\"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
         builder.HasIndex(x => new { x.DatVeId, x.TrangThai });
         builder.Property(x => x.HangVe).HasMaxLength(20).IsRequired();
         builder.Property(x => x.GiaVe).HasPrecision(12, 2);
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
+<<<<<<< Updated upstream
+=======
+        builder.Property(x => x.PhiDoi).HasPrecision(12, 2);
+        builder.Property(x => x.PhiHoan).HasPrecision(12, 2);
+        builder.Property(x => x.LoaiHanhKhach).HasConversion<string>().HasMaxLength(20).HasDefaultValue(LoaiHanhKhach.NguoiLon);
+        builder.Property(x => x.ThuePhi).HasPrecision(12, 2);
+        builder.Property(x => x.PhiDichVu).HasPrecision(12, 2);
+        builder.Property(x => x.PhiHanhLy).HasPrecision(12, 2);
+        builder.Property(x => x.PhiChoNgoi).HasPrecision(12, 2);
+        builder.HasOne(x => x.NguoiDiKem).WithMany().HasForeignKey(x => x.NguoiDiKemId).OnDelete(DeleteBehavior.Restrict);
+>>>>>>> Stashed changes
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_Ve_GiaVe", "\"GiaVe\" >= 0");

@@ -13,6 +13,11 @@ public sealed class TaiKhoanConfiguration : IEntityTypeConfiguration<TaiKhoan>
         builder.Property(x => x.MatKhauHash).HasMaxLength(256).IsRequired();
         builder.Property(x => x.HoTen).HasMaxLength(150).IsRequired();
         builder.Property(x => x.Email).HasMaxLength(254).IsRequired();
+<<<<<<< Updated upstream
+=======
+        builder.HasIndex(x => x.Email).IsUnique();
+        builder.Property(x => x.GmailLienHe).HasMaxLength(254);
+>>>>>>> Stashed changes
         builder.Property(x => x.SoDienThoai).HasMaxLength(20);
         builder.Property(x => x.VaiTro).HasConversion<string>().HasMaxLength(20).IsRequired();
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20).IsRequired();

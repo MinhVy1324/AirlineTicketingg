@@ -1,0 +1,295 @@
+@model AirlineTicketing.Web.Controllers.VnpayManagerPage
+@using AirlineTicketing.Web.Controllers
+@using AirlineTicketing.Web.Infrastructure.Payments
+@using Microsoft.AspNetCore.WebUtilities
+@{
+    Layout = "_ManagerLayout";
+    ViewData["Title"] = T("Đối soát thanh toán", "Payment reconciliation");
+    ViewData["ManagerNav"] = "vnpay";
+    var channels = new[] { ("", T("Tất cả", "All")), ("vnpay", "VNPAY Sandbox"), ("qr", "VietQR demo"),
+        ("demo", T("Thẻ và đổi vé mô phỏng", "Simulated cards and changes")), ("other", T("Khác", "Other")) };
+    var statuses = new[] { ("", T("Tất cả", "All")), ("waiting", T("Chờ xử lý", "Pending")), ("done", T("Thành công", "Successful")), ("failed", T("Thất bại", "Failed")) };
+    var tabs = new[] { ("thu", T($"Khoản thu ({Model.PendingCollections} chờ)", $"Collections ({Model.PendingCollections} pending)")),
+        ("hoan", T($"Lệnh hoàn ({Model.PendingRefunds} chờ)", $"Refund orders ({Model.PendingRefunds} pending)")) };
+    const string ledger = "/quan-ly/thanh-toan-vnpay";
+    string PostTo(string operation) => QueryHelpers.AddQueryString($"{ledger}/{operation}", new Dictionary<string, string?>
+    {
+        ["q"] = Model.Query, ["kenh"] = Model.Channel, ["trangThai"] = Model.Status, ["ngay"] = Model.Day,
+        ["trang"] = Model.Page.ToString(System.Globalization.CultureInfo.InvariantCulture)
+    });
+    PaymentEvidenceForm EvidenceFor(int id) => Model.RejectedEvidence?.Id == id
+        ? Model.RejectedEvidence : new PaymentEvidenceForm(id);
+    var showsVnpay = Model.Channel == "vnpay" || Model.Channel == "" &&
+        (Model.Query.Length == 0 || Model.Payments.Any(p => p.NhaCungCap == VnpayOptions.Provider)
+            || Model.Refunds.Any(r => r.NhaCungCap == VnpayOptions.Provider));
+    string When(DateTimeOffset date) => date.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy HH:mm");
+    string Amount(decimal amount, string currency) => currency == "VND" ? Money.Vnd(amount) : $"{amount:N2} {currency}";
+    string Channel(string provider) => provider == VietQr.Provider ? "VietQR demo" : provider;
+    string RefundState(HoanTien refund) => refund.TrangThai switch
+    {
+        TrangThaiHoanTien.ThanhCong => T("Đã hoàn", "Refunded"),
+        TrangThaiHoanTien.ThatBai => T("Hoàn thất bại", "Refund failed"),
+        _ when refund.NgayGuiCongThanhToan.HasValue => T("Chờ đối soát kết quả", "Awaiting result reconciliation"),
+        _ when refund.NhaCungCap == VnpayOptions.Provider => T("Chờ gửi cổng", "Awaiting gateway submission"),
+        _ when refund.NhaCungCap == VietQr.Provider => T("Chờ chứng từ hoàn", "Awaiting refund evidence"),
+        _ => T("Chờ xử lý", "Pending")
+    };
+}
+<div class="admin-page">
+    <header class="admin-page-head">
+        <h1 class="admin-page-title">@T("Đối soát thanh toán", "Payment reconciliation")</h1>
+    </header>
+    @if (TempData["PaymentMessage"] is string message)
+    {
+        var error = TempData["PaymentError"] is true;
+        <p class="av-alert @(error ? "av-alert--danger" : "av-alert--info")" role="@(error ? "alert" : "status")">@message</p>
+    }
+    @if (Model.Merchant is null && showsVnpay)
+    {
+        <p class="av-alert av-alert--warning">@T("Chưa cấu hình điểm thanh toán VNPAY Sandbox. Các tác vụ tra cứu và gửi lệnh qua cổng đang tắt.", "VNPAY Sandbox is unconfigured. Gateway lookup and submission are disabled.")</p>
+    }
+    <section class="av-card" aria-labelledby="payment-filters">
+        <div class="av-card__body av-card__stack">
+            <h2 class="av-title-20" id="payment-filters">@T("Tra cứu giao dịch", "Find transactions")</h2>
+            <form method="get" action="@ledger" class="av-row av-wrap av-gap-12 payment-ledger-filters">
+                <input type="hidden" name="tab" value="@Model.Tab" />
+                <label class="av-field">
+                    <span class="av-label">@T("Mã đặt chỗ, giao dịch hoặc chứng từ", "Booking, transaction or evidence reference")</span>
+                    <span class="av-control">
+                        <input name="q" type="search" value="@Model.Query" maxlength="100" />
+                        @Html.Icon("search", 17)
+                    </span>
+                </label>
+                <label class="av-field">
+                    <span class="av-label">@T("Kênh thanh toán", "Payment channel")</span>
+                    <span class="av-control"><select name="kenh">
+                        @foreach (var (value, label) in channels)
+                        {
+                            <option value="@value" selected="@(value == Model.Channel)">@label</option>
+                        }
+                    </select>@Html.Icon("chevron-down", 17)</span>
+                </label>
+                <label class="av-field">
+                    <span class="av-label">@T("Trạng thái", "Status")</span>
+                    <span class="av-control"><select name="trangThai">
+                        @foreach (var (value, label) in statuses)
+                        {
+                            <option value="@value" selected="@(value == Model.Status)">@label</option>
+                        }
+                    </select>@Html.Icon("chevron-down", 17)</span>
+                </label>
+                <label class="av-field">
+                    <span class="av-label">@T("Ngày ghi nhận (UTC+7)", "Recorded date (UTC+7)")</span>
+                    <span class="av-control"><input type="date" name="ngay" value="@Model.Day" /></span>
+                </label>
+                <button class="av-btn av-btn--primary" type="submit">@T("Lọc giao dịch", "Filter transactions")</button>
+            </form>
+            <div class="av-row av-wrap av-gap-16" aria-label="@T("Tổng tiền VND theo tìm kiếm và kênh thanh toán", "VND totals for the selected search and payment channel")">
+                <div class="av-stat"><div class="av-stat__label">@T("Đã thu", "Collected")</div><div class="av-stat__value">@Money.Vnd(Model.Collected)</div></div>
+                <div class="av-stat"><div class="av-stat__label">@T("Đã hoàn", "Refunded")</div><div class="av-stat__value">@Money.Vnd(Model.Refunded)</div></div>
+                <div class="av-stat"><div class="av-stat__label">@T("Thu ròng", "Net collections")</div><div class="av-stat__value">@Money.Vnd(Model.Collected - Model.Refunded)</div></div>
+            </div>
+            <p class="av-muted">@T("Tổng VND theo từ khóa, kênh và ngày. Lệnh đang chờ được lọc theo ngày tạo.", "Totals in VND by keyword, channel and date. Pending orders use the date they were created.")</p>
+        </div>
+    </section>
+
+    <nav aria-label="@T("Loại giao dịch", "Transaction type")" class="av-chips">
+        @foreach (var (value, label) in tabs)
+        {
+            <a asp-action="Index" asp-route-tab="@value" asp-route-q="@Model.Query" asp-route-kenh="@Model.Channel"
+               asp-route-trangThai="@Model.Status" asp-route-ngay="@Model.Day" class="av-chip @(value == Model.Tab ? "is-active" : null)"
+               aria-current="@(value == Model.Tab ? "page" : null)">@label</a>
+        }
+    </nav>
+    <section aria-labelledby="payment-orders" class="av-stack av-gap-12">
+        <h2 class="av-title-20" id="payment-orders">@(Model.Tab == "thu" ? T("Các khoản thu", "Collections") : T("Các lệnh hoàn tiền", "Refund orders"))</h2>
+        @if (Model.Payments.Count == 0 && Model.Refunds.Count == 0)
+        {
+            <p class="av-alert av-alert--info">@T("Không có giao dịch khớp bộ lọc.", "No transactions match the filters.")</p>
+        }
+        @foreach (var item in Model.Payments)
+        {
+            var pnr = item.DatVe.MaDatVe;
+            var state = item.TrangThai switch
+            {
+                TrangThaiThanhToan.ThanhCong => T("Đã thu", "Collected"),
+                TrangThaiThanhToan.ThatBai => T("Thu thất bại", "Collection failed"),
+                _ when item.NhaCungCap == VietQr.Provider => T("Chờ chứng từ thu", "Awaiting collection evidence"),
+                _ => T("Chờ xác nhận", "Awaiting confirmation")
+            };
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="av-row av-row--between av-wrap av-gap-12">
+                        <h3 class="av-title-20">@pnr · @Amount(item.SoTien, item.DonViTienTe)</h3>
+                        <strong>@state</strong>
+                    </div>
+                    <p>@Channel(item.NhaCungCap) · Tạo @When(item.NgayTao) (UTC+7)
+                        @if (item.NgayHoanTat is { } done) { <span> @T("· Cập nhật", "· Updated") @When(done)</span> }
+                    </p>
+                    <p class="payment-ledger-ref">@T("Mã thu", "Collection reference") <strong>@(item.MaGiaoDich ?? "—")</strong>
+                        @if (item.MaGiaoDichNhaCungCap is { } providerRef) { <span> @T("· Mã cổng", "· Gateway reference") @providerRef</span> }
+                        @if (item.NhaCungCap == VnpayOptions.Provider && item.KetQuaNhaCungCap is { } code) { <span> @T("· Mã kết quả", "· Result code") @code</span> }
+                    </p>
+                    <div class="av-row av-wrap av-gap-12">
+                        <a asp-controller="Manager" asp-action="Bookings" asp-route-q="@pnr" class="av-link">@T("Xem đặt chỗ", "View booking")</a>
+                        @if (item.HoanTiens.Count > 0)
+                        {
+                            <a asp-action="Index" asp-route-tab="hoan" asp-route-q="@(item.MaGiaoDich ?? pnr)" class="av-link">@T("Xem lệnh hoàn", "View refund order")</a>
+                        }
+                    </div>
+                    <partial name="_Evidence" model="Model.Evidence.Where(e => e.ThanhToanId == item.Id)" />
+                    @if (item.NhaCungCap == VnpayOptions.Provider && Model.Merchant is not null && item.MaDiemThanhToan == Model.Merchant)
+                    {
+                        <form method="post" action="@PostTo("truy-van")">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="pnr" value="@pnr" />
+                            <button class="av-btn av-btn--outline av-btn--sm" type="submit">@T("Truy vấn khoản thu VNPAY", "Query VNPAY collection")</button>
+                        </form>
+                    }
+                    @if (item.NhaCungCap == VietQr.Provider && item.TrangThai == TrangThaiThanhToan.ChoXuLy)
+                    {
+                        var draft = EvidenceFor(item.Id);
+                        <details class="payment-ledger-action" id="doi-soat-thu-@item.Id" open="@(draft.Error is not null)">
+                            <summary class="av-link">@T("Ghi nhận chứng từ thu", "Record collection evidence")</summary>
+                            <p>@T("Sao kê mô phỏng cần khớp", "The simulated statement must match") <strong>AEROVIET @pnr</strong> @T("và", "and") <strong>@Amount(item.SoTien, item.DonViTienTe)</strong>.</p>
+                            <form method="post" action="@PostTo("doi-soat-thu")" class="av-stack av-gap-12">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <input type="hidden" name="reference" value="@item.MaGiaoDich" />
+                                <input type="hidden" name="pnr" value="@pnr" />
+                                <partial name="_EvidenceFields" model="draft" />
+                                @if (draft.Error is not null && draft.Field is null)
+                                {
+                                    <p class="av-field__error" role="alert">@draft.Error</p>
+                                }
+                                <div><button class="av-btn av-btn--primary" type="submit">@T("Ghi nhận khoản thu", "Record collection")</button></div>
+                            </form>
+                        </details>
+                    }
+                </div>
+            </article>
+        }
+        @foreach (var item in Model.Refunds)
+        {
+            var pnr = item.ThanhToan.DatVe.MaDatVe;
+            var vnpay = item.NhaCungCap == VnpayOptions.Provider;
+            var qr = item.NhaCungCap == VietQr.Provider;
+            var waiting = item.TrangThai == TrangThaiHoanTien.ChoXuLy;
+            var sent = item.NgayGuiCongThanhToan.HasValue;
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="av-row av-row--between av-wrap av-gap-12">
+                        <h3 class="av-title-20">@pnr · @Amount(item.SoTien, item.DonViTienTe)</h3>
+                        <strong>@RefundState(item)</strong>
+                    </div>
+                    <p>@Channel(item.NhaCungCap) · Tạo @When(item.NgayTao) (UTC+7)
+                        @if (item.NgayGuiCongThanhToan is { } sentAt) { <span> @T("· Gửi", "· Sent") @When(sentAt)</span> }
+                        @if (item.NgayHoanTat is { } done) { <span> @T("· Cập nhật", "· Updated") @When(done)</span> }
+                    </p>
+                    <p class="payment-ledger-ref">@T("Mã lệnh hoàn", "Refund order reference") <strong>@(item.MaGiaoDich ?? "—")</strong>
+                        @if (item.MaGiaoDichNhaCungCap is { } providerRef) { <span> @T("· Mã hoàn tại cổng", "· Gateway refund reference") @providerRef</span> }
+                        @if (vnpay && item.KetQuaNhaCungCap?.Contains('/') == true) { <span> @T("· Mã kết quả", "· Result code") @item.KetQuaNhaCungCap</span> }
+                    </p>
+                    @if (!string.IsNullOrWhiteSpace(item.LyDo)) { <p>@item.LyDo</p> }
+                    <div class="av-row av-wrap av-gap-12">
+                        <a asp-action="Index" asp-route-tab="thu" asp-route-q="@(item.ThanhToan.MaGiaoDich ?? pnr)" class="av-link">@T("Xem khoản thu gốc", "View original payment")</a>
+                        @if (item.YeuCauDoiHoanId is int requestId)
+                        {
+                            <a asp-controller="Manager" asp-action="ChangeRefunds" asp-route-id="@requestId" class="av-link">@T("Xem yêu cầu hoàn vé", "View refund request")</a>
+                        }
+                    </div>
+                    <partial name="_Evidence" model="Model.Evidence.Where(e => e.HoanTienId == item.Id)" />
+                    @if (vnpay && waiting && !sent && Model.Merchant is not null && item.ThanhToan.MaDiemThanhToan == Model.Merchant)
+                    {
+                        <form method="post" action="@PostTo("hoan")">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="reference" value="@item.MaGiaoDich" />
+                            <input type="hidden" name="pnr" value="@pnr" />
+                            <button class="av-btn av-btn--primary" type="submit">@T("Gửi lệnh hoàn", "Submit refund order") @Amount(item.SoTien, item.DonViTienTe)</button>
+                        </form>
+                    }
+                    @if (waiting && (qr || vnpay && sent))
+                    {
+                        var draft = EvidenceFor(item.Id);
+                        var invalidNumber = draft.Field == "refundNumber";
+                        <details class="payment-ledger-action" id="doi-soat-hoan-@item.Id" open="@(draft.Error is not null)">
+                            <summary class="av-link">@T("Ghi nhận kết quả hoàn", "Record refund outcome")</summary>
+                            <p>@(vnpay ? T("Tra soát kết quả cuối trên cổng merchant theo mã lệnh hoàn và giao dịch thu gốc.", "Find the final result in the merchant portal using the refund order and original payment references.")
+                                : T("Đối chiếu chứng từ chuyển trả trên sao kê mô phỏng trước khi ghi nhận hoàn.", "Verify the return transfer in the simulated statement before recording the refund."))</p>
+                            <form method="post" action="@PostTo("doi-soat-hoan")" class="av-stack av-gap-12">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <input type="hidden" name="reference" value="@item.MaGiaoDich" />
+                                <input type="hidden" name="pnr" value="@pnr" />
+                                <partial name="_EvidenceFields" model="draft" />
+                                @if (draft.Error is not null && draft.Field is null)
+                                {
+                                    <p class="av-field__error" role="alert">@draft.Error</p>
+                                }
+                                @if (vnpay)
+                                {
+                                    <label class="av-field">
+                                        <span class="av-label">@T("Kết quả cuối", "Final outcome")</span>
+                                        <span class="av-control"><select name="result" required>
+                                            <option value="">@T("Chọn kết quả", "Select outcome")</option>
+                                            <option value="success" selected="@(draft.Result == "success")">@T("Đã hoàn tiền", "Refunded")</option>
+                                            <option value="failed" selected="@(draft.Result == "failed")">@T("Cổng đã từ chối hoàn", "Gateway rejected refund")</option>
+                                        </select>@Html.Icon("chevron-down", 17)</span>
+                                    </label>
+                                    <label class="av-field">
+                                        <span class="av-label">@T("Mã giao dịch hoàn tại VNPAY (bắt buộc khi đã hoàn)", "VNPAY refund transaction ID (required for successful refunds)")</span>
+                                        <span class="av-control @(invalidNumber ? "is-invalid" : null)">
+                                            <input type="text" name="refundNumber" value="@draft.RefundNumber" inputmode="numeric" maxlength="15"
+                                                   pattern="[0-9]{1,15}" aria-invalid="@(invalidNumber ? "true" : null)"
+                                                   aria-describedby="@(invalidNumber ? $"refund-number-error-{item.Id}" : null)" />
+                                        </span>
+                                        @if (invalidNumber)
+                                        {
+                                            <span class="av-field__error" role="alert" id="refund-number-error-@item.Id">@draft.Error</span>
+                                        }
+                                    </label>
+                                }
+                                else
+                                {
+                                    <input type="hidden" name="result" value="success" />
+                                }
+                                <label><input type="checkbox" name="confirmed" value="true" checked="@draft.Confirmed" required /> @T("Tôi đã đối chiếu chứng từ với lệnh này.", "I have verified the evidence against this order.")</label>
+                                <div><button class="av-btn av-btn--primary" type="submit">@T("Lưu kết quả hoàn", "Save refund outcome")</button></div>
+                            </form>
+                        </details>
+                    }
+                    @if (PaymentReconciliationService.CanRetry(item))
+                    {
+                        <form method="post" action="@PostTo("lap-lai-lenh-hoan")">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="reference" value="@item.MaGiaoDich" />
+                            <input type="hidden" name="pnr" value="@pnr" />
+                            <button class="av-btn av-btn--outline" type="submit">@T("Lập lần gửi mới", "Create another submission")</button>
+                        </form>
+                    }
+                </div>
+            </article>
+        }
+    </section>
+    @if (Model.Pages > 1)
+    {
+        <nav aria-label="@T("Phân trang giao dịch", "Transaction pages")" class="av-row av-wrap av-gap-12">
+            @if (Model.Page > 1)
+            {
+                <a asp-action="Index" asp-route-tab="@Model.Tab" asp-route-q="@Model.Query" asp-route-kenh="@Model.Channel"
+                   asp-route-trangThai="@Model.Status" asp-route-ngay="@Model.Day" asp-route-trang="@(Model.Page - 1)"
+                   class="av-btn av-btn--outline av-btn--sm">@T("Trang trước", "Previous page")</a>
+            }
+            <span>Trang @Model.Page / @Model.Pages</span>
+            @if (Model.Page < Model.Pages)
+            {
+                <a asp-action="Index" asp-route-tab="@Model.Tab" asp-route-q="@Model.Query" asp-route-kenh="@Model.Channel"
+                   asp-route-trangThai="@Model.Status" asp-route-ngay="@Model.Day" asp-route-trang="@(Model.Page + 1)"
+                   class="av-btn av-btn--outline av-btn--sm">@T("Trang sau", "Next page")</a>
+            }
+        </nav>
+    }
+</div>

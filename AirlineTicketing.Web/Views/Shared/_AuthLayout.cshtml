@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="@UiLanguage.Code">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,10 +9,18 @@
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/interface.css" asp-append-version="true" />
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="av-body--auth">
+<<<<<<< Updated upstream
     @RenderBody()
+=======
+    <a class="av-skip-link" href="#main-content">@T("Đến nội dung chính", "Skip to main content")</a>
+    <main id="main-content" tabindex="-1">@RenderBody()</main>
+    <partial name="_InstanceBadge" />
+    <partial name="_InteractionFeedback" />
+>>>>>>> Stashed changes
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

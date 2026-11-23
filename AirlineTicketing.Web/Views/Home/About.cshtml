@@ -1,0 +1,150 @@
+@{
+    ViewData["Title"] = T("Giới thiệu", "About");
+    ViewData["Nav"] = "about";
+    ViewData["Description"] = T(
+        "Tìm hiểu hệ thống đặt vé máy bay nội địa AeroViet. Xem cách chọn chuyến, chọn ghế, thanh toán demo, nhận vé và theo dõi yêu cầu đổi hoặc hoàn vé.",
+        "Learn how to find flights, choose seats, try demo payments, download tickets and track changes and refunds with AeroViet.");
+
+    var hotline = ViewData["SupportHotline"] as string;
+    var hotlineTel = ViewData["SupportHotlineTel"] as string;
+    var supportEmail = ViewData["SupportEmail"] as string;
+    var destinations = new[]
+    {
+        (City: "Hà Nội", Code: "HAN", Image: "dest-ha-noi.png"),
+        (City: "Đà Nẵng", Code: "DAD", Image: "dest-da-nang.png"),
+        (City: "Phú Quốc", Code: "PQC", Image: "dest-phu-quoc.png")
+    };
+}
+
+@section Head {
+    <link rel="stylesheet" href="~/css/about.css" asp-append-version="true" />
+}
+
+<article class="about">
+    <div class="av-container">
+        <section class="about-hero" aria-labelledby="about-title">
+            <div class="about-hero__copy">
+                <p class="about-kicker">@T("Giới thiệu AeroViet", "About AeroViet")</p>
+                <h1 id="about-title">@T("Đặt vé dễ dàng,", "Book with ease,") <span>@T("chủ động chuyến đi", "plan your trip")</span></h1>
+                <p class="about-hero__lead">@T("AeroViet là hệ thống đặt vé máy bay nội địa. Bạn có thể so sánh chuyến, xem tổng chi phí, chọn ghế và quản lý vé điện tử ở cùng một nơi.", "AeroViet is a domestic flight booking system. Compare flights, see the full price, select your seat and manage e-tickets in one place.")</p>
+                <div class="about-actions">
+                    <a class="av-btn av-btn--primary" asp-controller="Home" asp-action="Index" asp-fragment="tim-chuyen">@Html.Icon("search", 18) @T("Tìm chuyến bay", "Find flights")</a>
+                    <a class="av-btn av-btn--outline" asp-controller="Lookup" asp-action="Index">@T("Tra cứu đặt chỗ", "Look up a booking")</a>
+                </div>
+                <p class="about-hero__note">@Html.Icon("info", 17) @T("Bản demo sử dụng vé và giao dịch mô phỏng.", "This demo uses simulated tickets and transactions.")</p>
+            </div>
+            <figure class="about-hero__media">
+                <img src="~/img/about-halong-flight.jpg" asp-append-version="true" width="1536" height="1024" fetchpriority="high" alt="@T("Máy bay chở khách trên bầu trời vịnh Hạ Long", "A passenger plane flying over Hạ Long Bay")" />
+            </figure>
+        </section>
+
+        <nav class="about-jump" aria-label="@T("Nội dung giới thiệu", "About page sections")">
+            <a href="#cach-dat-ve">@T("Cách đặt vé", "How to book")</a>
+            <a href="#diem-den">@T("Điểm đến", "Destinations")</a>
+            <a href="#hoi-dap">@T("Hỏi đáp", "FAQs")</a>
+            <a href="#ho-tro">@T("Hỗ trợ", "Support")</a>
+        </nav>
+
+        <section class="about-section about-journey" id="cach-dat-ve" aria-labelledby="about-journey-title">
+            <div class="about-journey__intro">
+                <h2 id="about-journey-title">@T("Từ tìm chuyến", "From flight search")<br />@T("đến nhận vé điện tử", "to your e-ticket")</h2>
+                <p class="about-intro">@T("Bạn có thể đặt vé một chiều hoặc khứ hồi cho tối đa 9 hành khách trong cùng một đơn.", "Book one-way or round-trip flights for up to 9 passengers in one booking.")</p>
+                <figure class="about-route">
+                    <figcaption>@T("Ví dụ hành trình nội địa", "Example domestic route")</figcaption>
+                    <div class="about-route__line">
+                        <div><strong>SGN</strong><span>@T("TP. Hồ Chí Minh", "Ho Chi Minh City")</span></div>
+                        <span class="about-route__track" aria-hidden="true">@Html.Icon("plane", 24)</span>
+                        <div><strong>DAD</strong><span>Đà Nẵng</span></div>
+                    </div>
+                </figure>
+            </div>
+
+            <ol class="about-steps" role="list">
+                <li>
+                    <span class="about-steps__icon">@Html.Icon("search", 22)</span>
+                    <div><h3>@T("Tìm chuyến và so sánh giá", "Find flights and compare prices")</h3><p>@T("Nhập điểm đi, điểm đến và ngày bay. So sánh giờ khởi hành, hạng Phổ thông hoặc Thương gia và giá đã gồm thuế, phí.", "Enter your route and travel dates. Compare departure times and Economy or Business fares with taxes and fees included.")</p></div>
+                </li>
+                <li>
+                    <span class="about-steps__icon">@Html.Icon("armchair", 22)</span>
+                    <div><h3>@T("Chọn ghế và hành lý", "Choose seats and baggage")</h3><p>@T("Điền tên theo giấy tờ, chọn ghế trên sơ đồ A–F cho từng khách có ghế và thêm hành lý nếu cần. Với vé khứ hồi, bạn chọn riêng cho từng chặng.", "Enter names as shown on identification, pick a seat on the A–F seat map for each passenger who needs one, and add baggage if needed. Choose seats separately for each leg.")</p></div>
+                </li>
+                <li>
+                    <span class="about-steps__icon">@Html.Icon("credit-card", 22)</span>
+                    <div><h3>@T("Kiểm tra tổng tiền và thanh toán", "Review your total and pay")</h3><p>@T("Kiểm tra thông tin, tổng tiền và hạn giữ chỗ. Thử thanh toán bằng thẻ mô phỏng hoặc VietQR demo. VNPAY Sandbox hiển thị khi đã được cấu hình.", "Review your details, total and hold expiry. Try paying with a demo card or VietQR. VNPAY Sandbox appears when configured.")</p></div>
+                </li>
+                <li>
+                    <span class="about-steps__icon">@Html.Icon("ticket", 22)</span>
+                    <div><h3>@T("Nhận vé và theo dõi chuyến đi", "Get your ticket and manage your trip")</h3><p>@T("Khi giao dịch được xác nhận, lưu mã đặt chỗ và tải vé PDF. Dùng Vé của tôi để theo dõi chuyến bị đổi giờ, bị hủy hoặc yêu cầu đổi, hoàn vé.", "Once payment is confirmed, save your booking reference and download the ticket PDF. Use My tickets to track rescheduled or cancelled flights and manage changes and refunds.")</p></div>
+                </li>
+            </ol>
+        </section>
+    </div>
+
+    <section class="about-section about-destinations" id="diem-den" aria-labelledby="about-destinations-title">
+        <div class="av-container">
+            <div class="about-section__head">
+                <div>
+                    <h2 id="about-destinations-title">@T("Điểm đến gợi ý", "Suggested destinations")</h2>
+                    <p class="about-intro">@T("Chọn điểm đến để điền sẵn hành trình khởi hành từ TP. Hồ Chí Minh.", "Choose a destination to prefill a route from Ho Chi Minh City.")</p>
+                </div>
+                <a class="av-btn av-btn--outline" asp-controller="Home" asp-action="Index" asp-fragment="tim-chuyen">@T("Tìm hành trình khác", "Find a different route")</a>
+            </div>
+            <ul class="about-city-grid" role="list">
+                @foreach (var destination in destinations)
+                {
+                    <li>
+                        <a class="about-city" asp-controller="Home" asp-action="Index" asp-route-from="SGN" asp-route-to="@destination.Code" asp-fragment="tim-chuyen">
+                            <img src="~/img/@destination.Image" asp-append-version="true" alt="" loading="lazy" decoding="async" />
+                            <span class="about-city__name"><strong>@destination.City</strong><span>@destination.Code</span></span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </section>
+
+    <div class="av-container about-end">
+        <section class="about-section about-faq" id="hoi-dap" aria-labelledby="about-faq-title">
+            <h2 id="about-faq-title">@T("Câu hỏi thường gặp", "Frequently asked questions")</h2>
+            <div class="about-faq__list">
+                <details>
+                    <summary>@T("Tra cứu đặt chỗ và tải vé PDF ở đâu?", "Where can I look up my booking and download a ticket PDF?")</summary>
+                    <p>@T("Dùng mã đặt chỗ (PNR) và email liên hệ để", "Use your booking reference (PNR) and contact email to") <a asp-controller="Lookup" asp-action="Index">@T("tra cứu đặt chỗ", "look up a booking")</a>. @T("Tải PDF từ trang xác nhận hoặc mục", "Download the PDF from the confirmation page or from") <a asp-controller="Tickets" asp-action="Index">@T("Vé của tôi", "My tickets")</a> @T("sau khi đăng nhập bằng tài khoản đã đặt.", "after signing in with the account that made the booking.")</p>
+                </details>
+                <details>
+                    <summary>@T("Khi nào đặt chỗ được xác nhận?", "When is my booking confirmed?")</summary>
+                    <p>@T("Đặt chỗ được xác nhận khi thanh toán được ghi nhận. Với VietQR demo, bạn báo đã chuyển khoản trên trang đặt vé, sau đó hệ thống chờ nhân viên đối soát mã giao dịch và số tiền. Hạn giữ chỗ được hiển thị khi thanh toán.", "Your booking is confirmed once payment is recorded. For the VietQR demo, report your transfer on the booking page so staff can check the transaction reference and amount. Your hold expiry is shown at checkout.")</p>
+                </details>
+                <details>
+                    <summary>@T("Mỗi hành khách được mang bao nhiêu hành lý?", "How much baggage can each passenger take?")</summary>
+                    <p>@T("Trong mô phỏng, khách có ghế được 12 kg xách tay và 23 kg ký gửi mỗi chặng. Bạn có thể thêm 10 hoặc 20 kg ở bước điền thông tin hành khách. Xem", "In the demo, seated passengers receive 12 kg of carry-on and 23 kg of checked baggage per leg. You can add 10 or 20 kg on the passenger details page. See the") <a asp-controller="Policies" asp-action="Carriage">@T("điều kiện vận chuyển", "conditions of carriage")</a> @T("cho các trường hợp đi cùng trẻ em hoặc em bé.", "for travel with children or infants.")</p>
+                </details>
+                <details>
+                    <summary>@T("Tôi có thể đổi hoặc hoàn vé như thế nào?", "How can I change a ticket or request a refund?")</summary>
+                    <p>@T("Gửi và theo dõi yêu cầu trong Vé của tôi. Đổi chuyến trực tuyến áp dụng cho một số đơn đủ điều kiện. Hoàn vé áp dụng cho toàn bộ hành khách và chặng cùng mã đặt chỗ. Xem", "Use My tickets to submit and track requests. Online changes are available for eligible bookings. Refunds cover all passengers and legs under the same reference. See the") <a asp-controller="Policies" asp-action="ChangeRefund">@T("điều kiện, phí và mốc thời gian xử lý", "eligibility conditions, fees and processing steps")</a>.</p>
+                </details>
+                <details>
+                    <summary>@T("Thông tin của tôi hiển thị thế nào khi tra cứu?", "How is my information displayed in booking lookup?")</summary>
+                    <p>@T("Kết quả tra cứu công khai che một phần thông tin cá nhân. Bạn có thể đọc", "Public lookup results mask some personal information. Read the") <a asp-controller="Policies" asp-action="Privacy">@T("chính sách bảo mật", "privacy policy")</a> @T("để biết dữ liệu nào được dùng khi đặt vé.", "to see what information is used when booking.")</p>
+                </details>
+            </div>
+        </section>
+
+        <aside class="about-section about-support" id="ho-tro" aria-labelledby="about-support-title">
+            <span class="about-support__icon">@Html.Icon("headset", 23)</span>
+            <h2 id="about-support-title">@T("Cần hỗ trợ đặt vé?", "Need help with a booking?")</h2>
+            <p>@T("Chuẩn bị mã đặt chỗ và email liên hệ để tiện kiểm tra tình trạng vé hoặc giao dịch.", "Have your booking reference and contact email ready so support can check your ticket or payment status.")</p>
+            <ul class="about-support__links" role="list">
+                @if (!string.IsNullOrWhiteSpace(hotlineTel))
+                {
+                    <li><a href="tel:@hotlineTel">@Html.Icon("phone", 18) @hotline</a></li>
+                }
+                @if (!string.IsNullOrWhiteSpace(supportEmail))
+                {
+                    <li><a href="mailto:@supportEmail">@Html.Icon("mail", 18) @supportEmail</a></li>
+                }
+            </ul>
+            <a class="av-btn av-btn--outline" asp-controller="Tickets" asp-action="Index">@T("Mở Vé của tôi", "Open My tickets")</a>
+        </aside>
+    </div>
+</article>

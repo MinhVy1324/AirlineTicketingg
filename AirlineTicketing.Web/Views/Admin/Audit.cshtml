@@ -1,14 +1,23 @@
 @model AdminAuditViewModel
 @{
-    ViewData["Title"] = "Nhật ký hoạt động";
+    ViewData["Title"] = T("Nhật ký hoạt động", "Activity log");
     ViewData["AdminNav"] = "audit";
+    string AuditAction(string value) => value switch
+    {
+        "Tất cả thao tác" => T(value, "All actions"),
+        "Cập nhật cấu hình" => T(value, "Update settings"),
+        "Xuất vé" => T(value, "Issue tickets"),
+        "Thanh toán" => T(value, "Payment"),
+        "Đăng nhập" => T(value, "Sign in"),
+        _ => value
+    };
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Nhật ký hoạt động</h1>
-            <p class="admin-page-subtitle">Truy vết ai đã làm gì, thời điểm thực hiện và kết quả xử lý.</p>
+            <h1 class="admin-page-title">@T("Nhật ký hoạt động", "Activity log")</h1>
+            <p class="admin-page-subtitle">@T("Truy vết ai đã làm gì, thời điểm thực hiện và kết quả xử lý.", "See who performed each action, when it happened and its outcome.")</p>
         </div>
     </header>
 
@@ -16,7 +25,7 @@
         <div class="av-card__body admin-card__body">
             <div class="admin-filters admin-filters--audit">
                 <label class="av-field">
-                    <span class="av-label">Thời gian</span>
+                    <span class="av-label">@T("Thời gian", "Time")</span>
                     <span class="av-control">
                         <input type="text" name="tu-ngay" value="@Model.FromDate – @Model.ToDate" />
                         @Html.Icon("calendar", 17)
@@ -24,27 +33,27 @@
                 </label>
 
                 <label class="av-field">
-                    <span class="av-label">Người thực hiện</span>
+                    <span class="av-label">@T("Người thực hiện", "Actor")</span>
                     <span class="av-control">
                         <select name="nguoi-thuc-hien">
-                            <option selected>@Model.ActorFilter</option>
+                            <option value="@Model.ActorFilter" selected>@(Model.ActorFilter == "Tất cả người dùng" ? T(Model.ActorFilter, "All users") : Model.ActorFilter)</option>
                             <option>Trần Hoàng Tùng / Admin</option>
                             <option>Lê Quốc Long / Manager</option>
-                            <option>Cổng VNPay / Hệ thống</option>
+                            <option value="Cổng VNPay / Hệ thống">@T("Cổng VNPay / Hệ thống", "VNPAY gateway / System")</option>
                         </select>
                         @Html.Icon("chevron-down", 17)
                     </span>
                 </label>
 
                 <label class="av-field">
-                    <span class="av-label">Loại thao tác</span>
+                    <span class="av-label">@T("Loại thao tác", "Action type")</span>
                     <span class="av-control">
                         <select name="loai-thao-tac">
-                            <option selected>@Model.TypeFilter</option>
-                            <option>Cập nhật cấu hình</option>
-                            <option>Xuất vé</option>
-                            <option>Thanh toán</option>
-                            <option>Đăng nhập</option>
+                            <option value="@Model.TypeFilter" selected>@AuditAction(Model.TypeFilter)</option>
+                            <option value="Cập nhật cấu hình">@AuditAction("Cập nhật cấu hình")</option>
+                            <option value="Xuất vé">@AuditAction("Xuất vé")</option>
+                            <option value="Thanh toán">@AuditAction("Thanh toán")</option>
+                            <option value="Đăng nhập">@AuditAction("Đăng nhập")</option>
                         </select>
                         @Html.Icon("chevron-down", 17)
                     </span>
@@ -62,10 +71,14 @@
         <div class="av-card__body admin-card__body">
             <div class="admin-card__head">
                 <div class="admin-card__head-main">
-                    <h2 class="av-card__title">Sự kiện hệ thống</h2>
-                    <span class="av-caption">Giờ Việt Nam (UTC+7) · Chỉ đọc, không sửa hoặc xóa</span>
+                    <h2 class="av-card__title">@T("Sự kiện hệ thống", "System events")</h2>
+                    <span class="av-caption">@T("Giờ Việt Nam (UTC+7) · Chỉ đọc, không sửa hoặc xóa", "Vietnam time (UTC+7) · Read-only")</span>
                 </div>
+<<<<<<< Updated upstream
                 <a class="av-link" href="/admin/nhat-ky">
+=======
+                <a class="av-link" href="/admin/nhat-ky?export=csv&tu-ngay=@Uri.EscapeDataString(Context.Request.Query["tu-ngay"].ToString())&nguoi-thuc-hien=@Uri.EscapeDataString(Context.Request.Query["nguoi-thuc-hien"].ToString())&loai-thao-tac=@Uri.EscapeDataString(Context.Request.Query["loai-thao-tac"].ToString())" data-feedback-download>
+>>>>>>> Stashed changes
                     @Html.Icon("download", 15)
                     <span>@Model.ExportText</span>
                 </a>
@@ -75,11 +88,11 @@
                 <table class="av-table admin-table--audit">
                     <thead>
                         <tr>
-                            <th scope="col">Thời điểm</th>
-                            <th scope="col">Người thực hiện</th>
-                            <th scope="col">Thao tác</th>
-                            <th scope="col">Đối tượng</th>
-                            <th scope="col">Kết quả</th>
+                            <th scope="col">@T("Thời điểm", "Timestamp")</th>
+                            <th scope="col">@T("Người thực hiện", "Actor")</th>
+                            <th scope="col">@T("Thao tác", "Actions")</th>
+                            <th scope="col">@T("Đối tượng", "Target")</th>
+                            <th scope="col">@T("Kết quả", "Result")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -115,9 +128,9 @@
             <div class="av-pagination">
                 <span>@Model.ResultText</span>
                 <span class="av-pagination__links">
-                    <a href="/admin/nhat-ky">Trước</a>
+                    <a href="/admin/nhat-ky">@T("Trước", "Previous")</a>
                     <span class="is-current">1</span>
-                    <a href="/admin/nhat-ky">Sau</a>
+                    <a href="/admin/nhat-ky">@T("Sau", "Next")</a>
                 </span>
             </div>
         </div>

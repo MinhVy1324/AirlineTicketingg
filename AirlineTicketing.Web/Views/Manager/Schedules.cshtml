@@ -1,13 +1,13 @@
 @model ManagerSchedulesViewModel
 @{
-    ViewData["Title"] = "Lịch bay & tồn chỗ";
+    ViewData["Title"] = T("Lịch bay & tồn chỗ", "Flight schedules & availability");
     ViewData["ManagerNav"] = "schedules";
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Lịch bay &amp; tồn chỗ</h1>
+            <h1 class="admin-page-title">@T("Lịch bay & tồn chỗ", "Flight schedules & availability")</h1>
             <p class="admin-page-subtitle">@Model.Subtitle</p>
         </div>
         <button type="button" class="av-btn av-btn--primary">
@@ -16,6 +16,20 @@
         </button>
     </header>
 
+<<<<<<< Updated upstream
+=======
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone" role="@(Model.MessageTone == "danger" ? "alert" : "status")">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check" : "info", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@(Model.MessageTone == "success" ? T("Đã cập nhật", "Updated") : T("Không thể lưu", "Could not save"))</span>
+                <span>@Model.Message</span>
+            </div>
+        </div>
+    }
+
+>>>>>>> Stashed changes
     <section class="av-card admin-card">
         <form class="av-card__body admin-card__body manager-filters" method="get" action="/quan-ly/lich-bay">
             <label class="av-field">
@@ -30,10 +44,17 @@
                 <span class="av-label">@Model.RouteLabel</span>
                 <span class="av-control">
                     <select name="tuyen">
+<<<<<<< Updated upstream
                         <option selected>@Model.RouteValue</option>
                         <option>HAN → SGN</option>
                         <option>SGN → DAD</option>
                         <option>SGN → PQC</option>
+=======
+                        @foreach (var option in Model.RouteOptions)
+                        {
+                            <option value="@option.Value" selected="@option.IsSelected">@(option.Value.Length == 0 ? T(option.Label, "All routes") : option.Label)</option>
+                        }
+>>>>>>> Stashed changes
                     </select>
                     @Html.Icon("chevron-down", 17)
                 </span>
@@ -43,10 +64,17 @@
                 <span class="av-label">@Model.AirlineStatusLabel</span>
                 <span class="av-control">
                     <select name="trang-thai">
+<<<<<<< Updated upstream
                         <option selected>@Model.AirlineStatusValue</option>
                         <option>Vietnam Airlines</option>
                         <option>Vietjet Air</option>
                         <option>Bamboo Airways</option>
+=======
+                        @foreach (var option in Model.StatusOptions)
+                        {
+                            <option value="@option.Value" selected="@option.IsSelected">@ManagerSchedulesViewModel.StatusLabel(option.Label)</option>
+                        }
+>>>>>>> Stashed changes
                     </select>
                     @Html.Icon("chevron-down", 17)
                 </span>
@@ -69,12 +97,12 @@
                 <table class="av-table manager-table--schedules">
                     <thead>
                         <tr>
-                            <th scope="col">Chuyến / Tàu bay</th>
-                            <th scope="col">Tuyến</th>
-                            <th scope="col">Giờ bay</th>
-                            <th scope="col">Trạng thái</th>
-                            <th scope="col">Ghế / Bán / Giữ / Trống</th>
-                            <th scope="col">Giá cơ bản từ</th>
+                            <th scope="col">@T("Chuyến / Tàu bay", "Flight / Aircraft")</th>
+                            <th scope="col">@T("Tuyến", "Route")</th>
+                            <th scope="col">@T("Giờ bay", "Flight time")</th>
+                            <th scope="col">@T("Trạng thái", "Status")</th>
+                            <th scope="col">@T("Ghế / Bán / Giữ / Trống", "Seats / Sold / Held / Available")</th>
+                            <th scope="col">@T("Giá cơ bản từ", "Base fare from")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,7 +112,7 @@
                                 <td class="manager-flight-name">@row.Flight</td>
                                 <td>@row.Route</td>
                                 <td>@row.Time</td>
-                                <td class="admin-table__result admin-table__result--@row.StatusTone">@row.StatusText</td>
+                                <td class="admin-table__result admin-table__result--@row.StatusTone">@ManagerSchedulesViewModel.StatusLabel(row.StatusText)</td>
                                 <td>@row.Seats</td>
                                 <td>@row.Price</td>
                             </tr>
@@ -96,9 +124,9 @@
             <div class="av-pagination">
                 <span>@Model.ResultText</span>
                 <span class="av-pagination__links">
-                    <a href="/quan-ly/lich-bay">Trước</a>
+                    <a href="/quan-ly/lich-bay">@T("Trước", "Previous")</a>
                     <span class="is-current">1</span>
-                    <a href="/quan-ly/lich-bay">Sau</a>
+                    <a href="/quan-ly/lich-bay">@T("Sau", "Next")</a>
                 </span>
             </div>
         </div>
@@ -115,6 +143,7 @@
                         <span class="av-caption">@Model.EditorSubtitle</span>
                     </div>
                     <div class="manager-editor__tools">
+<<<<<<< Updated upstream
                         <a class="av-btn av-btn--outline av-btn--sm" href="/quan-ly/lich-bay?hop-thoai=doi-gia">
                             Đổi giá
                         </a>
@@ -124,6 +153,72 @@
                     </div>
                 </div>
 
+=======
+                        @if (!Model.EditorIsNew)
+                        {
+                            <a class="av-btn av-btn--outline av-btn--sm"
+                               href="/quan-ly/lich-bay?ngay=@Model.DateValue&chon=@Model.SelectedFlightId&hop-thoai=doi-gia">
+                                @T("Đổi giá", "Update fare")
+                            </a>
+                            <a class="av-btn av-btn--outline av-btn--sm admin-text-danger"
+                               href="/quan-ly/lich-bay?ngay=@Model.DateValue&chon=@Model.SelectedFlightId&hop-thoai=huy-chuyen">
+                                @T("Hủy chuyến", "Cancel flight")
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.EditorIsNew)
+                {
+                    <div class="manager-editor__row manager-editor__row--two">
+                        <label class="av-field">
+                            <span class="av-label">@T("Số hiệu chuyến bay *", "Flight number *")</span>
+                            <span class="av-control">
+                                <input type="text" name="so-hieu" placeholder="@T("Ví dụ VN210", "Example: VN210")" required />
+                            </span>
+                        </label>
+                        <label class="av-field">
+                            <span class="av-label">@T("Hãng hàng không *", "Airline *")</span>
+                            <span class="av-control">
+                                <select name="hang-hang-khong-id" required>
+                                    @foreach (var option in Model.EditorAirlineOptions)
+                                    {
+                                        <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                                    }
+                                </select>
+                                @Html.Icon("chevron-down", 17)
+                            </span>
+                        </label>
+                    </div>
+                    <div class="manager-editor__row manager-editor__row--two">
+                        <label class="av-field">
+                            <span class="av-label">@T("Tuyến bay *", "Route *")</span>
+                            <span class="av-control">
+                                <select name="tuyen-bay-id" required>
+                                    @foreach (var option in Model.EditorRouteOptions)
+                                    {
+                                        <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                                    }
+                                </select>
+                                @Html.Icon("chevron-down", 17)
+                            </span>
+                        </label>
+                        <label class="av-field">
+                            <span class="av-label">@T("Tàu bay *", "Aircraft *")</span>
+                            <span class="av-control">
+                                <select name="may-bay-id" required>
+                                    @foreach (var option in Model.EditorAircraftOptions)
+                                    {
+                                        <option value="@option.Value" selected="@option.IsSelected">@option.Label</option>
+                                    }
+                                </select>
+                                @Html.Icon("chevron-down", 17)
+                            </span>
+                        </label>
+                    </div>
+                }
+
+>>>>>>> Stashed changes
                 <div class="manager-editor__row manager-editor__row--three">
                     <label class="av-field">
                         <span class="av-label">@Model.EditorDateLabel</span>
@@ -141,23 +236,23 @@
                         <span class="av-label">@Model.EditorStatusLabel</span>
                         <span class="av-control">
                             <select name="trang-thai">
-                                <option selected>@Model.EditorStatusValue</option>
-                                <option>Tạm ngừng mở bán</option>
-                                <option>Đã hủy</option>
+                                <option value="@Model.EditorStatusValue" selected>@ManagerSchedulesViewModel.StatusLabel(Model.EditorStatusValue)</option>
+                                <option value="Tạm ngừng mở bán">@T("Tạm ngừng mở bán", "Pause sales")</option>
+                                <option value="Đã hủy">@T("Đã hủy", "Cancelled")</option>
                             </select>
                             @Html.Icon("chevron-down", 17)
                         </span>
                     </label>
                 </div>
 
-                <div class="admin-table manager-fares">
+                <div class="admin-table manager-fares" role="region" aria-label="@T("Hạng vé và tồn chỗ", "Cabin and availability")" tabindex="0">
                     <table class="av-table">
                         <thead>
                             <tr>
-                                <th scope="col">Hạng ghế</th>
-                                <th scope="col">Sức chứa</th>
-                                <th scope="col">Đã bán</th>
-                                <th scope="col">Cơ bản / khách</th>
+                                <th scope="col">@T("Hạng ghế", "Cabin")</th>
+                                <th scope="col">@T("Sức chứa", "Capacity")</th>
+                                <th scope="col">@T("Đã bán", "Sold")</th>
+                                <th scope="col">@T("Cơ bản / khách", "Base fare / passenger")</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -213,7 +308,7 @@
 
                     <label class="av-check">
                         <input type="checkbox" name="gui-email" checked="@(Model.EmailChecked ? "checked" : null)" />
-                        <span>Gửi email khi lịch bay thay đổi</span>
+                        <span>@T("Gửi email khi lịch bay thay đổi", "Send email when the schedule changes")</span>
                     </label>
 
                     <label class="av-field">
@@ -242,7 +337,7 @@
 {
     var dialog = Model.CancelDialog;
     <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-flight-title">
-        <a class="av-modal__backdrop" href="@dialog.CancelHref" aria-label="Đóng hộp thoại"></a>
+        <a class="av-modal__backdrop" href="@dialog.CancelHref" aria-label="@T("Đóng hộp thoại", "Close dialog")"></a>
 
         <form class="av-modal__panel" method="post" action="/quan-ly/lich-bay/huy-chuyen">
             @Html.AntiForgeryToken()
@@ -252,7 +347,7 @@
                     <h2 class="av-modal__title" id="cancel-flight-title">@dialog.Title</h2>
                     <p class="av-caption">@dialog.Subtitle</p>
                 </div>
-                <a class="admin-modal__close" href="@dialog.CancelHref" aria-label="Đóng">
+                <a class="admin-modal__close" href="@dialog.CancelHref" aria-label="@T("Đóng", "Close")">
                     @Html.Icon("x", 24)
                 </a>
             </div>
@@ -283,20 +378,15 @@
             <label class="av-field">
                 <span class="av-label">@dialog.ReasonLabel</span>
                 <span class="av-control av-control--area">
-                    <textarea name="ly-do" rows="2" required>@dialog.ReasonValue</textarea>
+                    <textarea name="ly-do" rows="2" maxlength="300" required>@dialog.ReasonValue</textarea>
                 </span>
             </label>
 
             <label class="av-field">
                 <span class="av-label">@dialog.MessageLabel</span>
                 <span class="av-control av-control--area">
-                    <textarea name="thong-bao" rows="3" required>@dialog.MessageValue</textarea>
+                    <textarea name="thong-bao" rows="3" maxlength="1000" required>@dialog.MessageValue</textarea>
                 </span>
-            </label>
-
-            <label class="av-check">
-                <input type="checkbox" name="gui-email" checked />
-                <span>@dialog.EmailCheckText</span>
             </label>
 
             <div class="av-alert av-alert--warning">
@@ -321,7 +411,7 @@
 {
     var dialog = Model.PriceDialog;
     <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="change-price-title">
-        <a class="av-modal__backdrop" href="@dialog.CancelHref" aria-label="Đóng hộp thoại"></a>
+        <a class="av-modal__backdrop" href="@dialog.CancelHref" aria-label="@T("Đóng hộp thoại", "Close dialog")"></a>
 
         <form class="av-modal__panel" method="post" action="/quan-ly/lich-bay/doi-gia">
             @Html.AntiForgeryToken()
@@ -332,7 +422,7 @@
                     <h2 class="av-modal__title" id="change-price-title">@dialog.Title</h2>
                     <p class="av-caption">@dialog.Subtitle</p>
                 </div>
-                <a class="admin-modal__close" href="@dialog.CancelHref" aria-label="Đóng">
+                <a class="admin-modal__close" href="@dialog.CancelHref" aria-label="@T("Đóng", "Close")">
                     @Html.Icon("x", 24)
                 </a>
             </div>
@@ -348,6 +438,16 @@
                 </div>
             </div>
 
+<<<<<<< Updated upstream
+=======
+            <label class="av-field">
+                <span class="av-label">@T("Giá cơ bản mới / khách (VND) *", "New base fare / passenger (VND) *")</span>
+                <span class="av-control">
+                    <input type="number" name="gia-moi" min="0" step="1000" value="@dialog.NewAmount" required />
+                </span>
+            </label>
+
+>>>>>>> Stashed changes
             <div class="av-rows">
                 <div class="av-rowline">
                     <span class="av-rowline__label">@dialog.DeltaLabel</span>

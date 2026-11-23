@@ -1,5 +1,6 @@
 <footer class="av-footer" id="tro-giup">
     <div class="av-container av-footer__inner">
+<<<<<<< Updated upstream
         <span>© 2026 AeroViet · An tâm trên mọi hành trình</span>
         <span class="av-footer__links">
             <span>1900 6868</span>
@@ -8,5 +9,15 @@
             <span aria-hidden="true">·</span>
             <a href="/#tro-giup">Bảo mật</a>
         </span>
+=======
+        <span>@T("© 2026 AeroViet · An tâm trên mọi hành trình", "© 2026 AeroViet · Travel with confidence")</span>
+        <div class="av-footer__links">
+            <span>@ViewData["SupportHotline"]</span>
+            <a asp-controller="Home" asp-action="About" aria-current="@((ViewData["Nav"] as string) == "about" ? "page" : null)">@T("Giới thiệu", "About")</a>
+            <a href="/dieu-kien-van-chuyen">@T("Điều kiện vận chuyển", "Conditions of carriage")</a>
+            <a href="/doi-hoan-ve">@T("Đổi / hoàn vé", "Changes and refunds")</a>
+            <a href="/bao-mat">@T("Bảo mật", "Privacy")</a>
+        </div>
+>>>>>>> Stashed changes
     </div>
 </footer>

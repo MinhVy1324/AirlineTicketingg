@@ -1,0 +1,23 @@
+@model JourneyBookingViewModel
+<section class="av-card passenger-block">
+    <h2 class="passenger-block__title">@T("Hành trình & hành khách", "Itinerary & passengers")</h2>
+    <p>@BookingUiText.Party(Model.Selection.Party) · @BookingUiText.LegCount(Model.Selection.LegCount) · @BookingUiText.Text(JourneyRules.Cabin(Model.Selection.Cabin).Name)</p>
+    @foreach (var leg in Model.Legs)
+    {
+        <div class="journey-person">
+            <h3>@BookingUiText.Text(leg.Label) · @leg.Flight.From.Code → @leg.Flight.To.Code</h3>
+            <p>@leg.Flight.FlightNumber · @leg.Flight.Departure.ToString("dd/MM/yyyy HH:mm")–@leg.Flight.Arrival.ToString("HH:mm") (UTC+7)</p>
+            @foreach (var ticket in Model.Tickets.Where(x => x.FlightNumber == leg.Flight.FlightNumber && x.Schedule == leg.Flight.Departure.ToString("dd/MM/yyyy HH:mm")))
+            {
+                <div class="av-rows journey-person">
+                    <strong>@ticket.Passenger · @BookingUiText.Text(ticket.Type)</strong>
+                    <span>@BookingUiText.Text(ticket.Cabin) · @BookingUiText.Text(ticket.Seat) · @BookingUiText.Text(ticket.Baggage)</span>
+                    @if (!string.IsNullOrEmpty(ticket.TicketNumber)) { <span>@T("Mã vé:", "Ticket number:") @ticket.TicketNumber</span> }
+                    <span>@Money.Vnd(ticket.Total)</span>
+                </div>
+            }
+        </div>
+    }
+    <hr class="av-divider" />
+    <p>@T("Người liên hệ:", "Contact:") @Model.Form.ContactName · @Model.Form.Email · @Model.Form.Phone</p>
+</section>

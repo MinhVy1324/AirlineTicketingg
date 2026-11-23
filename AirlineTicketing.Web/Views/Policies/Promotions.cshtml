@@ -1,0 +1,24 @@
+@model BookingPromotion
+@{ ViewData["Title"] = T("Ưu đãi đặt vé", "Booking offers"); }
+<article class="av-page av-container">
+    <section class="av-card policy-card">
+        <div class="av-card__body av-card__stack">
+            <h1 class="av-page-title">@ViewData["Title"]</h1>
+            @if (Model.IsActive)
+            {
+                <h2 class="av-title-20">@BookingPromotion.Code · @T("Giảm đến", "Save up to") @Money.Vnd(BookingPromotion.MaximumDiscount)</h2>
+                <p>@T(
+                    $"Dùng cho đơn từ {Money.Vnd(BookingPromotion.Minimum)} trước giảm giá, có phí dịch vụ. Mức giảm tối đa bằng phí dịch vụ của đơn.",
+                    $"Available on bookings from {Money.Vnd(BookingPromotion.Minimum)} before discounts when there is a service fee. The discount is capped at that fee.")</p>
+                <p>@T(
+                    $"Nhập mã ở bước Kiểm tra & thanh toán trước khi tạo giao dịch. Ưu đãi áp dụng một lần trên mỗi mã đặt chỗ đến hết {Model.EndsAtText} (giờ Việt Nam). Nếu chỉnh sửa hành khách hoặc dịch vụ và tạo đặt chỗ mới, hãy áp dụng mã lại.",
+                    $"Enter the code at Review and pay before creating a transaction. The offer can be used once per booking through {Model.EndsAtText} (Vietnam time). Apply it again if you create a new booking after editing passengers or services.")</p>
+            }
+            else
+            {
+                <p>@T($"Ưu đãi {BookingPromotion.Code} đã kết thúc.", $"Offer {BookingPromotion.Code} has ended.")</p>
+            }
+            <p><a class="av-btn av-btn--primary" href="/#tim-chuyen">@T("Tìm chuyến bay", "Find flights")</a></p>
+        </div>
+    </section>
+</article>

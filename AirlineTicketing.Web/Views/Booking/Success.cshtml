@@ -1,6 +1,6 @@
 @model BookingViewModel
 @{
-    ViewData["Title"] = "Đặt vé thành công";
+    ViewData["Title"] = T("Đặt vé thành công", "Booking confirmed");
     ViewData["Nav"] = "tickets";
     var flight = Model.Flight;
 }
@@ -8,22 +8,41 @@
 <div class="av-page av-container">
     <partial name="_Stepper" model="4" />
 
+<<<<<<< Updated upstream
     <section class="success-hero">
         <span class="success-hero__check">@Html.Icon("check-circle", 34)</span>
         <h1 class="success-hero__title">Đặt vé thành công. Hẹn gặp bạn trên mây!</h1>
         <p class="success-hero__text">Vé điện tử đã được gửi đến @Model.Passenger.Email.</p>
+=======
+    @if ((TempData["TicketEmailMessage"] ?? ViewData["TicketDeliveryMessage"]) is string emailMessage)
+    {
+        <div class="av-alert av-alert--@(TempData["TicketEmailTone"] ?? "info")" role="status">
+            <span class="av-alert__icon">@Html.Icon("mail", 20)</span>
+            <div class="av-alert__body"><span>@BookingUiText.Text(emailMessage)</span></div>
+        </div>
+    }
+
+    <section class="success-hero">
+        <span class="success-hero__check">@Html.Icon("check-circle", 34)</span>
+        <h1 class="success-hero__title">@T("Đặt vé thành công", "Booking confirmed")</h1>
+        <p class="success-hero__text">@T("Vé điện tử đã được phát hành. Bạn có thể tải PDF hoặc gửi lại qua email ở bên dưới.", "Your e-ticket has been issued. You can download the PDF or resend it by email below.")</p>
+>>>>>>> Stashed changes
     </section>
 
     <div class="success-layout">
         <article class="ticket">
             <div class="ticket__head">
                 <div class="av-stack av-gap-3">
-                    <span class="ticket__pnr-label">MÃ ĐẶT CHỖ (PNR)</span>
-                    <strong class="ticket__pnr">@Model.Pnr</strong>
+                    <span class="ticket__pnr-label">@T("MÃ ĐẶT CHỖ (PNR)", "BOOKING REFERENCE (PNR)")</span>
+                    <div class="ticket__code-tools">
+                        <strong class="ticket__pnr">@Model.Pnr</strong>
+                        <button type="button" class="av-copy" data-copy-value="@Model.Pnr"
+                                data-copy-message="@T("Đã sao chép mã đặt chỗ.", "Booking reference copied.")" hidden>@T("Sao chép mã", "Copy code")</button>
+                    </div>
                 </div>
                 <div class="ticket__status">
-                    <span class="av-badge av-badge--success">Đã thanh toán</span>
-                    <span class="av-badge av-badge--success">Đã xuất vé</span>
+                    <span class="av-badge av-badge--success">@T("Đã thanh toán", "Paid")</span>
+                    <span class="av-badge av-badge--success">@T("Đã xuất vé", "Ticket issued")</span>
                 </div>
             </div>
 
@@ -36,26 +55,30 @@
                         </span>
                         <span class="av-badge av-badge--info">@flight.FlightNumber</span>
                     </div>
-                    <span class="summary-flight__date">@Money.LongDate(flight.Departure) · @flight.Stops</span>
+                    <span class="summary-flight__date">@BookingUiText.LongDate(flight.Departure) · @BookingUiText.Text(flight.Stops)</span>
 
                     <partial name="_FlightTimeline" model="new FlightTimelineModel(flight, ShowAirportName: true)" />
 
                     <hr class="av-divider" />
-                    <span class="av-caption">@flight.FareName · 1 người lớn</span>
+                    <span class="av-caption">@BookingUiText.Text(flight.FareName) · @T("1 người lớn", "1 adult")</span>
                 </div>
 
                 <hr class="av-divider" />
 
                 <div class="ticket__passenger">
                     <div>
-                        <span class="ticket__kicker">HÀNH KHÁCH</span>
+                        <span class="ticket__kicker">@T("HÀNH KHÁCH", "PASSENGER")</span>
                         <strong class="ticket__name">@Model.Passenger.FullName</strong>
+<<<<<<< Updated upstream
                         <span class="av-caption">Người lớn · Ghế @Model.SeatCode · @Model.SeatPosition</span>
+=======
+                        <span class="av-caption">@T("Người lớn · Ghế", "Adult · Seat") @Model.SeatCode · @BookingUiText.Text(Model.SeatTypeName)</span>
+>>>>>>> Stashed changes
                     </div>
                     <div>
-                        <span class="ticket__kicker">SỐ VÉ ĐIỆN TỬ</span>
+                        <span class="ticket__kicker">@T("SỐ VÉ ĐIỆN TỬ", "E-TICKET NUMBER")</span>
                         <span class="ticket__ticketno">@Model.TicketNumber</span>
-                        <span class="av-caption">Xuất vé: @Model.IssuedAtText</span>
+                        <span class="av-caption">@T("Xuất vé:", "Issued:") @Model.IssuedAtText</span>
                     </div>
                 </div>
 
@@ -63,21 +86,30 @@
 
                 <div class="av-rows">
                     <div class="av-rowline">
+<<<<<<< Updated upstream
                         <span class="av-rowline__label">Hành lý ký gửi</span>
                         <span class="av-rowline__value">23 kg + mua thêm 10 kg</span>
                     </div>
                     <div class="av-rowline">
                         <span class="av-rowline__label">Thanh toán</span>
                         <span class="av-rowline__value">Thẻ @Model.CardBrand · •••• @Model.CardLast4</span>
+=======
+                        <span class="av-rowline__label">@T("Hành lý ký gửi", "Checked baggage")</span>
+                        <span class="av-rowline__value">@BookingUiText.Text(Model.BaggageText)</span>
+                    </div>
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">@T("Thanh toán", "Payment")</span>
+                        <span class="av-rowline__value">@BookingUiText.Text(Model.PaymentDisplayText)</span>
+>>>>>>> Stashed changes
                     </div>
                     <div class="av-rowline av-rowline--total">
-                        <span class="av-rowline__label">Tổng đã thanh toán</span>
+                        <span class="av-rowline__label">@T("Tổng đã thanh toán", "Total paid")</span>
                         <span class="av-rowline__value av-num">@Money.Vnd(Model.Price.Total)</span>
                     </div>
                 </div>
 
                 <p class="av-caption">
-                    Giao dịch @Model.TransactionCode · @Model.PaidAtText (UTC+7)
+                    @T("Giao dịch", "Transaction") @Model.TransactionCode · @BookingUiText.DateTimeText(Model.PaidAtText) (UTC+7)
                 </p>
             </div>
         </article>
@@ -85,28 +117,33 @@
         <aside class="booking-aside">
             <section class="av-card">
                 <div class="av-card__body av-card__stack">
-                    <h2 class="av-card__title">Trước khi đến sân bay</h2>
+                    <h2 class="av-card__title">@T("Trước khi đến sân bay", "Before you go to the airport")</h2>
 
                     <ul class="guide">
                         <li class="guide__item">
                             <span class="guide__icon">@Html.Icon("clock", 20)</span>
                             <div class="guide__body">
-                                <span class="guide__title">Có mặt trước giờ bay 2 tiếng</span>
-                                <span class="guide__text">Làm thủ tục tại sân bay @flight.From.Name.</span>
+                                <span class="guide__title">@T("Có mặt trước giờ bay 2 tiếng", "Arrive 2 hours before departure")</span>
+                                <span class="guide__text">@T($"Làm thủ tục tại sân bay {flight.From.Name}.", $"Check in at {flight.From.Name} airport.")</span>
                             </div>
                         </li>
                         <li class="guide__item">
                             <span class="guide__icon">@Html.Icon("id-card", 20)</span>
                             <div class="guide__body">
-                                <span class="guide__title">Mang giấy tờ tùy thân hợp lệ</span>
-                                <span class="guide__text">Thông tin phải trùng với vé điện tử.</span>
+                                <span class="guide__title">@T("Mang giấy tờ tùy thân hợp lệ", "Bring valid identification")</span>
+                                <span class="guide__text">@T("Thông tin phải trùng với vé điện tử.", "Your identification must match the e-ticket.")</span>
                             </div>
                         </li>
                         <li class="guide__item">
                             <span class="guide__icon">@Html.Icon("luggage", 20)</span>
                             <div class="guide__body">
+<<<<<<< Updated upstream
                                 <span class="guide__title">Kiểm tra hành lý của bạn</span>
                                 <span class="guide__text">12 kg xách tay · Tổng 33 kg ký gửi.</span>
+=======
+                                <span class="guide__title">@T("Kiểm tra hành lý của bạn", "Check your baggage")</span>
+                                <span class="guide__text">@T($"12 kg xách tay · Ký gửi {Model.BaggageText}.", $"12 kg carry-on · Checked baggage: {BookingUiText.Text(Model.BaggageText)}.")</span>
+>>>>>>> Stashed changes
                             </div>
                         </li>
                     </ul>
@@ -116,30 +153,51 @@
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("info", 20)</span>
                 <div class="av-alert__body">
-                    <span class="av-alert__title">Đây là vé điện tử</span>
-                    <span>Không phải thẻ lên máy bay. Bạn cần làm thủ tục trước chuyến bay.</span>
+                    <span class="av-alert__title">@T("Đây là vé điện tử", "This is an e-ticket")</span>
+                    <span>@T("Không phải thẻ lên máy bay. Bạn cần làm thủ tục trước chuyến bay.", "Check in before departure to receive your boarding pass.")</span>
                 </div>
             </div>
 
             <section class="av-card">
                 <div class="av-card__body av-card__stack">
+<<<<<<< Updated upstream
                     <h2 class="av-card__title">Hỗ trợ hành trình</h2>
                     <span class="av-body">1900 6868 · 06:00–22:00</span>
                     <p class="av-caption">Cung cấp PNR @Model.Pnr để được hỗ trợ.</p>
+=======
+                    <h2 class="av-card__title">@T("Hỗ trợ hành trình", "Travel support")</h2>
+                    <span class="av-body">@ViewData["SupportHotline"] · 06:00–22:00</span>
+                    <p class="av-caption">@T($"Cung cấp PNR {Model.Pnr} để được hỗ trợ.", $"Give support your booking reference {Model.Pnr}.")</p>
+>>>>>>> Stashed changes
                 </div>
             </section>
         </aside>
     </div>
 
     <div class="post-actions">
+<<<<<<< Updated upstream
         <button type="button" class="av-btn av-btn--primary">
             @Html.Icon("download", 17)
             <span>Tải vé điện tử (PDF)</span>
         </button>
+=======
+        <a class="av-btn av-btn--primary" href="/ve/@Model.Pnr/pdf" data-feedback-download>
+            @Html.Icon("download", 17)
+            <span>@T("Tải vé điện tử (PDF)", "Download e-ticket (PDF)")</span>
+        </a>
+        <form method="post" action="/ve/@Model.Pnr/gui-lai-email" style="display:inline-flex;margin:0;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="quayLai" value="/dat-ve/thanh-cong?pnr=@Model.Pnr" />
+            <button type="submit" class="av-btn av-btn--outline">
+                @Html.Icon("mail", 17)
+                <span>@T("Gửi lại vé qua email", "Resend ticket by email")</span>
+            </button>
+        </form>
+>>>>>>> Stashed changes
         <a class="av-btn av-btn--outline" href="/ve-cua-toi">
             @Html.Icon("ticket", 17)
-            <span>Xem đặt chỗ của tôi</span>
+            <span>@T("Xem đặt chỗ của tôi", "View my booking")</span>
         </a>
-        <a class="av-btn av-btn--outline" href="/">Về trang chủ</a>
+        <a class="av-btn av-btn--outline" href="/">@T("Về trang chủ", "Back to home")</a>
     </div>
 </div>

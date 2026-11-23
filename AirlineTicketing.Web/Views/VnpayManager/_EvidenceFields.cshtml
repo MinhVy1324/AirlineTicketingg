@@ -1,0 +1,30 @@
+@model AirlineTicketing.Web.Controllers.PaymentEvidenceForm
+@{
+    var receiptHint = $"receipt-hint-{Model.Id}";
+    var amountHint = $"amount-hint-{Model.Id}";
+    var invalidReceipt = Model.Field == "receipt";
+    var invalidAmount = Model.Field == "amount";
+}
+<div class="payment-evidence-fields">
+    <label class="av-field">
+        <span class="av-label">@T("Mã chứng từ trên sao kê", "Statement evidence reference")</span>
+        <span class="av-control @(invalidReceipt ? "is-invalid" : null)">
+            <input name="receipt" type="text" value="@Model.Receipt" minlength="3" maxlength="64" required autocomplete="off"
+                   pattern="[A-Za-z0-9][A-Za-z0-9_.\/\-]{2,63}" title="@T("3–64 ký tự gồm chữ, số hoặc dấu -, _, . và /.", "3–64 characters using letters, numbers, hyphens, underscores, periods or slashes.")"
+                   aria-describedby="@receiptHint" aria-invalid="@(invalidReceipt ? "true" : null)" />
+        </span>
+        <span id="@receiptHint" class="@(invalidReceipt ? "av-field__error" : "av-field__hint")" role="@(invalidReceipt ? "alert" : null)">
+            @(invalidReceipt ? Model.Error : T("Dùng mã giao dịch trên sao kê, ví dụ DEMO-THU-001.", "Use the statement transaction reference, for example DEMO-THU-001."))
+        </span>
+    </label>
+    <label class="av-field">
+        <span class="av-label">@T("Số tiền trên sao kê (VND)", "Statement amount (VND)")</span>
+        <span class="av-control @(invalidAmount ? "is-invalid" : null)">
+            <input name="amount" type="text" value="@Model.Amount" inputmode="numeric" pattern="[0-9]+" maxlength="14" required
+                   aria-describedby="@amountHint" aria-invalid="@(invalidAmount ? "true" : null)" />
+        </span>
+        <span id="@amountHint" class="@(invalidAmount ? "av-field__error" : "av-field__hint")" role="@(invalidAmount ? "alert" : null)">
+            @(invalidAmount ? Model.Error : T("Nhập chữ số liền nhau, ví dụ 2450000.", "Enter digits together, for example 2450000."))
+        </span>
+    </label>
+</div>

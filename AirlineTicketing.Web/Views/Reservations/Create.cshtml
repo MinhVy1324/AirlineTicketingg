@@ -1,0 +1,44 @@
+@model CreateReservationViewModel
+@{
+    ViewData["Title"] = T("Thông tin hành khách", "Passenger information");
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">@T("Thông tin người đặt và hành khách", "Contact and passenger details")</h1>
+        <p class="av-page-subtitle">@T("Giá cuối cùng và thời hạn giữ ghế sẽ được máy chủ xác nhận.", "The final price and seat hold expiry will be confirmed.")</p>
+    </header>
+
+    <form method="post" class="booking-layout">
+        @Html.AntiForgeryToken()
+        <div class="booking-main av-card">
+            <div class="av-card__body av-stack av-gap-18">
+                <div asp-validation-summary="ModelOnly" class="av-alert av-alert--danger"></div>
+                <input asp-for="ChuyenBayId" type="hidden" />
+
+                <h2 class="av-card__title">@T("Người liên hệ", "Contact person")</h2>
+                <label class="av-field"><span class="av-label">@T("Họ tên", "Full name")</span><input asp-for="HoTenLienHe" required /></label>
+                <span asp-validation-for="HoTenLienHe"></span>
+                <label class="av-field"><span class="av-label">Email</span><input asp-for="Email" required /></label>
+                <span asp-validation-for="Email"></span>
+                <label class="av-field"><span class="av-label">@T("Số điện thoại", "Phone number")</span><input asp-for="SoDienThoai" required /></label>
+                <span asp-validation-for="SoDienThoai"></span>
+
+                <hr class="av-divider" />
+                <h2 class="av-card__title">@T("Hành khách", "Passenger")</h2>
+                <label class="av-field"><span class="av-label">@T("Họ tên trên giấy tờ", "Name on travel document")</span><input asp-for="HoTenHanhKhach" required /></label>
+                <label class="av-field"><span class="av-label">@T("Ngày sinh", "Date of birth")</span><input asp-for="NgaySinh" /></label>
+                <label class="av-field"><span class="av-label">@T("Quốc tịch", "Nationality")</span><input asp-for="QuocTich" /></label>
+                <label class="av-field"><span class="av-label">@T("Hộ chiếu/giấy tờ", "Passport or ID")</span><input asp-for="SoHoChieu" /></label>
+                <label class="av-field"><span class="av-label">@T("Ghế", "Seat")</span><input asp-for="SoGhe" required /></label>
+                <label class="av-field">
+                    <span class="av-label">@T("Hạng vé", "Cabin class")</span>
+                    <select asp-for="HangVe"><option value="PhoThong">@T("Phổ thông", "Economy")</option><option value="ThuongGia">@T("Thương gia", "Business")</option></select>
+                </label>
+                <button class="av-btn av-btn--primary av-btn--lg" type="submit">@T("Giữ ghế và xác nhận giá", "Hold your seat and confirm the price")</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

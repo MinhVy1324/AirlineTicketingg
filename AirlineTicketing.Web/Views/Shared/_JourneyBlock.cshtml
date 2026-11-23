@@ -8,10 +8,10 @@
         <span class="av-badge av-badge--info">@Model.FlightNumber</span>
     </div>
 
-    <span class="summary-flight__date">@Money.LongDate(Model.Departure) · @Model.Stops</span>
+    <span class="summary-flight__date">@BookingUiText.LongDate(Model.Departure) · @BookingUiText.Text(Model.Stops)</span>
 
     <partial name="_FlightTimeline" model="new FlightTimelineModel(Model, ShowAirportName: true)" />
 
     <hr class="av-divider" />
-    <span class="av-caption">@Model.FareName · 1 người lớn</span>
+    <span class="av-caption">@BookingUiText.Text(Model.FareName) · @T("1 người lớn", "1 adult")</span>
 </div>

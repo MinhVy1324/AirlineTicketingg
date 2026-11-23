@@ -1,0 +1,34 @@
+@model BookingViewModel
+@{ ViewData["Title"] = T("Đặt vé thành công", "Booking confirmed"); ViewData["Nav"] = "book"; }
+<div class="av-page av-container">
+    <partial name="_Stepper" model="4" />
+    <section class="success-hero">
+        <span class="success-hero__check">@Html.Icon("check-circle", 34)</span>
+        <h1 class="success-hero__title">@T("Đặt vé thành công", "Booking confirmed")</h1>
+        <p class="success-hero__text">@T("Vé điện tử đã được phát hành cho toàn bộ hành trình.", "E-tickets have been issued for your entire trip.")</p>
+        <div class="ticket__code-tools">
+            <span>@T("Mã đặt chỗ", "Booking reference") <strong>@Model.Pnr</strong></span>
+            <button type="button" class="av-copy" data-copy-value="@Model.Pnr"
+                    data-copy-message="@T("Đã sao chép mã đặt chỗ.", "Booking reference copied.")" hidden>@T("Sao chép mã", "Copy code")</button>
+        </div>
+    </section>
+    @if ((TempData["TicketEmailMessage"] ?? ViewData["TicketDeliveryMessage"]) is string message)
+    {
+        <div class="av-alert av-alert--@(TempData["TicketEmailTone"] ?? "info")" role="status">@BookingUiText.Text(message)</div>
+    }
+    <div class="booking-layout">
+        <div class="booking-main">
+            <partial name="_JourneySummary" model="Model.Journey" />
+            <div class="av-card passenger-block"><p>@T("Thanh toán:", "Payment:") @BookingUiText.Text(Model.PaymentDisplayText) · @Model.TransactionCode</p><p>@T("Ngày thanh toán:", "Paid at:") @BookingUiText.DateTimeText(Model.PaidAtText)</p>
+                <a class="av-btn av-btn--primary" href="/ve/@Model.Pnr/pdf" data-feedback-download>@T("Tải vé điện tử PDF", "Download e-ticket PDF")</a>
+                <a class="av-btn av-btn--secondary" href="/ve-cua-toi">@T("Vé của tôi", "My tickets")</a>
+                <form method="post" action="/ve/@Model.Pnr/gui-lai-email">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="quayLai" value="/dat-ve/thanh-cong?pnr=@Model.Pnr" />
+                    <button type="submit" class="av-btn av-btn--outline">@T("Gửi lại vé qua email", "Resend ticket by email")</button>
+                </form>
+            </div>
+        </div>
+        <aside class="booking-aside"><partial name="_PriceSummary" model="Model.Price" /></aside>
+    </div>
+</div>

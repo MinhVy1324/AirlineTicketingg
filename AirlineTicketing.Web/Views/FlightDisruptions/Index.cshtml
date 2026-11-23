@@ -1,0 +1,126 @@
+@model FlightDisruptionsViewModel
+@{
+    Layout = "_ManagerLayout";
+    ViewData["Title"] = T("Biến động chuyến bay", "Flight disruptions");
+    ViewData["ManagerNav"] = "disruptions";
+}
+
+<div class="admin-page">
+    <header class="admin-page-head">
+        <div class="admin-page-head__main">
+            <h1 class="admin-page-title">@T("Biến động chuyến bay", "Flight disruptions")</h1>
+            <p class="admin-page-subtitle">@T("Xử lý những đặt chỗ bị ảnh hưởng khi chuyến bay bị hủy hoặc đổi lịch.", "Manage bookings affected by cancellations or schedule changes.")</p>
+        </div>
+    </header>
+    <nav class="admin-tabs" aria-label="@T("Trạng thái xử lý", "Resolution status")">
+        <a class="admin-tab @(!Model.History ? "is-active" : null)" href="/quan-ly/bien-dong-chuyen-bay"
+           aria-current="@(!Model.History ? "page" : null)">@T("Chờ xử lý", "Pending")</a>
+        <a class="admin-tab @(Model.History ? "is-active" : null)" href="/quan-ly/bien-dong-chuyen-bay?history=true"
+           aria-current="@(Model.History ? "page" : null)">@T("Đã xử lý", "Resolved")</a>
+    </nav>
+    @if (Model.Message is not null)
+    {
+        <div class="av-alert av-alert--@(Model.Error ? "danger" : "success")" role="status">@Model.Message</div>
+    }
+    <section class="av-card">
+        <div class="av-card__body">
+            @if (Model.Rows.Count == 0)
+            {
+                <p>@T("Chưa có biến động chuyến bay trong mục này.", "There are no flight disruptions in this category.")</p>
+            }
+            else
+            {
+                <div class="av-table-wrap" tabindex="0" role="region" aria-label="@T("Đặt chỗ bị ảnh hưởng", "Affected bookings")">
+                    <table class="av-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">@T("Mã đặt chỗ", "Booking reference")</th>
+                                <th scope="col">@T("Chặng bị ảnh hưởng", "Affected segment")</th>
+                                <th scope="col">@T("Trạng thái", "Status")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Rows)
+                            {
+                                <tr>
+                                    <td><a class="av-link" href="/quan-ly/bien-dong-chuyen-bay?id=@row.Id&amp;history=@(Model.History ? "true" : "false")">@row.Pnr</a></td>
+                                    <td>@row.Flight · @row.Route</td>
+                                    <td>@(row.Cancelled ? T("Hủy chuyến", "Cancel flight") : T("Đổi lịch", "Reschedule")) · @(row.Result is null ? T("Chờ xử lý", "Pending") : T("Đã xử lý", "Resolved"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
+
+    @if (Model.Selected is { } selected)
+    {
+        <section class="av-card">
+            <div class="av-card__body av-stack av-gap-16">
+                <div class="admin-record-heading">
+                    <h2 class="av-card__title">@T("Đặt chỗ", "Booking") @selected.Pnr</h2>
+                    <span class="av-badge @(selected.Cancelled ? "av-badge--danger" : "av-badge--warning")">
+                        @(selected.Cancelled ? T("Chuyến bị hủy", "Flight cancelled") : T("Đã đổi lịch", "Rescheduled"))
+                    </span>
+                </div>
+                <dl class="admin-data-fields">
+                    <div><dt>@T("Khách hàng", "Customer")</dt><dd>@selected.Name</dd></div>
+                    <div><dt>@T("Chuyến bay", "Flight")</dt><dd>@selected.Flight</dd></div>
+                    <div><dt>@T("Chặng bay", "Flight segment")</dt><dd>@selected.Route</dd></div>
+                    <div><dt>@T("Lịch cũ", "Previous schedule")</dt><dd>@selected.OldSchedule</dd></div>
+                    @if (selected.NewSchedule is not null)
+                    {
+                        <div><dt>@T("Lịch mới", "New schedule")</dt><dd>@selected.NewSchedule</dd></div>
+                    }
+                    <div><dt>@T("Kết quả", "Result")</dt><dd>@(selected.Result ?? T("Đang chờ xử lý", "Pending"))</dd></div>
+                </dl>
+                @if (Model.CanRebook && Model.Alternatives.Count > 0)
+                {
+                    <form class="av-stack av-gap-12" method="post"
+                          action="/quan-ly/bien-dong-chuyen-bay/@selected.Id/chuyen-thay-the">
+                        @Html.AntiForgeryToken()
+                        <label class="av-field">
+                            <span class="av-label">@T("Chuyến thay thế cùng tuyến", "Alternative flight on the same route")</span>
+                            <span class="av-control">
+                                <select name="flightId" required>
+                                    <option value="">@T("Chọn chuyến bay", "Choose a flight")</option>
+                                    @foreach (var candidate in Model.Alternatives)
+                                    {
+                                        <option value="@candidate.Id">@candidate.Description</option>
+                                    }
+                                </select>
+                            </span>
+                        </label>
+                        <label class="av-check">
+                            <input name="confirmed" type="checkbox" value="true" required />
+                            <span>@T("Khách đã đồng ý chuyển cả nhóm trên chặng này. Phí đổi 0 ₫.", "The customer agreed to move the whole group on this segment. No change fee applies.")</span>
+                        </label>
+                        <button type="submit" class="av-btn av-btn--primary">@T("Chuyển sang chuyến thay thế", "Move to alternative flight")</button>
+                    </form>
+                }
+                else if (Model.CanRebook)
+                {
+                    <p>@T("Hiện không có chuyến cùng tuyến phù hợp với các chặng còn lại.", "No alternative flights fit the remaining itinerary.")</p>
+                }
+                @if (Model.CanRefundDemo)
+                {
+                    <form class="av-stack av-gap-12" method="post"
+                          action="/quan-ly/bien-dong-chuyen-bay/@selected.Id/hoan-demo">
+                        @Html.AntiForgeryToken()
+                        <label class="av-check">
+                            <input name="confirmed" type="checkbox" value="true" required />
+                            <span>@T("Khách đã đồng ý hoàn toàn bộ đặt chỗ với số tiền mô phỏng", "The customer agreed to a full booking refund for the simulated amount of") @Model.RefundAmount.</span>
+                        </label>
+                        <button type="submit" class="av-btn av-btn--outline">@T("Hoàn toàn bộ vé demo", "Refund all demo tickets")</button>
+                    </form>
+                }
+                else if (selected.Result is null)
+                {
+                    <p class="av-caption">@T("Hoàn tại đây áp dụng cho đơn thanh toán thẻ mô phỏng chưa bay chặng nào. Các trường hợp khác cần nhân viên đối soát thủ công.", "Refunds here apply to wholly unused bookings paid by simulated card. Staff reconcile other cases manually.")</p>
+                }
+            </div>
+        </section>
+    }
+</div>

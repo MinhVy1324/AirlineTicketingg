@@ -1,0 +1,17 @@
+@{ ViewData["Title"] = T("Chính sách bảo mật", "Privacy policy"); }
+<article class="av-page av-container">
+    <section class="av-card policy-card">
+        <div class="av-card__body av-card__stack">
+            <h1 class="av-page-title">@ViewData["Title"]</h1>
+            <p>@T("Trang này mô tả cách bản demo AeroViet xử lý dữ liệu khi bạn tạo tài khoản và đặt vé. Hãy dùng thông tin mẫu khi trình diễn.", "This page explains how the AeroViet demo handles information when you create an account and book flights. Use sample information in the demo.")</p>
+            <h2 class="av-title-20">@T("Dữ liệu dùng để đặt vé", "Information used for bookings")</h2>
+            <p>@T("AeroViet lưu thông tin liên hệ, hành khách, giấy tờ đã nhập, hành trình, ghế và trạng thái thanh toán để giữ chỗ, phát hành vé và hỗ trợ đổi hoặc hoàn. Địa chỉ IP có thể được ghi vào nhật ký thao tác tài khoản.", "AeroViet stores contact and passenger details, entered identification, itineraries, seats and payment status to hold seats, issue tickets and handle changes or refunds. IP addresses may be recorded in account activity logs.")</p>
+            <h2 class="av-title-20">@T("Tài khoản và phiên làm việc", "Accounts and sessions")</h2>
+            <p>@T("Mật khẩu được lưu dưới dạng băm có muối. Gmail nhập trong hồ sơ đăng ký mới dùng để liên hệ. Cookie giúp duy trì phiên đặt vé và đăng nhập, đồng thời lưu ngôn ngữ giao diện. Tra cứu bằng mã đặt chỗ và email sẽ che một phần thông tin cá nhân.", "Passwords are stored as salted hashes. Gmail addresses entered in new profiles are used for contact. Cookies maintain booking and sign-in sessions and remember your display language. Booking lookup by reference and email masks some personal information.")</p>
+            <h2 class="av-title-20">@T("Thanh toán và email demo", "Demo payments and email")</h2>
+            <p>@T("VNPAY Sandbox nhận dữ liệu thanh toán trên trang riêng. AeroViet lưu số tiền, mã và trạng thái giao dịch. Phương thức mô phỏng nội bộ chỉ nhận số thẻ thử và lưu bốn số cuối. Nếu chưa cấu hình SMTP, email được ghi vào hộp thư demo trên máy chủ.", "VNPAY Sandbox receives payment data on its own page. AeroViet records the amount, reference and transaction status. The built-in simulator accepts test card numbers and stores their last four digits. If SMTP is unavailable, messages go to a demo mailbox on the server.")</p>
+            <h2 class="av-title-20">@T("Hỗ trợ về dữ liệu", "Questions about your information")</h2>
+            <p>@T("Liên hệ", "Contact") @ViewData["SupportEmail"] @T("để hỏi về thông tin đặt vé hoặc yêu cầu cập nhật dữ liệu.", "to ask about booking information or request an update.")</p>
+        </div>
+    </section>
+</article>

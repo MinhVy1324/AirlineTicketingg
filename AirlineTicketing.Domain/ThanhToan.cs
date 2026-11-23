@@ -10,6 +10,9 @@ public class ThanhToan
     public string NhaCungCap { get; set; } = "NoiBo";
     public TrangThaiThanhToan TrangThai { get; set; } = TrangThaiThanhToan.ChoXuLy;
     public string? MaGiaoDich { get; set; }
+    public string? MaDiemThanhToan { get; set; }
+    public string? MaGiaoDichNhaCungCap { get; set; }
+    public string? KetQuaNhaCungCap { get; set; }
     public DateTimeOffset NgayTao { get; set; }
     public DateTimeOffset? NgayHoanTat { get; set; }
 

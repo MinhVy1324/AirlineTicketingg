@@ -1,6 +1,6 @@
 @model AdminSettingsViewModel
 @{
-    ViewData["Title"] = "Cấu hình nghiệp vụ";
+    ViewData["Title"] = T("Cấu hình nghiệp vụ", "Business settings");
     ViewData["AdminNav"] = "settings";
 
     var bookingPair = Model.BookingFields.Take(2).ToArray();
@@ -10,8 +10,8 @@
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Cấu hình nghiệp vụ</h1>
-            <p class="admin-page-subtitle">Chính sách áp dụng cho đơn mới. Đơn đã tạo giữ nguyên điều kiện tại thời điểm đặt.</p>
+            <h1 class="admin-page-title">@T("Cấu hình nghiệp vụ", "Business settings")</h1>
+            <p class="admin-page-subtitle">@T("Chính sách áp dụng cho đơn mới. Đơn đã tạo giữ nguyên điều kiện tại thời điểm đặt.", "Settings apply to new bookings. Existing bookings retain the terms set at booking.")</p>
         </div>
     </header>
 
@@ -23,6 +23,15 @@
         <span class="admin-settings-version__time">@Model.UpdatedText</span>
     </div>
 
+<<<<<<< Updated upstream
+=======
+    @if (TempData["msg"] is string smsg)
+    {
+        var tone = TempData["tone"] as string ?? "info";
+        <div class="av-alert av-alert--@tone" role="@(tone == "danger" ? "alert" : "status")"><div class="av-alert__body"><span>@smsg</span></div></div>
+    }
+
+>>>>>>> Stashed changes
     <form class="admin-page__form" method="post" action="/admin/cau-hinh">
         @Html.AntiForgeryToken()
 
@@ -188,10 +197,10 @@
         <div class="admin-savebar">
             <span class="admin-savebar__note">@Model.FooterNote</span>
             <div class="admin-savebar__actions">
-                <a class="av-btn av-btn--outline" href="/admin/cau-hinh">Hủy thay đổi</a>
+                <a class="av-btn av-btn--outline" href="/admin/cau-hinh">@T("Hủy thay đổi", "Cancel changes")</a>
                 <button type="submit" class="av-btn av-btn--primary">
                     @Html.Icon("check", 17)
-                    <span>Lưu cấu hình</span>
+                    <span>@T("Lưu cấu hình", "Save settings")</span>
                 </button>
             </div>
         </div>

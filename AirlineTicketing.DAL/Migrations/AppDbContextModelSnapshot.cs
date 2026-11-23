@@ -22,6 +22,173 @@ namespace AirlineTicketing.DAL.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+<<<<<<< Updated upstream
+=======
+            modelBuilder.Entity("AirlineTicketing.Domain.BienDongDatVe", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChuyenBayId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DatVeId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("HaCanhCu")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("HaCanhMoi")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("KetQua")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset>("KhoiHanhCu")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("KhoiHanhMoi")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("NgayTao")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("NgayXuLy")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SoHieuCu")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("SoHieuMoi")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChuyenBayId");
+
+                    b.HasIndex("DatVeId", "NgayXuLy");
+
+                    b.HasIndex("NgayXuLy", "NgayTao");
+
+                    b.ToTable("BienDongDatVes");
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.CauHinhHeThong", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("GiaTri")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Khoa")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("KieuDuLieu")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MoTa")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset>("NgayCapNhat")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("NguoiCapNhat")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Nhom")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Khoa")
+                        .IsUnique();
+
+                    b.HasIndex("Nhom");
+
+                    b.ToTable("CauHinhHeThongs");
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.ChungTuDoiSoat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("HoanTienId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("KetQua")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("MaChungTu")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("MaLenh")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NguoiDoiSoat")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("NhaCungCap")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("SoTien")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<int>("ThanhToanId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("ThoiDiem")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HoanTienId");
+
+                    b.HasIndex("ThanhToanId");
+
+                    b.HasIndex("NhaCungCap", "MaChungTu")
+                        .IsUnique();
+
+                    b.ToTable("ChungTuDoiSoats");
+                });
+
+>>>>>>> Stashed changes
             modelBuilder.Entity("AirlineTicketing.Domain.ChuyenBay", b =>
                 {
                     b.Property<int>("Id")
@@ -89,6 +256,25 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasColumnType("character(3)")
                         .IsFixedLength();
 
+<<<<<<< Updated upstream
+=======
+                    b.Property<string>("EmailLienHe")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<string>("GhiChu")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<decimal>("GiamGia")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateTimeOffset>("HetHanGiuCho")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("HanGiuCho");
+
+>>>>>>> Stashed changes
                     b.Property<int>("KhachHangId")
                         .HasColumnType("integer");
 
@@ -97,11 +283,45 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string>("MaKhuyenMai")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<DateTimeOffset>("NgayDat")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+<<<<<<< Updated upstream
+=======
+                    b.Property<DateTimeOffset?>("NgayXacNhan")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("PhiDichVu")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiDoiDaThu")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiHanhLy")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<string>("SoDienThoaiLienHe")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TenLienHe")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<decimal>("ThuePhi")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+>>>>>>> Stashed changes
                     b.Property<decimal>("TongTien")
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric(12,2)");
@@ -122,12 +342,187 @@ namespace AirlineTicketing.DAL.Migrations
                         {
                             t.HasCheckConstraint("CK_DatVe_DonViTienTe", "\"DonViTienTe\" ~ '^[A-Z]{3}$'");
 
+<<<<<<< Updated upstream
+=======
+                            t.HasCheckConstraint("CK_DatVe_GiamGia", "\"GiamGia\" BETWEEN 0 AND \"PhiDichVu\"");
+
+                            t.HasCheckConstraint("CK_DatVe_Phi", "\"ThuePhi\" >= 0 AND \"PhiDichVu\" >= 0 AND \"PhiHanhLy\" >= 0");
+
+>>>>>>> Stashed changes
                             t.HasCheckConstraint("CK_DatVe_TongTien", "\"TongTien\" >= 0");
 
                             t.HasCheckConstraint("CK_DatVe_TrangThai", "\"TrangThai\" IN ('ChoThanhToan', 'DaXacNhan', 'DaHuy', 'HetHan', 'HoanTien')");
                         });
                 });
 
+<<<<<<< Updated upstream
+=======
+            modelBuilder.Entity("AirlineTicketing.Domain.EmailDeliveryJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Delivered")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid?>("LeaseId")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProtectedMessage")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique()
+                        .HasFilter("\"CompletedAt\" IS NULL AND \"BookingId\" IS NOT NULL");
+
+                    b.HasIndex("NextAttemptAt")
+                        .HasFilter("\"CompletedAt\" IS NULL");
+
+                    b.ToTable("EmailDeliveryJobs");
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.HangHangKhong", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("DangHoatDong")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("MaHang")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<string>("MaIcao")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<string>("QuocGia")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TenHang")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaHang")
+                        .IsUnique();
+
+                    b.ToTable("HangHangKhongS");
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.HangVe", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChuyenBayId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("DangMoBan")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("GiaCoBan")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<int>("HanhLyKyGuiKg")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HanhLyXachTayKg")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MaHang")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("NhomHang")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("PhiDoi")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiHoan")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<int>("SoGhe")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SoGheDaBan")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TenHang")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChuyenBayId", "MaHang")
+                        .IsUnique();
+
+                    b.ToTable("HangVes", t =>
+                        {
+                            t.HasCheckConstraint("CK_HangVe_Cho", "\"SoGhe\" > 0 AND \"SoGheDaBan\" >= 0 AND \"SoGheDaBan\" <= \"SoGhe\"");
+
+                            t.HasCheckConstraint("CK_HangVe_Gia", "\"GiaCoBan\" >= 0");
+
+                            t.HasCheckConstraint("CK_HangVe_HanhLy", "\"HanhLyXachTayKg\" >= 0 AND \"HanhLyKyGuiKg\" >= 0");
+
+                            t.HasCheckConstraint("CK_HangVe_Phi", "\"PhiDoi\" >= 0 AND \"PhiHoan\" >= 0");
+                        });
+                });
+
+>>>>>>> Stashed changes
             modelBuilder.Entity("AirlineTicketing.Domain.HanhKhach", b =>
                 {
                     b.Property<int>("Id")
@@ -175,6 +570,10 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasColumnType("character(3)")
                         .IsFixedLength();
 
+                    b.Property<string>("KetQuaNhaCungCap")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
                     b.Property<string>("LyDo")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
@@ -182,6 +581,13 @@ namespace AirlineTicketing.DAL.Migrations
                     b.Property<string>("MaGiaoDich")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MaGiaoDichNhaCungCap")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.Property<DateTimeOffset?>("NgayGuiCongThanhToan")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("NgayHoanTat")
                         .HasColumnType("timestamp with time zone");
@@ -210,6 +616,9 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<int?>("YeuCauDoiHoanId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NhaCungCap", "MaGiaoDich")
@@ -217,6 +626,9 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasFilter("\"MaGiaoDich\" IS NOT NULL");
 
                     b.HasIndex("ThanhToanId", "NgayTao");
+
+                    b.HasIndex("YeuCauDoiHoanId", "ThanhToanId")
+                        .IsUnique();
 
                     b.ToTable("HoanTiens", t =>
                         {
@@ -366,6 +778,10 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<string>("GmailLienHe")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
                     b.Property<int?>("KhachHangId")
                         .HasColumnType("integer");
 
@@ -440,9 +856,21 @@ namespace AirlineTicketing.DAL.Migrations
                         .HasColumnType("character(3)")
                         .IsFixedLength();
 
+                    b.Property<string>("KetQuaNhaCungCap")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("MaDiemThanhToan")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
                     b.Property<string>("MaGiaoDich")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MaGiaoDichNhaCungCap")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
 
                     b.Property<DateTimeOffset?>("NgayHoanTat")
                         .HasColumnType("timestamp with time zone");
@@ -476,6 +904,9 @@ namespace AirlineTicketing.DAL.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DatVeId", "NgayTao");
+
+                    b.HasIndex("MaDiemThanhToan", "MaGiaoDichNhaCungCap")
+                        .IsUnique();
 
                     b.HasIndex("NhaCungCap", "MaGiaoDich")
                         .IsUnique()
@@ -554,15 +985,71 @@ namespace AirlineTicketing.DAL.Migrations
                     b.Property<int>("HanhKhachId")
                         .HasColumnType("integer");
 
+<<<<<<< Updated upstream
+=======
+                    b.Property<int>("HanhLyKyGuiKg")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HanhLyXachTayKg")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LoaiHanhKhach")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("NguoiLon");
+
+                    b.Property<string>("LyDoHuy")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+>>>>>>> Stashed changes
                     b.Property<string>("MaVe")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+<<<<<<< Updated upstream
+=======
+                    b.Property<DateTimeOffset?>("NgayHuy")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("NgayPhatHanh")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("NguoiDiKemId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PhiChoNgoi")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiDichVu")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiDoi")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiHanhLy")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiHoan")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+>>>>>>> Stashed changes
                     b.Property<string>("SoGhe")
                         .IsRequired()
                         .HasMaxLength(5)
                         .HasColumnType("character varying(5)");
+
+                    b.Property<decimal>("ThuePhi")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
 
                     b.Property<string>("TrangThai")
                         .IsRequired()
@@ -576,13 +1063,15 @@ namespace AirlineTicketing.DAL.Migrations
                     b.HasIndex("MaVe")
                         .IsUnique();
 
+                    b.HasIndex("NguoiDiKemId");
+
                     b.HasIndex("ChuyenBayId", "HanhKhachId")
                         .IsUnique()
                         .HasFilter("\"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
 
                     b.HasIndex("ChuyenBayId", "SoGhe")
                         .IsUnique()
-                        .HasFilter("\"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
+                        .HasFilter("\"SoGhe\" <> '' AND \"TrangThai\" IN ('TamGiu', 'DaPhatHanh')");
 
                     b.HasIndex("DatVeId", "TrangThai");
 
@@ -594,6 +1083,153 @@ namespace AirlineTicketing.DAL.Migrations
                         });
                 });
 
+<<<<<<< Updated upstream
+=======
+            modelBuilder.Entity("AirlineTicketing.Domain.YeuCauDoiHoan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ChuyenBayGocId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ChuyenBayMoiId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DatVeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GhiChuXuLy")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal?>("GiaVeMoi")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<string>("LoaiYeuCau")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("LyDo")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("MaYeuCau")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset>("NgayTao")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTimeOffset?>("NgayXuLy")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("NguoiXuLyId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PhiDichVuKhongHoan")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiDoi")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiHanhLyKhongHoan")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal>("PhiHoan")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<string>("PhuongThucHoan")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("SoTienHoan")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<string>("ThongTinBoSung")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChuyenBayMoiId");
+
+                    b.HasIndex("MaYeuCau")
+                        .IsUnique();
+
+                    b.HasIndex("NguoiXuLyId");
+
+                    b.HasIndex("DatVeId", "LoaiYeuCau");
+
+                    b.HasIndex("TrangThai", "NgayTao");
+
+                    b.ToTable("YeuCauDoiHoans", t =>
+                        {
+                            t.HasCheckConstraint("CK_YeuCau_Loai", "\"LoaiYeuCau\" IN ('DoiVe', 'HoanVe')");
+
+                            t.HasCheckConstraint("CK_YeuCau_Phi", "\"PhiDoi\" >= 0 AND \"PhiHoan\" >= 0 AND \"PhiDichVuKhongHoan\" >= 0 AND \"PhiHanhLyKhongHoan\" >= 0 AND \"SoTienHoan\" >= 0");
+
+                            t.HasCheckConstraint("CK_YeuCau_TrangThai", "\"TrangThai\" IN ('ChoDuyet', 'DaDuyet', 'TuChoi', 'HoanTat')");
+                        });
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.BienDongDatVe", b =>
+                {
+                    b.HasOne("AirlineTicketing.Domain.ChuyenBay", "ChuyenBay")
+                        .WithMany()
+                        .HasForeignKey("ChuyenBayId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AirlineTicketing.Domain.DatVe", "DatVe")
+                        .WithMany("BienDongs")
+                        .HasForeignKey("DatVeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChuyenBay");
+
+                    b.Navigation("DatVe");
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.ChungTuDoiSoat", b =>
+                {
+                    b.HasOne("AirlineTicketing.Domain.HoanTien", "HoanTien")
+                        .WithMany()
+                        .HasForeignKey("HoanTienId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AirlineTicketing.Domain.ThanhToan", "ThanhToan")
+                        .WithMany()
+                        .HasForeignKey("ThanhToanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("HoanTien");
+
+                    b.Navigation("ThanhToan");
+                });
+
+>>>>>>> Stashed changes
             modelBuilder.Entity("AirlineTicketing.Domain.ChuyenBay", b =>
                 {
                     b.HasOne("AirlineTicketing.Domain.MayBay", "MayBay")
@@ -624,6 +1260,28 @@ namespace AirlineTicketing.DAL.Migrations
                     b.Navigation("KhachHang");
                 });
 
+<<<<<<< Updated upstream
+=======
+            modelBuilder.Entity("AirlineTicketing.Domain.EmailDeliveryJob", b =>
+                {
+                    b.HasOne("AirlineTicketing.Domain.DatVe", null)
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("AirlineTicketing.Domain.HangVe", b =>
+                {
+                    b.HasOne("AirlineTicketing.Domain.ChuyenBay", "ChuyenBay")
+                        .WithMany("HangVes")
+                        .HasForeignKey("ChuyenBayId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChuyenBay");
+                });
+
+>>>>>>> Stashed changes
             modelBuilder.Entity("AirlineTicketing.Domain.HoanTien", b =>
                 {
                     b.HasOne("AirlineTicketing.Domain.ThanhToan", "ThanhToan")
@@ -632,7 +1290,14 @@ namespace AirlineTicketing.DAL.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("AirlineTicketing.Domain.YeuCauDoiHoan", "YeuCauDoiHoan")
+                        .WithMany()
+                        .HasForeignKey("YeuCauDoiHoanId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("ThanhToan");
+
+                    b.Navigation("YeuCauDoiHoan");
                 });
 
             modelBuilder.Entity("AirlineTicketing.Domain.TaiKhoan", b =>
@@ -695,11 +1360,18 @@ namespace AirlineTicketing.DAL.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("AirlineTicketing.Domain.HanhKhach", "NguoiDiKem")
+                        .WithMany()
+                        .HasForeignKey("NguoiDiKemId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("ChuyenBay");
 
                     b.Navigation("DatVe");
 
                     b.Navigation("HanhKhach");
+
+                    b.Navigation("NguoiDiKem");
                 });
 
             modelBuilder.Entity("AirlineTicketing.Domain.ChuyenBay", b =>
@@ -709,6 +1381,13 @@ namespace AirlineTicketing.DAL.Migrations
 
             modelBuilder.Entity("AirlineTicketing.Domain.DatVe", b =>
                 {
+<<<<<<< Updated upstream
+=======
+                    b.Navigation("BienDongs");
+
+                    b.Navigation("LichSus");
+
+>>>>>>> Stashed changes
                     b.Navigation("ThanhToans");
 
                     b.Navigation("Ves");

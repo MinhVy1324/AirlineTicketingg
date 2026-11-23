@@ -22,6 +22,7 @@ public static class IconExtensions
         ["chevron-down"] = "<path d=\"m6 9 6 6 6-6\" />",
         ["chevron-right"] = "<path d=\"m9 18 6-6-6-6\" />",
         ["chevron-left"] = "<path d=\"m15 18-6-6 6-6\" />",
+        ["menu"] = "<path d=\"M4 6h16M4 12h16M4 18h16\" />",
         ["arrow-left"] = "<path d=\"m12 19-7-7 7-7M19 12H5\" />",
         ["arrow-right"] = "<path d=\"M5 12h14m-7-7 7 7-7 7\" />",
         ["calendar"] = "<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" /><path d=\"M16 2v4M8 2v4M3 10h18\" />",

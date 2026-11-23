@@ -1,6 +1,6 @@
 @model BookingViewModel
 @{
-    ViewData["Title"] = "Hành khách & dịch vụ";
+    ViewData["Title"] = T("Hành khách & dịch vụ", "Passengers & extras");
     ViewData["Nav"] = "book";
 }
 
@@ -8,17 +8,22 @@
     <partial name="_Stepper" model="2" />
 
     <header class="booking-title">
-        <h1 class="av-page-title">Thông tin hành khách</h1>
-        <p class="av-page-subtitle">Nhập đúng thông tin trên giấy tờ tùy thân dùng để làm thủ tục bay.</p>
+        <h1 class="av-page-title">@T("Thông tin hành khách", "Passenger details")</h1>
+        <p class="av-page-subtitle">@T("Nhập đúng thông tin trên giấy tờ tùy thân dùng để làm thủ tục bay.", "Enter the details exactly as they appear on the ID you will use to check in.")</p>
     </header>
 
-    @if (Model.ShowValidationErrors)
+    @if (Model.ValidationErrors.Count > 0)
     {
-        <div class="av-alert av-alert--danger">
+        <div class="av-alert av-alert--danger" role="alert" tabindex="-1" data-validation-summary>
             <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
             <div class="av-alert__body">
-                <span class="av-alert__title">Vui lòng sửa 2 trường trước khi tiếp tục</span>
-                <span>Email chưa đúng định dạng và chưa nhập số giấy tờ. Các thông tin bạn đã nhập vẫn được giữ nguyên.</span>
+                <span class="av-alert__title">@T("Vui lòng kiểm tra thông tin trước khi tiếp tục", "Review your details before continuing")</span>
+                <ul>
+                    @foreach (var error in Model.ValidationErrors)
+                    {
+                        <li><a href="#@error.Key">@BookingUiText.Text(error.Value)</a></li>
+                    }
+                </ul>
             </div>
         </div>
     }
@@ -29,33 +34,31 @@
         <div class="booking-main">
             <section class="av-card passenger-block">
                 <div class="passenger-block__head">
-                    <h2 class="passenger-block__title">Hành khách 1 · Người lớn</h2>
-                    @if (!Model.ShowValidationErrors)
-                    {
-                        <span class="passenger-block__done">Đã nhập thông tin</span>
-                    }
+                    <h2 class="passenger-block__title">@T("Hành khách 1 · Người lớn", "Passenger 1 · Adult")</h2>
+                    <span class="av-caption">@T("Từ 12 tuổi tại ngày bay", "Aged 12 or older on the flight date")</span>
                 </div>
 
                 <div class="form-grid form-grid--3">
                     <label class="av-field">
-                        <span class="av-label">Họ <span class="req">*</span></span>
+                        <span class="av-label">@T("Họ", "Surname") <span class="req">*</span></span>
                         <span class="av-control">
-                            <input type="text" name="lastName" value="@Model.Passenger.LastName" autocomplete="family-name" required />
+                            <input id="lastName" type="text" name="lastName" value="@Model.Passenger.LastName" autocomplete="family-name" maxlength="70" required aria-invalid="@(Model.ErrorFor("lastName") is not null ? "true" : "false")" />
+                        </span>
+                        <span class="av-field__error">@BookingUiText.Text(Model.ErrorFor("lastName"))</span>
+                    </label>
+                    <label class="av-field">
+                        <span class="av-label">@T("Tên đệm và tên", "Middle and given names") <span class="req">*</span></span>
+                        <span class="av-control">
+                            <input id="firstName" type="text" name="firstName" value="@Model.Passenger.FirstName" autocomplete="given-name" maxlength="70" required aria-invalid="@(Model.ErrorFor("firstName") is not null ? "true" : "false")" />
                         </span>
                     </label>
                     <label class="av-field">
-                        <span class="av-label">Tên đệm và tên <span class="req">*</span></span>
+                        <span class="av-label">@T("Giới tính", "Gender") <span class="req">*</span></span>
                         <span class="av-control">
-                            <input type="text" name="firstName" value="@Model.Passenger.FirstName" autocomplete="given-name" required />
-                        </span>
-                    </label>
-                    <label class="av-field">
-                        <span class="av-label">Giới tính <span class="req">*</span></span>
-                        <span class="av-control">
-                            <select name="gender">
-                                <option selected="@(Model.Passenger.Gender == "Nữ")">Nữ</option>
-                                <option selected="@(Model.Passenger.Gender == "Nam")">Nam</option>
-                                <option selected="@(Model.Passenger.Gender == "Khác")">Khác</option>
+                            <select id="gender" name="gender" required>
+                                <option value="Nữ" selected="@(Model.Passenger.Gender == "Nữ")">@T("Nữ", "Female")</option>
+                                <option value="Nam" selected="@(Model.Passenger.Gender == "Nam")">@T("Nam", "Male")</option>
+                                <option value="Khác" selected="@(Model.Passenger.Gender == "Khác")">@T("Khác", "Other")</option>
                             </select>
                             @Html.Icon("chevron-down", 17)
                         </span>
@@ -64,59 +67,55 @@
 
                 <div class="form-grid form-grid--3">
                     <label class="av-field">
-                        <span class="av-label">Ngày sinh <span class="req">*</span></span>
+                        <span class="av-label">@T("Ngày sinh", "Date of birth") <span class="req">*</span></span>
                         <span class="av-control">
-                            <input type="text" name="dateOfBirth" value="@Model.Passenger.DateOfBirth" autocomplete="bday" required />
+                            <input id="dateOfBirth" type="text" name="dateOfBirth" value="@Model.Passenger.DateOfBirth" autocomplete="bday" placeholder="dd/MM/yyyy" maxlength="10" required />
                             @Html.Icon("calendar", 17)
                         </span>
                     </label>
                     <label class="av-field">
-                        <span class="av-label">Quốc tịch <span class="req">*</span></span>
+                        <span class="av-label">@T("Quốc tịch", "Nationality") <span class="req">*</span></span>
                         <span class="av-control">
-                            <select name="nationality">
-                                <option selected>Việt Nam</option>
-                                <option>Khác</option>
-                            </select>
-                            @Html.Icon("chevron-down", 17)
+                            <input id="nationality" type="text" name="nationality" value="@Model.Passenger.Nationality" maxlength="100" required />
                         </span>
                     </label>
                     <label class="av-field">
-                        <span class="av-label">CCCD / Hộ chiếu <span class="req">*</span></span>
-                        <span class="av-control @(Model.ShowValidationErrors ? "is-invalid" : null)">
-                            <input type="text" name="identityNumber" value="@Model.Passenger.IdentityNumber" required />
+                        <span class="av-label">@T("CCCD / Hộ chiếu", "ID card / passport") <span class="req">*</span></span>
+                        <span class="av-control @(Model.ErrorFor("identityNumber") is not null ? "is-invalid" : null)">
+                            <input id="identityNumber" type="text" name="identityNumber" value="@Model.Passenger.IdentityNumber" minlength="6" maxlength="30" required />
                         </span>
-                        @if (Model.ShowValidationErrors)
+                        @if (Model.ErrorFor("identityNumber") is string identityError)
                         {
-                            <span class="av-field__error">Vui lòng nhập số CCCD hoặc hộ chiếu.</span>
+                            <span class="av-field__error">@BookingUiText.Text(identityError)</span>
                         }
                     </label>
                 </div>
 
-                <p class="av-caption">Dữ liệu minh họa · Họ tên không dấu, đúng thứ tự trên giấy tờ.</p>
+                <p class="av-caption">@T("Nhập đúng họ tên và giấy tờ của người đi chuyến bay. Hỗ trợ họ tên tiếng Việt có dấu.", "Enter the passenger's name and ID exactly as shown on their document. Vietnamese accents are accepted.")</p>
             </section>
 
             <section class="av-card passenger-block">
                 <div class="av-card__head-main">
-                    <h2 class="passenger-block__title">Thông tin liên hệ</h2>
-                    <p class="av-page-subtitle">Vé điện tử và cập nhật chuyến bay sẽ gửi đến thông tin này.</p>
+                    <h2 class="passenger-block__title">@T("Thông tin liên hệ", "Contact details")</h2>
+                    <p class="av-page-subtitle">@T("Vé điện tử và cập nhật chuyến bay sẽ gửi đến thông tin này.", "We will use these details to send your e-ticket and flight updates.")</p>
                 </div>
 
                 <div class="form-grid form-grid--2">
                     <label class="av-field">
                         <span class="av-label">Email <span class="req">*</span></span>
-                        <span class="av-control @(Model.ShowValidationErrors ? "is-invalid" : null)">
-                            <input type="email" name="email" value="@Model.Passenger.Email" autocomplete="email" required />
+                        <span class="av-control @(Model.ErrorFor("email") is not null ? "is-invalid" : null)">
+                            <input id="email" type="email" name="email" value="@Model.Passenger.Email" autocomplete="email" maxlength="254" required />
                             @Html.Icon("mail", 17)
                         </span>
-                        @if (Model.ShowValidationErrors)
+                        @if (Model.ErrorFor("email") is string emailError)
                         {
-                            <span class="av-field__error">Email chưa đúng định dạng. Ví dụ: minhanh@example.com</span>
+                            <span class="av-field__error">@BookingUiText.Text(emailError)</span>
                         }
                     </label>
                     <label class="av-field">
-                        <span class="av-label">Số điện thoại <span class="req">*</span></span>
+                        <span class="av-label">@T("Số điện thoại", "Phone number") <span class="req">*</span></span>
                         <span class="av-control">
-                            <input type="tel" name="phone" value="@Model.Passenger.Phone" autocomplete="tel" required />
+                            <input id="phone" type="tel" name="phone" value="@Model.Passenger.Phone" autocomplete="tel" maxlength="20" required />
                             @Html.Icon("phone", 17)
                         </span>
                     </label>
@@ -124,20 +123,28 @@
             </section>
 
             <section class="av-card passenger-block">
-                <h2 class="passenger-block__title">Hành lý &amp; chỗ ngồi</h2>
+                <h2 class="passenger-block__title">@T("Hành lý & chỗ ngồi", "Baggage & seating")</h2>
 
                 <div class="baggage-row">
                     <div class="baggage-row__info">
-                        <span class="baggage-row__title">Hành lý cho @Model.Passenger.FullName</span>
-                        <span class="baggage-row__text">Đã gồm 12 kg xách tay + 23 kg ký gửi.</span>
+                        <span class="baggage-row__title">@T($"Hành lý cho {Model.Passenger.FullName}", $"Baggage for {Model.Passenger.FullName}")</span>
+                        <span class="baggage-row__text">@T("Đã gồm 12 kg xách tay + 23 kg ký gửi.", "Includes 12 kg carry-on and 23 kg checked baggage.")</span>
                     </div>
                     <label class="av-field baggage-row__select">
-                        <span class="av-label">Hành lý ký gửi bổ sung</span>
+                        <span class="av-label">@T("Hành lý ký gửi bổ sung", "Extra checked baggage")</span>
                         <span class="av-control">
+<<<<<<< Updated upstream
                             <select name="baggage">
                                 <option selected>+10 kg · @Money.Vnd(DemoCatalog.ExtraBaggageFee)</option>
                                 <option>Không mua thêm</option>
                                 <option>+20 kg · @Money.Vnd(480_000m)</option>
+=======
+                            <select id="baggage" name="baggage">
+                                @foreach (var package in AirlineTicketing.BUS.BaggageCatalog.Packages)
+                                {
+                                    <option value="@package.Code" selected="@(Model.BaggageCode == package.Code)">@BookingUiText.Text(package.Label) · @Money.Vnd(package.Price)</option>
+                                }
+>>>>>>> Stashed changes
                             </select>
                             @Html.Icon("chevron-down", 17)
                         </span>
@@ -146,6 +153,7 @@
 
                 <hr class="av-divider" />
 
+<<<<<<< Updated upstream
                 <div class="seat-area">
                     <div class="seatmap" role="group" aria-label="Sơ đồ chỗ ngồi">
                         <div class="seatmap__cols" aria-hidden="true">
@@ -205,28 +213,69 @@
                             <span><i class="is-filled"></i>Đang chọn</span>
                             <span><i class="is-taken"></i>Đã có khách</span>
                         </div>
+=======
+                @if (!string.IsNullOrWhiteSpace(Model.SeatError))
+                {
+                    <div class="av-alert av-alert--danger" role="alert">
+                        <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                        <div class="av-alert__body">
+                            <span class="av-alert__title">@T("Chưa thể tiếp tục", "Unable to continue")</span>
+                            <span>@BookingUiText.Text(Model.SeatError)</span>
+                        </div>
+                    </div>
+                }
+
+                <div id="seat" class="seat-area" data-seat-area
+                     data-selected="@(Model.SeatCode == "Chưa chọn" ? "" : Model.SeatCode)">
+                    <partial name="_SeatGrid" model='new SeatGridViewModel("seat", Model.Flight.Aircraft, Model.SeatRows)' />
+                    <div class="seat-detail" aria-live="polite" aria-atomic="true">
+                        <span class="seat-detail__title" data-seat-title>
+                            @(Model.SeatCode == "Chưa chọn" ? T("Chưa chọn chỗ ngồi", "No seat selected") : T($"Ghế {Model.SeatCode} · {Model.SeatTypeName}", $"Seat {Model.SeatCode} · {BookingUiText.Text(Model.SeatTypeName)}"))
+                        </span>
+                        <span class="av-badge av-badge--info" data-seat-badge>
+                            @(Model.SeatCode == "Chưa chọn" ? T("Vui lòng chọn ghế", "Select a seat") : T($"Đã chọn · {Model.SeatPosition}", $"Selected · {BookingUiText.Text(Model.SeatPosition)}"))
+                        </span>
+                        <p class="seat-detail__text" data-seat-text>
+                            @T("Ghế tiêu chuẩn đã bao gồm trong hạng vé. Ghế phổ thông đặc biệt và ghế rộng chân có phụ thu, được cộng vào tổng tiền ở bước thanh toán.", "Standard seats are included. Preferred and extra-legroom seats incur a fee added at checkout.")
+                        </p>
+                        <p class="seat-detail__price" data-seat-price>
+                            @(Model.Price.SeatFee > 0 ? $"+{Money.Vnd(Model.Price.SeatFee)}" : T("Miễn phí", "Free"))
+                        </p>
+                        <partial name="_SeatLegend" />
+                        <p class="av-caption" data-seat-hint role="status">
+                            @T("Bạn cần chọn một ghế trước khi tiếp tục thanh toán.", "Select a seat before continuing to payment.")
+                        </p>
+>>>>>>> Stashed changes
                     </div>
                 </div>
             </section>
 
             <div class="step-nav">
+<<<<<<< Updated upstream
                 <a class="av-btn av-btn--ghost" href="/chuyen-bay">@Html.Icon("arrow-left", 17) Quay lại chọn chuyến</a>
                 <button type="submit" class="av-btn av-btn--primary av-btn--lg" disabled="@Model.ShowValidationErrors">
                     Tiếp tục thanh toán
+=======
+                <a class="av-btn av-btn--ghost" href="/chuyen-bay">@Html.Icon("arrow-left", 17) @T("Quay lại chọn chuyến", "Back to flight selection")</a>
+                <button type="submit" class="av-btn av-btn--primary av-btn--lg"
+                        data-seat-submit
+                        disabled="@(Model.SeatCode == "Chưa chọn")">
+                    @T("Tiếp tục thanh toán", "Continue to payment")
+>>>>>>> Stashed changes
                     @Html.Icon("arrow-right", 17)
                 </button>
             </div>
 
-            @if (Model.ShowValidationErrors)
+            @if (Model.ValidationErrors.Count > 0)
             {
-                <p class="av-caption">Chưa thể tiếp tục. Vui lòng sửa email và bổ sung số giấy tờ ở trên.</p>
+                <p class="av-caption">@T("Các thông tin bạn đã nhập được giữ lại. Sửa các mục được thông báo rồi gửi lại.", "Your information has been retained. Fix the fields shown and resubmit.")</p>
             }
         </div>
 
         <aside class="booking-aside">
             <section class="av-card">
                 <div class="av-card__body summary-flight">
-                    <h2 class="av-card__title">Hành trình của bạn</h2>
+                    <h2 class="av-card__title">@T("Hành trình của bạn", "Your itinerary")</h2>
 
                     <div class="summary-flight__airline">
                         <span class="summary-flight__airline-name">
@@ -236,13 +285,13 @@
                         <span class="av-badge av-badge--neutral">@Model.Flight.FlightNumber</span>
                     </div>
 
-                    <span class="summary-flight__date">@Money.LongDate(Model.Flight.Departure) · @Model.Flight.Stops</span>
+                    <span class="summary-flight__date">@BookingUiText.LongDate(Model.Flight.Departure) · @BookingUiText.Text(Model.Flight.Stops)</span>
 
                     <partial name="_FlightTimeline" model="new FlightTimelineModel(Model.Flight, ShowAirportName: true)" />
 
                     <hr class="av-divider" />
 
-                    <span class="av-caption">@Model.Flight.FareName · 1 người lớn</span>
+                    <span class="av-caption">@BookingUiText.Text(Model.Flight.FareName) · @T("1 người lớn", "1 adult")</span>
                 </div>
             </section>
 
@@ -251,8 +300,8 @@
             <div class="av-alert av-alert--success">
                 <span class="av-alert__icon">@Html.Icon("shield-check", 20)</span>
                 <div class="av-alert__body">
-                    <span class="av-alert__title">Thông tin của bạn được bảo vệ</span>
-                    <span>Chỉ sử dụng để xuất vé và hỗ trợ hành trình.</span>
+                    <span class="av-alert__title">@T("Thông tin của bạn được bảo vệ", "Your information is protected")</span>
+                    <span>@T("Chỉ sử dụng để xuất vé và hỗ trợ hành trình.", "We use it to issue your ticket and support your trip.")</span>
                 </div>
             </div>
         </aside>

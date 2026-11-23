@@ -1,22 +1,38 @@
 @model AdminAccountsViewModel
 @{
-    ViewData["Title"] = "Quản lý tài khoản";
+    ViewData["Title"] = T("Quản lý tài khoản", "Account management");
     ViewData["AdminNav"] = "accounts";
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Quản lý tài khoản</h1>
-            <p class="admin-page-subtitle">Cấp quyền truy cập phù hợp, theo dõi và bảo vệ tài khoản hệ thống.</p>
+            <h1 class="admin-page-title">@T("Quản lý tài khoản", "Account management")</h1>
+            <p class="admin-page-subtitle">@T("Cấp quyền truy cập phù hợp, theo dõi và bảo vệ tài khoản hệ thống.", "Manage access permissions and monitor system accounts.")</p>
         </div>
         <button type="button" class="av-btn av-btn--primary">
             @Html.Icon("plus", 17)
+<<<<<<< Updated upstream
             <span>Tạo tài khoản nhân sự</span>
         </button>
     </header>
 
     <section class="admin-kpis admin-kpis--compact" aria-label="Thống kê tài khoản">
+=======
+            <span>@T("Tạo tài khoản nhân sự", "Create staff account")</span>
+        </a>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone" role="@(Model.MessageTone == "danger" ? "alert" : "status")">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check" : "info", 20)</span>
+            <div class="av-alert__body"><span>@Model.Message</span></div>
+        </div>
+    }
+
+    <section class="admin-kpis admin-kpis--compact" aria-label="@T("Thống kê tài khoản", "Account statistics")">
+>>>>>>> Stashed changes
         @foreach (var kpi in Model.Stats)
         {
             <article class="admin-kpi admin-kpi--compact">
@@ -29,13 +45,13 @@
     <section class="av-card admin-card">
         <div class="av-card__body admin-card__body">
             <div class="admin-card__head-main">
-                <h2 class="av-card__title">Danh sách tài khoản</h2>
-                <span class="av-caption">Thông tin cá nhân dưới đây là dữ liệu minh họa.</span>
+                <h2 class="av-card__title">@T("Danh sách tài khoản", "Accounts")</h2>
+                <span class="av-caption">@T("Thông tin cá nhân dưới đây là dữ liệu minh họa.", "The personal information below is sample data.")</span>
             </div>
 
             <form class="admin-filters admin-filters--accounts" method="get" action="/admin/tai-khoan">
                 <label class="av-field">
-                    <span class="av-label">Tìm kiếm</span>
+                    <span class="av-label">@T("Tìm kiếm", "Search")</span>
                     <span class="av-control">
                         <input type="search" name="q" placeholder="@Model.SearchPlaceholder" autocomplete="off" />
                         @Html.Icon("search", 17)
@@ -43,42 +59,42 @@
                 </label>
 
                 <label class="av-field">
-                    <span class="av-label">Vai trò</span>
+                    <span class="av-label">@T("Vai trò", "Role")</span>
                     <span class="av-control">
                         <select name="vai-tro">
-                            <option selected>@Model.RoleFilter</option>
+                            <option value="@Model.RoleFilter" selected>@T(Model.RoleFilter, "All roles")</option>
                             <option>Admin</option>
                             <option>Manager</option>
-                            <option>Khách hàng</option>
+                            <option value="Khách hàng">@T("Khách hàng", "Customer")</option>
                         </select>
                         @Html.Icon("chevron-down", 17)
                     </span>
                 </label>
 
                 <label class="av-field">
-                    <span class="av-label">Trạng thái</span>
+                    <span class="av-label">@T("Trạng thái", "Status")</span>
                     <span class="av-control">
                         <select name="trang-thai">
-                            <option selected>@Model.StatusFilter</option>
-                            <option>Hoạt động</option>
-                            <option>Đã khóa</option>
+                            <option value="@Model.StatusFilter" selected>@T(Model.StatusFilter, "All statuses")</option>
+                            <option value="Hoạt động">@T("Hoạt động", "Active")</option>
+                            <option value="Đã khóa">@T("Đã khóa", "Locked")</option>
                         </select>
                         @Html.Icon("chevron-down", 17)
                     </span>
                 </label>
 
-                <button type="submit" class="av-btn av-btn--outline admin-filters__submit">Áp dụng</button>
+                <button type="submit" class="av-btn av-btn--outline admin-filters__submit">@T("Áp dụng", "Apply")</button>
             </form>
 
             <div class="admin-table">
                 <table class="av-table admin-table--accounts">
                     <thead>
                         <tr>
-                            <th scope="col">Tài khoản / Email</th>
-                            <th scope="col">Vai trò</th>
-                            <th scope="col">Trạng thái</th>
-                            <th scope="col">Lần đăng nhập cuối</th>
-                            <th scope="col">Thao tác</th>
+                            <th scope="col">@T("Tài khoản / Email", "Account / Email")</th>
+                            <th scope="col">@T("Vai trò", "Role")</th>
+                            <th scope="col">@T("Trạng thái", "Status")</th>
+                            <th scope="col">@T("Lần đăng nhập cuối", "Last sign-in")</th>
+                            <th scope="col">@T("Thao tác", "Actions")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,7 +105,7 @@
                                     <span class="admin-account-name">@row.Name</span>
                                     <span class="admin-account-email">@row.Email</span>
                                 </td>
-                                <td>@row.Role</td>
+                                <td>@(row.Role == nameof(VaiTro.KhachHang) ? T(row.Role, "Customer") : row.Role)</td>
                                 <td class="admin-table__result admin-table__result--@row.StatusTone">@row.StatusText</td>
                                 <td>@row.LastLogin</td>
                                 <td><a class="admin-table__action" href="@row.ActionHref">@row.ActionText</a></td>
@@ -102,9 +118,9 @@
             <div class="av-pagination">
                 <span>@Model.ResultText</span>
                 <span class="av-pagination__links">
-                    <a href="/admin/tai-khoan">Trước</a>
+                    <a href="/admin/tai-khoan">@T("Trước", "Previous")</a>
                     <span class="is-current">1</span>
-                    <a href="/admin/tai-khoan">Sau</a>
+                    <a href="/admin/tai-khoan">@T("Sau", "Next")</a>
                 </span>
             </div>
         </div>
@@ -137,21 +153,20 @@
 
         <article class="av-card admin-card">
             <div class="av-card__body admin-card__body">
-                <h2 class="av-card__title">Kiểm soát truy cập</h2>
+                <h2 class="av-card__title">@T("Kiểm soát truy cập", "Access control")</h2>
 
                 <div class="av-alert av-alert--info">
                     <span class="av-alert__icon">@Html.Icon("shield-check", 20)</span>
                     <div class="av-alert__body">
-                        <span class="av-alert__title">Không khóa Admin cuối cùng</span>
+                        <span class="av-alert__title">@T("Không khóa Admin cuối cùng", "Keep at least one active administrator")</span>
                         <span>
-                            Luôn duy trì ít nhất một quản trị viên hoạt động. Mọi thao tác khóa, mở và cấp quyền
-                            đều có nhật ký.
+                            @T("Luôn duy trì ít nhất một quản trị viên hoạt động. Mọi thao tác khóa, mở và cấp quyền đều có nhật ký.", "Keep at least one active administrator. Account locks, unlocks and permission changes are recorded in the audit log.")
                         </span>
                     </div>
                 </div>
 
                 <p class="av-caption admin-card__note">
-                    Khóa tài khoản sẽ kết thúc các phiên hiện tại. Đặt chỗ và dữ liệu lịch sử vẫn được giữ nguyên.
+                    @T("Khóa tài khoản sẽ kết thúc các phiên hiện tại. Đặt chỗ và dữ liệu lịch sử vẫn được giữ nguyên.", "Locking the account ends current sessions and retains booking and audit history.")
                 </p>
             </div>
         </article>
@@ -160,25 +175,34 @@
 
 @if (Model.ShowLockDialog)
 {
+<<<<<<< Updated upstream
+=======
+    var isLocking = Model.LockDialog.IsLocking;
+>>>>>>> Stashed changes
     <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="lock-account-title">
-        <a class="av-modal__backdrop" href="@Model.LockDialog.CancelHref" aria-label="Đóng hộp thoại"></a>
+        <a class="av-modal__backdrop" href="@Model.LockDialog.CancelHref" aria-label="@T("Đóng hộp thoại", "Close dialog")"></a>
 
         <form class="av-modal__panel" method="post" action="@Model.LockDialog.SubmitHref">
             @Html.AntiForgeryToken()
 
             <div class="av-modal__head">
                 <div class="admin-modal__head-main">
+<<<<<<< Updated upstream
                     <h2 class="av-modal__title" id="lock-account-title">Khóa tài khoản @Model.LockDialog.AccountName?</h2>
                     <p class="av-caption">Tài khoản / Xác nhận khóa · Thao tác chưa được thực hiện</p>
+=======
+                    <h2 class="av-modal__title" id="lock-account-title">@(isLocking ? T("Khóa tài khoản", "Lock account") : T("Mở khóa tài khoản", "Unlock account")) @Model.LockDialog.AccountName?</h2>
+                    <p class="av-caption">@T("Tài khoản / Xác nhận thao tác", "Accounts / Confirm action")</p>
+>>>>>>> Stashed changes
                 </div>
-                <a class="admin-modal__close" href="@Model.LockDialog.CancelHref" aria-label="Đóng">
+                <a class="admin-modal__close" href="@Model.LockDialog.CancelHref" aria-label="@T("Đóng", "Close")">
                     @Html.Icon("x", 24)
                 </a>
             </div>
 
             <div class="admin-detail-rows admin-detail-rows--dialog">
                 <div class="admin-detail-rows__row">
-                    <span class="admin-detail-rows__label">Tài khoản</span>
+                    <span class="admin-detail-rows__label">@T("Tài khoản", "Account")</span>
                     <span class="admin-detail-rows__value">@Model.LockDialog.AccountName</span>
                 </div>
                 <div class="admin-detail-rows__row">
@@ -186,7 +210,7 @@
                     <span class="admin-detail-rows__value">@Model.LockDialog.Email</span>
                 </div>
                 <div class="admin-detail-rows__row">
-                    <span class="admin-detail-rows__label">Vai trò / Trạng thái hiện tại</span>
+                    <span class="admin-detail-rows__label">@T("Vai trò / Trạng thái hiện tại", "Role / Current status")</span>
                     <span class="admin-detail-rows__value">@Model.LockDialog.RoleStatus</span>
                 </div>
             </div>
@@ -194,15 +218,21 @@
             <div class="av-alert av-alert--warning">
                 <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
                 <div class="av-alert__body">
+<<<<<<< Updated upstream
                     <span class="av-alert__title">Tài khoản sẽ không thể tiếp tục truy cập</span>
                     <span>
                         Kết thúc tất cả phiên truy cập hiện tại và ngăn đăng nhập mới. Dữ liệu đặt chỗ và
                         lịch sử xử lý vẫn được giữ nguyên; không xóa tài khoản.
                     </span>
+=======
+                    <span class="av-alert__title">@(isLocking ? T("Tài khoản sẽ không thể tiếp tục truy cập", "The account will lose access") : T("Tài khoản sẽ có thể đăng nhập trở lại", "The account can sign in again"))</span>
+                    <span>@(isLocking ? T("Các phiên hiện tại sẽ không còn hiệu lực mới. Dữ liệu đặt chỗ và lịch sử vẫn được giữ nguyên; không xóa tài khoản.", "Existing sessions will end. Bookings and history are retained, and the account remains on file.") : T("Sau khi mở khóa, tài khoản có thể đăng nhập lại theo vai trò được cấp.", "Unlocking restores sign-in access for the assigned role."))</span>
+>>>>>>> Stashed changes
                 </div>
             </div>
 
             <label class="av-field">
+<<<<<<< Updated upstream
                 <span class="av-label">Lý do khóa tài khoản <span class="req">*</span></span>
                 <span class="av-control av-control--area">
                     <textarea name="reason" rows="3" required>@Model.LockDialog.Reason</textarea>
@@ -218,7 +248,60 @@
             <div class="av-modal__foot">
                 <a class="av-btn av-btn--outline" href="@Model.LockDialog.CancelHref">Hủy thao tác</a>
                 <button type="submit" class="av-btn av-btn--danger">Khóa tài khoản</button>
+=======
+                <span class="av-label">@T("Lý do", "Reason") @(isLocking ? T("khóa", "for locking") : T("mở khóa", "for unlocking")) <span class="req">*</span></span>
+                <span class="av-control av-control--area">
+                    <textarea name="reason" rows="3" required>@Model.LockDialog.Reason</textarea>
+                </span>
+                <span class="av-field__hint">@T("Bắt buộc nhập lý do. Thao tác được ghi vào nhật ký.", "A reason is required. This action is recorded in the audit log.")</span>
+            </label>
+
+            <p class="av-caption admin-modal__note">
+                @T("Thao tác thực hiện bởi quản trị viên đang đăng nhập. Không thể tự khóa tài khoản của mình hoặc khóa Admin hoạt động cuối cùng.", "The signed-in administrator performs this action. Your own account and the last active administrator are protected from locking.")
+            </p>
+
+            <div class="av-modal__foot">
+                <a class="av-btn av-btn--outline" href="@Model.LockDialog.CancelHref">@T("Hủy thao tác", "Cancel action")</a>
+                <button type="submit" class="av-btn @(isLocking ? "av-btn--danger" : "av-btn--primary")">@(isLocking ? T("Khóa tài khoản", "Lock account") : T("Mở khóa tài khoản", "Unlock account"))</button>
+>>>>>>> Stashed changes
             </div>
         </form>
     </div>
 }
+<<<<<<< Updated upstream
+=======
+
+@if (Model.ShowFormDialog)
+{
+    <div class="av-modal admin-modal" role="dialog" aria-modal="true" aria-labelledby="account-form-title">
+        <a class="av-modal__backdrop" href="@Model.Form.CancelHref" aria-label="@T("Đóng", "Close")"></a>
+        <form class="av-modal__panel" method="post" action="@Model.Form.SubmitHref">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Form.Id" />
+            <div class="av-modal__head">
+                <div class="admin-modal__head-main">
+                    <h2 class="av-modal__title" id="account-form-title">@Model.Form.Title</h2>
+                    <p class="av-caption">@T("Dữ liệu được lưu vào cơ sở dữ liệu (GĐ2).", "Account information is saved to the database.")</p>
+                </div>
+                <a class="admin-modal__close" href="@Model.Form.CancelHref" aria-label="@T("Đóng", "Close")">@Html.Icon("x", 24)</a>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.Form.Error))
+            {
+                <div class="av-alert av-alert--danger"><div class="av-alert__body"><span>@Model.Form.Error</span></div></div>
+            }
+            <label class="av-field"><span class="av-label">@T("Họ tên", "Full name") <span class="req">*</span></span><span class="av-control"><input name="hoTen" value="@Model.Form.HoTen" required /></span></label>
+            <label class="av-field"><span class="av-label">@T("Tên đăng nhập", "Username") <span class="req">*</span></span><span class="av-control"><input name="tenDangNhap" value="@Model.Form.TenDangNhap" required @(Model.Form.IsEdit ? "readonly" : "") /></span></label>
+            <label class="av-field"><span class="av-label">Email <span class="req">*</span></span><span class="av-control"><input name="email" type="email" value="@Model.Form.Email" required /></span></label>
+            <label class="av-field"><span class="av-label">@T("Số điện thoại", "Phone number")</span><span class="av-control"><input name="soDienThoai" value="@Model.Form.SoDienThoai" /></span></label>
+            <label class="av-field"><span class="av-label">@T("Mã nhân sự", "Staff ID")</span><span class="av-control"><input name="maNhanSu" value="@Model.Form.MaNhanSu" /></span></label>
+            <label class="av-field"><span class="av-label">@T("Vai trò", "Role")</span><span class="av-control"><select name="vaiTro"><option value="Admin" selected="@(Model.Form.VaiTro=="Admin")">Admin</option><option value="Manager" selected="@(Model.Form.VaiTro=="Manager")">Manager</option><option value="KhachHang" selected="@(Model.Form.VaiTro=="KhachHang")">@T("Khách hàng", "Customer")</option></select>@Html.Icon("chevron-down", 17)</span></label>
+            <label class="av-field"><span class="av-label">@T("Trạng thái", "Status")</span><span class="av-control"><select name="trangThai"><option value="HoatDong" selected="@(Model.Form.TrangThai=="HoatDong")">@T("Hoạt động", "Active")</option><option value="BiKhoa" selected="@(Model.Form.TrangThai=="BiKhoa")">@T("Đã khóa", "Locked")</option></select>@Html.Icon("chevron-down", 17)</span></label>
+            <label class="av-field"><span class="av-label">@T("Mật khẩu", "Password") @(Model.Form.IsEdit ? T("(để trống nếu không đổi)", "(leave blank to keep the current password)") : "") <span class="req">@(Model.Form.IsEdit ? "" : "*")</span></span><span class="av-control"><input name="matKhau" type="password" autocomplete="new-password" @(Model.Form.IsEdit ? null : "required") /></span></label>
+            <div class="av-modal__foot">
+                <a class="av-btn av-btn--outline" href="@Model.Form.CancelHref">@T("Hủy", "Cancel")</a>
+                <button type="submit" class="av-btn av-btn--primary">@(Model.Form.IsEdit ? T("Lưu thay đổi", "Save changes") : T("Tạo tài khoản", "Create account"))</button>
+            </div>
+        </form>
+    </div>
+}
+>>>>>>> Stashed changes

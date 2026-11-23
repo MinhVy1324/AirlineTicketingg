@@ -1,52 +1,71 @@
 @model TicketsViewModel
 @{
-    ViewData["Title"] = "Vé của tôi";
+    ViewData["Title"] = T("Vé của tôi", "My tickets");
     ViewData["Nav"] = "tickets";
     var detail = Model.Detail;
 }
 
 <div class="av-page av-container">
+    @if (TempData["TicketMsg"] is string message)
+    {
+        <div class="av-alert av-alert--info" role="status">@message</div>
+    }
     <header class="av-stack av-gap-6">
-        <span class="av-eyebrow">QUẢN LÝ HÀNH TRÌNH</span>
-        <h1 class="av-page-title">Vé của tôi</h1>
-        <p class="av-page-subtitle">Xem thông tin đặt chỗ, vé điện tử và các yêu cầu hỗ trợ của bạn.</p>
+        <span class="av-eyebrow">@T("QUẢN LÝ HÀNH TRÌNH", "MANAGE YOUR TRIP")</span>
+        <h1 class="av-page-title">@T("Vé của tôi", "My tickets")</h1>
+        <p class="av-page-subtitle">@T("Xem thông tin đặt chỗ, vé điện tử và các yêu cầu hỗ trợ của bạn.", "View your bookings, e-tickets, and support requests.")</p>
     </header>
 
-    <nav class="av-chips" aria-label="Lọc đặt chỗ theo trạng thái">
-        <a class="av-chip @(Model.Tabs.Count > 0 && Model.Tabs[0].IsActive ? "is-active" : null)"
-           href="/ve-cua-toi">@Model.Tabs[0].Label (@Model.Tabs[0].Count)</a>
-        <a class="av-chip @(Model.Tabs.Count > 1 && Model.Tabs[1].IsActive ? "is-active" : null)"
-           href="/ve-cua-toi?tab=done">@Model.Tabs[1].Label (@Model.Tabs[1].Count)</a>
-        <a class="av-chip @(Model.Tabs.Count > 2 && Model.Tabs[2].IsActive ? "is-active" : null)"
-           href="/ve-cua-toi?tab=cancelled">@Model.Tabs[2].Label (@Model.Tabs[2].Count)</a>
+    <nav class="av-chips" aria-label="@T("Lọc đặt chỗ theo trạng thái", "Filter bookings by status")">
+        @foreach (var tab in Model.Tabs)
+        {
+            <a class="av-chip @(tab.IsActive ? "is-active" : null)" href="@tab.Href"
+               aria-current="@(tab.IsActive ? "page" : null)">@tab.Label (@tab.Count)</a>
+        }
     </nav>
 
     <form class="tickets-toolbar" method="get" action="/ve-cua-toi" role="search">
+        @if (Model.ActiveTab is not null)
+        {
+            <input type="hidden" name="tab" value="@Model.ActiveTab" />
+        }
         <label class="av-field">
-            <span class="av-label">Tìm đặt chỗ</span>
+            <span class="av-label">@T("Tìm đặt chỗ", "Find a booking")</span>
             <span class="av-control">
-                <input type="search" name="q" placeholder="Nhập mã PNR hoặc điểm đến" autocomplete="off" />
+                <input type="search" name="q" value="@Model.Search" placeholder="@T("Nhập mã PNR hoặc điểm đến", "Enter a booking reference or destination")" autocomplete="off" />
                 @Html.Icon("search", 17)
             </span>
         </label>
 
         <label class="av-field av-field--date">
-            <span class="av-label">Ngày khởi hành</span>
+            <span class="av-label">@T("Ngày khởi hành", "Departure date")</span>
             <span class="av-control">
                 <select name="date">
-                    <option selected>Tất cả thời gian</option>
-                    <option>Sắp tới</option>
-                    <option>Đã qua</option>
+                    <option value="" selected="@(Model.DateFilter is null)">@T("Tất cả thời gian", "Any date")</option>
+                    <option value="upcoming" selected="@(Model.DateFilter == "upcoming")">@T("Sắp tới", "Upcoming")</option>
+                    <option value="past" selected="@(Model.DateFilter == "past")">@T("Đã qua", "Past")</option>
                 </select>
                 @Html.Icon("calendar", 17)
             </span>
         </label>
 
-        <button type="submit" class="av-btn av-btn--primary">Tìm kiếm</button>
+        <button type="submit" class="av-btn av-btn--primary">@T("Tìm kiếm", "Search")</button>
     </form>
 
+    @if (Model.Search is not null || Model.DateFilter is not null)
+    {
+        <a class="av-link" asp-action="Index" asp-route-tab="@Model.ActiveTab">@T("Xóa bộ lọc", "Clear filters")</a>
+    }
+
+    @if (detail is null)
+    {
+        <p class="av-body">@T("Không có đặt chỗ phù hợp trong mục này.", "No matching bookings in this section.")</p>
+        <a class="av-link" href="/ve-cua-toi/yeu-cau">@T("Theo dõi yêu cầu đổi/hoàn", "Track change and refund requests")</a>
+    }
+    else
+    {
     <div class="tickets-layout">
-        <section class="tickets-list" aria-label="Danh sách đặt chỗ">
+        <section class="tickets-list" aria-label="@T("Danh sách đặt chỗ", "Booking list")">
             @foreach (var ticket in Model.Tickets)
             {
                 <article class="pnr-card @(ticket.IsSelected ? "is-selected" : null)">
@@ -71,7 +90,8 @@
 
                     @if (!string.IsNullOrWhiteSpace(ticket.ActionText) && !string.IsNullOrWhiteSpace(ticket.ActionHref))
                     {
-                        <a class="av-btn av-btn--outline av-btn--sm pnr-card__action" href="@ticket.ActionHref">
+                        <a class="av-btn av-btn--outline av-btn--sm pnr-card__action" href="@ticket.ActionHref"
+                           aria-label="@ticket.ActionText @ticket.Pnr">
                             @ticket.ActionText
                         </a>
                     }
@@ -81,23 +101,85 @@
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("info", 20)</span>
                 <div class="av-alert__body">
-                    <span class="av-alert__title">Bạn cần đổi lịch trình?</span>
-                    <span>Chọn đặt chỗ và gửi yêu cầu đổi/hoàn. Bộ phận vận hành sẽ kiểm tra điều kiện vé.</span>
+                    <span class="av-alert__title">@T("Bạn cần đổi lịch trình?", "Need to change your trip?")</span>
+                    <span>@T("Chọn đặt chỗ và gửi yêu cầu đổi/hoàn. Bộ phận vận hành sẽ kiểm tra điều kiện vé.", "Choose a booking to request a change or refund. Our staff will review your fare conditions.")</span>
                 </div>
             </div>
         </section>
 
-        <section class="ticket-detail" aria-label="Chi tiết đặt chỗ">
+        <section class="ticket-detail" aria-label="@T("Chi tiết đặt chỗ", "Booking details")">
+            @if (detail.NeedsScheduleSupport)
+            {
+                <div class="av-alert av-alert--warning" role="status">
+                    <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@T("Hành trình cần xử lý do thay đổi lịch bay", "This trip requires assistance after a schedule change")</span>
+                        <span>@T("PDF sẽ có lại sau khi xử lý xong các chặng bị ảnh hưởng. Liên hệ", "Your PDF will be available after all affected flights are resolved. Contact") @ViewData["SupportHotline"] @T("hoặc", "or") @ViewData["SupportEmail"] @T("để thống nhất chuyến thay thế hoặc phương án hoàn.", "to arrange a replacement flight or a refund.")</span>
+                    </div>
+                </div>
+            }
+            @foreach (var change in detail.Disruptions)
+            {
+                <article class="av-card">
+                    <div class="av-card__body av-stack av-gap-8">
+                        <h2 class="av-card__title">@change.Title</h2>
+                        <p>@T("Lịch cũ", "Previous schedule") · @change.OldSchedule</p>
+                        @if (change.NewSchedule is not null)
+                        {
+                            <p>@T("Lịch mới", "New schedule") · @change.NewSchedule</p>
+                        }
+                        <p class="av-caption">@(change.Result ?? T("Đang chờ xử lý", "Awaiting processing"))</p>
+                        @if (change.CanAccept)
+                        {
+                            <form method="post" action="/ve-cua-toi/bien-dong/@change.Id/chap-nhan">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="pnr" value="@detail.Pnr" />
+                                <button class="av-btn av-btn--primary" type="submit">@T("Chấp nhận lịch bay mới", "Accept new schedule")</button>
+                            </form>
+                        }
+                    </div>
+                </article>
+            }
             <article class="av-card">
                 <div class="av-card__body av-stack av-gap-18">
+<<<<<<< Updated upstream
                     <div class="av-row av-row--between av-gap-12">
                         <h2 class="av-card__title">Chi tiết đặt chỗ · @detail.Pnr</h2>
                         <button type="button" class="av-link">
                             Tải vé PDF
                             @Html.Icon("download", 15)
                         </button>
+=======
+                    @if (TempData["TicketEmailMessage"] is string emailMessage)
+                    {
+                        <div class="av-alert av-alert--@(TempData["TicketEmailTone"] ?? "info")" role="status">
+                            <span class="av-alert__icon">@Html.Icon("mail", 20)</span>
+                            <div class="av-alert__body"><span>@emailMessage</span></div>
+                        </div>
+                    }
+                    <div class="av-row av-row--between av-gap-12">
+                        <h2 class="av-card__title">@T("Chi tiết đặt chỗ", "Booking details") · @detail.Pnr</h2>
+                        @if (detail.HasIssuedTicket)
+                        {
+                            <div class="av-row av-gap-8 av-wrap">
+                                <a class="av-link" href="/ve/@detail.Pnr/pdf" data-feedback-download>
+                                    @T("Tải vé PDF", "Download PDF ticket")
+                                    @Html.Icon("download", 15)
+                                </a>
+                                <form method="post" action="/ve/@detail.Pnr/gui-lai-email" style="display:inline-flex;margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="quayLai" value="/ve-cua-toi?pnr=@detail.Pnr" />
+                                    <button type="submit" class="av-link">
+                                        <span>@T("Gửi lại email", "Resend email")</span>
+                                        @Html.Icon("mail", 15)
+                                    </button>
+                                </form>
+                            </div>
+                        }
+>>>>>>> Stashed changes
                     </div>
 
+@if (detail.Journey is { } journey) { <partial name="_JourneySummary" model="journey" /> } else {
                     <div class="summary-flight">
                         <div class="summary-flight__airline">
                             <span class="summary-flight__airline-name">
@@ -106,35 +188,36 @@
                             </span>
                             <span class="av-badge av-badge--info">@detail.Flight.FlightNumber</span>
                         </div>
-                        <span class="summary-flight__date">@Money.LongDate(detail.Flight.Departure) · @detail.Flight.Stops</span>
+                        <span class="summary-flight__date">@BookingUiText.LongDate(detail.Flight.Departure) · @BookingUiText.Text(detail.Flight.Stops)</span>
 
                         <partial name="_FlightTimeline" model="new FlightTimelineModel(detail.Flight, ShowAirportName: true)" />
 
                         <hr class="av-divider" />
-                        <span class="av-caption">@detail.Flight.FareName · 1 người lớn</span>
+                        <span class="av-caption">@UiLanguage.Label(detail.Flight.FareName) · @T("1 người lớn", "1 adult")</span>
                     </div>
 
                     <hr class="av-divider" />
 
                     <div class="av-rows">
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Hành khách / ghế</span>
+                            <span class="av-rowline__label">@T("Hành khách / ghế", "Passenger and seat")</span>
                             <span class="av-rowline__value">@detail.PassengerName · @detail.SeatCode</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Số vé</span>
+                            <span class="av-rowline__label">@T("Số vé", "Ticket number")</span>
                             <span class="av-rowline__value av-num">@detail.TicketNumber</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Hành lý</span>
+                            <span class="av-rowline__label">@T("Hành lý", "Baggage")</span>
                             <span class="av-rowline__value">@detail.BaggageText</span>
                         </div>
+</div>}<div class="av-rows">
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Thanh toán</span>
+                            <span class="av-rowline__label">@T("Thanh toán", "Payment")</span>
                             <span class="av-rowline__value">@detail.PaymentText</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Ngày đặt</span>
+                            <span class="av-rowline__label">@T("Ngày đặt", "Booked on")</span>
                             <span class="av-rowline__value">@detail.BookedAtText</span>
                         </div>
                     </div>
@@ -143,15 +226,13 @@
 
             <article class="av-card">
                 <div class="av-card__body av-card__stack">
-                    <h2 class="av-card__title">Điều kiện đổi / hoàn</h2>
+                    <h2 class="av-card__title">@T("Điều kiện đổi / hoàn", "Change and refund conditions")</h2>
                     <p class="cond-text">
-                        Đổi vé trước giờ bay 3 tiếng: phí @Money.Vnd(detail.ChangeFee) + chênh lệch giá.
-                        Hoàn vé: phí @Money.Vnd(detail.RefundFee); phí dịch vụ @Money.Vnd(detail.ServiceFee)
-                        và hành lý thêm @Money.Vnd(detail.ExtraBaggageFee) không hoàn.
+                        @T($"Đổi vé trước giờ bay 3 tiếng: phí {Money.Vnd(detail.ChangeFee)} + chênh lệch giá. Hoàn vé: phí {Money.Vnd(detail.RefundFee)}; phí dịch vụ {Money.Vnd(detail.ServiceFee)} và hành lý thêm {Money.Vnd(detail.ExtraBaggageFee)} không hoàn.",
+                            $"Request a change at least 3 hours before departure. The change fee is {Money.Vnd(detail.ChangeFee)} plus any fare difference. The refund fee is {Money.Vnd(detail.RefundFee)}. The service fee of {Money.Vnd(detail.ServiceFee)} and extra baggage fee of {Money.Vnd(detail.ExtraBaggageFee)} are non-refundable.")
                     </p>
                     <p class="av-caption">
-                        Yêu cầu chỉ được thực hiện sau khi xác nhận phí. Không đổi/hoàn khi không có mặt.
-                        Hoàn về phương thức thanh toán ban đầu.
+                        @T("Yêu cầu chỉ được thực hiện sau khi xác nhận phí. Không đổi/hoàn khi không có mặt. Hoàn về phương thức thanh toán ban đầu.", "The request is processed after the fee is confirmed. Changes and refunds are unavailable after a no-show. Refunds go to the original payment method.")
                     </p>
 
                     @if (detail.CanManage)
@@ -159,25 +240,31 @@
                         <div class="av-row av-gap-12 av-wrap">
                             <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">
                                 @Html.Icon("refresh", 17)
-                                <span>Yêu cầu đổi vé</span>
+                                <span>@T("Yêu cầu đổi vé", "Request a change")</span>
                             </a>
                             <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">
                                 @Html.Icon("undo", 17)
-                                <span>Yêu cầu hoàn vé</span>
+                                <span>@T("Yêu cầu hoàn vé", "Request a refund")</span>
                             </a>
                         </div>
-                        <a class="av-link" href="/ve-cua-toi/yeu-cau">
-                            Theo dõi yêu cầu đã gửi
-                            @Html.Icon("arrow-right", 15)
-                        </a>
                     }
+                    <a class="av-link" href="/ve-cua-toi/yeu-cau">
+                        @T("Theo dõi yêu cầu đã gửi", "Track submitted requests")
+                        @Html.Icon("arrow-right", 15)
+                    </a>
                 </div>
             </article>
 
             <div class="ticket-detail__foot">
+<<<<<<< Updated upstream
                 <span class="av-caption">Hỗ trợ: 1900 6868 · support@aeroviet.vn</span>
                 <a class="av-link" href="#dieu-kien">Xem chính sách đầy đủ @Html.Icon("arrow-right", 15)</a>
+=======
+                <span class="av-caption">@T("Hỗ trợ:", "Support") @ViewData["SupportHotline"] · @ViewData["SupportEmail"]</span>
+                <a class="av-link" href="/doi-hoan-ve">@T("Xem chính sách đầy đủ", "Read the full policy") @Html.Icon("arrow-right", 15)</a>
+>>>>>>> Stashed changes
             </div>
         </section>
     </div>
+    }
 </div>

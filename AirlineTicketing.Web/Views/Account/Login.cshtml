@@ -1,8 +1,12 @@
 @model DangNhapDTO
 @{
     Layout = "_AuthLayout";
+<<<<<<< Updated upstream
     ViewData["Title"] = "Đăng nhập";
     var returnUrl = ViewData["ReturnUrl"] as string;
+=======
+    ViewData["Title"] = T("Đăng nhập", "Sign in");
+>>>>>>> Stashed changes
 }
 
 <div class="auth">
@@ -12,6 +16,7 @@
             <span class="av-brand__name">AeroViet</span>
         </a>
         <div class="auth__hero-content">
+<<<<<<< Updated upstream
             <span class="auth__eyebrow">BAY AN TÂM. ĐI TRỌN VẸN.</span>
             <h1 class="auth__hero-title">Mỗi chuyến bay, một khởi đầu mới.</h1>
             <p class="auth__hero-text">Tìm hành trình phù hợp, đặt vé dễ dàng và quản lý mọi chuyến đi cùng AeroViet.</p>
@@ -21,28 +26,53 @@
             </div>
         </div>
         <p class="auth__hero-foot">AeroViet · Kết nối hành trình Việt</p>
+=======
+            <h2 class="auth__hero-title">@T("Quản lý hành trình của bạn", "Manage your trip")</h2>
+            <p class="auth__hero-text">
+                @T("Theo dõi chuyến bay, tải vé điện tử và xem yêu cầu đổi hoặc hoàn vé.",
+                    "Track your flights, download e-tickets, and view change or refund requests.")
+            </p>
+        </div>
+
+        <p class="auth__hero-foot">@T("AeroViet · Kết nối hành trình Việt", "AeroViet · Connecting journeys across Vietnam")</p>
+>>>>>>> Stashed changes
     </aside>
 
     <section class="auth__panel">
         <div class="auth__panel-top">
+<<<<<<< Updated upstream
             <button type="button" class="av-link av-muted" aria-label="Chọn ngôn ngữ">
                 @Html.Icon("globe", 16)<span>Tiếng Việt</span>@Html.Icon("chevron-down", 14)
             </button>
+=======
+            <partial name="_LanguageSwitcher" />
+>>>>>>> Stashed changes
         </div>
 
-        <form class="auth__form" method="post" asp-controller="Account" asp-action="Login">
+        <form class="auth__form" method="post" asp-controller="Account" asp-action="Login"
+              data-pending-message="@T("Đang đăng nhập…", "Signing in…")">
             @Html.AntiForgeryToken()
             <input type="hidden" name="returnUrl" value="@returnUrl" />
             <div asp-validation-summary="ModelOnly" class="auth__error" role="alert"></div>
 
             <div class="av-stack av-gap-8">
-                <span class="av-eyebrow">CHÀO MỪNG TRỞ LẠI</span>
-                <h1 class="auth__title">Đăng nhập AeroViet</h1>
-                <p class="auth__sub">Một tài khoản cho mọi hành trình của bạn.</p>
+                <h1 class="auth__title">@T("Đăng nhập AeroViet", "Sign in to AeroViet")</h1>
             </div>
 
+<<<<<<< Updated upstream
+=======
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <p class="auth__error" role="alert">@Model.ErrorMessage</p>
+            }
+            @if (TempData["AccountMessage"] is string message)
+            {
+                <p class="av-alert av-alert--success" role="status">@message</p>
+            }
+
+>>>>>>> Stashed changes
             <label class="av-field">
-                <span class="av-label">Tên đăng nhập hoặc email</span>
+                <span class="av-label">@T("Tên đăng nhập hoặc email", "Username or email")</span>
                 <span class="av-control">
                     <input asp-for="TenDangNhap" autocomplete="username" required />
                     @Html.Icon("mail", 17)
@@ -50,6 +80,7 @@
                 <span asp-validation-for="TenDangNhap" class="auth__error"></span>
             </label>
 
+<<<<<<< Updated upstream
             <label class="av-field">
                 <span class="av-label">Mật khẩu</span>
                 <span class="av-control">
@@ -63,10 +94,26 @@
                 <label class="av-check">
                     <input asp-for="GhiNho" />
                     <span>Ghi nhớ đăng nhập</span>
-                </label>
-                <a class="av-link" href="/dang-nhap">Quên mật khẩu?</a>
+=======
+            <div class="av-field">
+                <label class="av-label" for="login-password">@T("Mật khẩu", "Password")</label>
+                <div class="av-control">
+                    <input type="password" id="login-password" name="password" autocomplete="current-password" required />
+                    <button type="button" class="av-password-toggle" data-password-toggle aria-controls="login-password"
+                            aria-label="@T("Hiện mật khẩu", "Show password")" hidden>@T("Hiện", "Show")</button>
+                </div>
             </div>
 
+            <div class="auth__row">
+                <label class="av-check">
+                    <input type="checkbox" name="rememberMe" value="true" checked="@Model.RememberMe" />
+                    <span>@T("Ghi nhớ đăng nhập", "Keep me signed in")</span>
+>>>>>>> Stashed changes
+                </label>
+                <a class="av-link" href="/quen-mat-khau">@T("Quên mật khẩu?", "Forgot your password?")</a>
+            </div>
+
+<<<<<<< Updated upstream
             <button type="submit" class="av-btn av-btn--primary av-btn--lg av-btn--block">Đăng nhập</button>
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("info", 20)</span>
@@ -81,6 +128,30 @@
         <div class="auth__panel-bottom">
             <span>Cần hỗ trợ? 1900 6868 · support@aeroviet.vn</span>
             <span>© 2026 AeroViet · Điều khoản sử dụng · Bảo mật</span>
+=======
+            <button type="submit" class="av-btn av-btn--primary av-btn--lg av-btn--block">@T("Đăng nhập", "Sign in")</button>
+            <p class="auth__foot">@T("Chưa có tài khoản?", "New to AeroViet?") <a class="av-link" href="/dang-ky">@T("Đăng ký", "Create an account")</a></p>
+
+            <div class="av-alert av-alert--info">
+                <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">@T("Truy cập đúng khu vực của bạn", "Access your workspace")</span>
+                    <span>
+                        @T("Sau khi đăng nhập, hệ thống chuyển đến khu vực Khách hàng, Manager hoặc Admin theo quyền đã được cấp. Không tự chọn vai trò.",
+                            "After signing in, you will go to the customer, manager, or admin workspace assigned to your account.")
+                    </span>
+                </div>
+            </div>
+
+            <p class="auth__foot">
+                @T("Môi trường demo (seed):", "Demo accounts") <code>admin / 123456</code>, <code>manager / 123456</code>, <code>minhanh / 123456</code>.
+            </p>
+        </form>
+
+        <div class="auth__panel-bottom">
+            <span>@T("Cần hỗ trợ?", "Need help?") @ViewData["SupportHotline"] · @ViewData["SupportEmail"]</span>
+            <span>© 2026 AeroViet · <a href="/dieu-kien-van-chuyen">@T("Điều kiện vận chuyển", "Conditions of carriage")</a> · <a href="/bao-mat">@T("Bảo mật", "Privacy")</a></span>
+>>>>>>> Stashed changes
         </div>
     </section>
 </div>

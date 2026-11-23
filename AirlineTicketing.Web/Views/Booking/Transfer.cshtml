@@ -1,0 +1,154 @@
+@model QrPaymentViewModel
+@{
+    var supportHotline = ViewData["SupportHotline"];
+    ViewData["Title"] = T("Chuyển khoản VietQR demo", "VietQR demo transfer");
+    ViewData["Nav"] = "book";
+}
+
+<div class="av-page av-container">
+    <partial name="_Stepper" model="3" />
+
+    <header class="booking-title">
+        <h1 class="av-page-title">@T("Chuyển khoản VietQR demo", "VietQR demo transfer")</h1>
+        <p class="av-page-subtitle">
+            @T($"Đặt chỗ {Model.Pnr} được giữ đến {Model.HoldUntilText} (UTC+7).", $"Booking {Model.Pnr} is held until {BookingUiText.DateTimeText(Model.HoldUntilText)} (UTC+7).")
+        </p>
+    </header>
+
+    <div class="booking-layout">
+        <div class="booking-main">
+            @if (Model.Journey is { } journey) { <partial name="_JourneySummary" model="journey" /> }
+            <section class="av-card passenger-block qr-payment">
+                <div class="qr-payment__head">
+                    <div class="av-stack av-gap-3">
+                        <span class="ticket__pnr-label">@T("MÃ ĐẶT CHỖ (PNR)", "BOOKING REFERENCE (PNR)")</span>
+                        <strong class="ticket__pnr">@Model.Pnr</strong>
+                    </div>
+                    <span class="av-badge av-badge--@(Model.Reported ? "info" : "warning")">
+                        @(Model.Reported ? T("Chờ đối soát", "Awaiting verification") : T("Chờ thanh toán", "Awaiting payment"))
+                    </span>
+                </div>
+
+                <div class="qr-payment__body">
+                    <div class="qr-payment__code">
+                        <img src="@Model.QrUrl" alt="@T($"Mã QR chuyển khoản cho đặt chỗ {Model.Pnr}", $"Transfer QR code for booking {Model.Pnr}")" width="248" height="248" />
+                        <span class="av-caption">@T("Mã QR mẫu dùng để diễn tập", "Sample QR code for testing")</span>
+                    </div>
+
+                    <div class="qr-payment__info">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Ngân hàng", "Bank")</span>
+                            <span class="av-rowline__value">@Model.BankName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Số tài khoản", "Account number")</span>
+                            <div class="av-rowline__value ticket__code-tools">
+                                <strong>@Model.AccountNumber</strong>
+                                <button type="button" class="av-copy" data-copy-value="@Model.AccountNumber"
+                                        data-copy-message="@T("Đã sao chép số tài khoản.", "Account number copied.")" hidden>@T("Sao chép số tài khoản", "Copy account number")</button>
+                            </div>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Chủ tài khoản", "Account holder")</span>
+                            <span class="av-rowline__value">@Model.AccountName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Số tiền", "Amount")</span>
+                            <span class="av-rowline__value av-num"><strong>@Model.AmountText</strong></span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Nội dung chuyển khoản", "Transfer reference")</span>
+                            <div class="av-rowline__value ticket__code-tools">
+                                <strong>@Model.Memo</strong>
+                                <button type="button" class="av-copy" data-copy-value="@Model.Memo"
+                                        data-copy-message="@T("Đã sao chép nội dung chuyển khoản.", "Transfer reference copied.")" hidden>@T("Sao chép nội dung", "Copy reference")</button>
+                            </div>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Chuyến bay / ghế", "Flight / seat")</span>
+                            <span class="av-rowline__value">@Model.FlightNumber · @T("Ghế", "Seat") @Model.SeatCode</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="av-alert av-alert--info">
+                    <span class="av-alert__icon">@Html.Icon("info", 20)</span>
+                    <div class="av-alert__body">
+                        <span class="av-alert__title">@T("Đây là môi trường minh họa", "This is a demo environment")</span>
+                        <span>
+                            @T("Dùng số tiền và nội dung trên để tạo giao dịch mô phỏng. Sau khi báo đã chuyển khoản, nhân viên đối chiếu chứng từ demo trong mục Đối soát thanh toán.", "Use the amount and reference above to simulate a transfer. After you report it, staff will verify the demo payment in Payment Reconciliation.")
+                        </span>
+                    </div>
+                </div>
+
+                @if (Model.Reported)
+                {
+                    <div class="av-alert av-alert--success">
+                        <span class="av-alert__icon">@Html.Icon("check-circle", 20)</span>
+                        <div class="av-alert__body">
+                            <span class="av-alert__title">@T("Đã ghi nhận thông báo chuyển khoản", "Transfer notification received")</span>
+                            <span>
+                                @T($"Đặt chỗ {Model.Pnr} đang chờ nhân viên đối soát giao dịch. Vé điện tử sẽ được phát hành sau khi xác nhận. Nếu quá thời gian giữ chỗ mà chưa đối soát xong, vui lòng gọi {supportHotline} và cung cấp mã PNR {Model.Pnr}.", $"Booking {Model.Pnr} is awaiting staff verification. Your e-ticket will be issued after payment is confirmed. If the hold has expired and the payment is still pending, call {supportHotline} with reference {Model.Pnr}.")
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="step-nav">
+                        <a class="av-btn av-btn--ghost" href="/ve-cua-toi">@Html.Icon("arrow-left", 17) @T("Về Vé của tôi", "Back to My tickets")</a>
+                        <a class="av-btn av-btn--outline" asp-action="Transfer" asp-route-pnr="@Model.Pnr">
+                            @Html.Icon("refresh", 17) @T("Kiểm tra trạng thái", "Check status")
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <form method="post" asp-controller="Booking" asp-action="ConfirmTransfer" asp-route-pnr="@Model.Pnr"
+                          data-pending-message="@T("Đang gửi xác nhận chuyển khoản…", "Submitting transfer notification…")">
+                        @Html.AntiForgeryToken()
+                        <div class="step-nav">
+                            <a class="av-btn av-btn--ghost" href="/ve-cua-toi">@Html.Icon("arrow-left", 17) @T("Về Vé của tôi", "Back to My tickets")</a>
+                            <button type="submit" class="av-btn av-btn--primary av-btn--lg">
+                                @Html.Icon("check", 17)
+                                <span>@T("Báo đã chuyển khoản demo", "Report demo transfer")</span>
+                            </button>
+                        </div>
+                    </form>
+                }
+            </section>
+        </div>
+
+        <aside class="booking-aside">
+            <section class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <h2 class="av-card__title">@T("Thông tin đặt chỗ", "Booking details")</h2>
+                    <div class="av-rows">
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Hành khách", "Passenger")</span>
+                            <span class="av-rowline__value">@Model.PassengerName</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Chuyến bay", "Flight")</span>
+                            <span class="av-rowline__value">@Model.FlightNumber</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Ghế", "Seat")</span>
+                            <span class="av-rowline__value">@Model.SeatCode</span>
+                        </div>
+                        <div class="av-rowline">
+                            <span class="av-rowline__label">@T("Giữ chỗ đến", "Hold expires at")</span>
+                            <span class="av-rowline__value">@BookingUiText.DateTimeText(Model.HoldUntilText)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="av-alert av-alert--warning">
+                <span class="av-alert__icon">@Html.Icon("clock", 20)</span>
+                <div class="av-alert__body">
+                    <span class="av-alert__title">@T("Ghế chỉ được giữ trong 15 phút", "Seats are held for 15 minutes")</span>
+                    <span>@T("Hết thời gian, đặt chỗ tự hủy và ghế được trả lại sơ đồ.", "The booking is cancelled automatically at the end of the hold and the seats become available again.")</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>

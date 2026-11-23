@@ -4,20 +4,34 @@
 }
 <header class="av-nav">
     <div class="av-container av-nav__inner">
-        <a class="av-brand" href="/" aria-label="AeroViet · Trang chủ">
+        <a class="av-brand" href="/" aria-label="@T("AeroViet · Trang chủ", "AeroViet · Home")">
             <span class="av-brand__mark">@Html.Icon("plane", 23)</span>
             <span class="av-brand__name">AeroViet</span>
         </a>
 
-        <nav class="av-nav__menu" aria-label="Điều hướng chính">
-            <a class="av-nav__link @Active("book")" href="/" aria-current="@(nav == "book" ? "page" : null)">Đặt vé</a>
-            <a class="av-nav__link @Active("lookup")" href="/tra-cuu" aria-current="@(nav == "lookup" ? "page" : null)">Tra cứu đặt chỗ</a>
-            <a class="av-nav__link @Active("offers")" href="/#uu-dai">Ưu đãi</a>
-            <a class="av-nav__link @Active("help")" href="/#tro-giup">Trợ giúp</a>
+        <nav class="av-nav__menu" aria-label="@T("Điều hướng chính", "Main navigation")">
+            <a class="av-nav__link @Active("book")" href="/" aria-current="@(nav == "book" ? "page" : null)">@T("Đặt vé", "Book")</a>
+            <a class="av-nav__link @Active("lookup")" href="/tra-cuu" aria-current="@(nav == "lookup" ? "page" : null)">@T("Tra cứu đặt chỗ", "Look up a booking")</a>
+            <a class="av-nav__link @Active("offers")" href="/khuyen-mai">@T("Ưu đãi", "Offers")</a>
+            <a class="av-nav__link @Active("about")" asp-controller="Home" asp-action="About" aria-current="@(nav == "about" ? "page" : null)">@T("Giới thiệu", "About")</a>
+            <a class="av-nav__link" asp-controller="Home" asp-action="About" asp-fragment="ho-tro">@T("Trợ giúp", "Help")</a>
         </nav>
 
         <div class="av-nav__aside">
+<<<<<<< Updated upstream
             <a class="av-btn av-btn--outline" href="/dang-nhap">Đăng nhập</a>
+=======
+            <partial name="_LanguageSwitcher" />
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="av-nav__user" href="@(User.IsInRole(AppRoles.KhachHang) ? "/ho-so" : "/ve-cua-toi")" aria-label="@User.DisplayName()"><span class="av-avatar" aria-hidden="true">@Html.Icon("user", 16)</span><span>@User.DisplayName()</span></a>
+                <a class="av-btn av-btn--outline av-btn--sm" href="/dang-xuat">@T("Đăng xuất", "Sign out")</a>
+            }
+            else
+            {
+                <a class="av-btn av-btn--outline" href="/dang-nhap">@T("Đăng nhập", "Sign in")</a>
+            }
+>>>>>>> Stashed changes
         </div>
     </div>
 </header>

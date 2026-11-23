@@ -2,7 +2,7 @@ namespace AirlineTicketing.Web.ViewModels;
 
 // --------------------------------------------------------------------- 07 · Vé của tôi
 
-public sealed record TicketTab(string Label, int Count, bool IsActive);
+public sealed record TicketTab(string Label, int Count, bool IsActive, string? Href = null);
 
 public sealed record TicketListItem(
     string Pnr,
@@ -22,11 +22,15 @@ public sealed class TicketsViewModel
 {
     public IReadOnlyList<TicketTab> Tabs { get; init; } = Array.Empty<TicketTab>();
     public IReadOnlyList<TicketListItem> Tickets { get; init; } = Array.Empty<TicketListItem>();
-    public TicketDetailViewModel Detail { get; init; } = null!;
+    public TicketDetailViewModel? Detail { get; init; }
+    public string? ActiveTab { get; init; }
+    public string? Search { get; init; }
+    public string? DateFilter { get; init; }
 }
 
 public sealed class TicketDetailViewModel
 {
+    public JourneyBookingViewModel? Journey { get; init; }
     public FlightOffer Flight { get; init; } = null!;
     public string Pnr { get; init; } = "AV8K2M";
     public string PassengerName { get; init; } = "NGUYEN MINH ANH";
@@ -40,6 +44,14 @@ public sealed class TicketDetailViewModel
     public decimal ServiceFee { get; init; } = 70_000m;
     public decimal ExtraBaggageFee { get; init; } = 250_000m;
     public bool CanManage { get; init; } = true;
+<<<<<<< Updated upstream
+=======
+    public bool NeedsScheduleSupport { get; init; }
+    public IReadOnlyList<FlightDisruptionNotice> Disruptions { get; init; } = [];
+
+    /// <summary>Vé đã phát hành nên có thể tải PDF và gửi lại qua email.</summary>
+    public bool HasIssuedTicket { get; init; }
+>>>>>>> Stashed changes
 }
 
 // --------------------------------------------------- 20 · Chuyến vừa hết chỗ
@@ -111,6 +123,8 @@ public sealed class LookupPageViewModel
 
 public sealed class LookupResultViewModel
 {
+    public bool NeedsScheduleSupport { get; init; }
+    public IReadOnlyList<string> JourneyRows { get; init; } = [];
     public string Pnr { get; init; } = "AV8K2M";
     public FlightOffer Flight { get; init; } = null!;
     public string PassengerMasked { get; init; } = "NGUYEN M*** A** · Người lớn";
@@ -129,18 +143,14 @@ public sealed class LookupResultViewModel
 public sealed class ChangeRequestViewModel
 {
     public BookingViewModel Booking { get; init; } = null!;
-    public FlightOffer NewFlight { get; init; } = null!;
+    public IReadOnlyList<FlightOffer> Candidates { get; init; } = [];
+    public FlightOffer? NewFlight { get; init; }
+    public decimal CurrentFare { get; init; }
     public decimal NewBaseFare { get; init; }
     public string SeatBaggageText { get; init; } = "18A · 12 kg xách tay + 23 kg ký gửi + thêm 10 kg";
-    public string AvailabilityText { get; init; } = "Có chỗ tại thời điểm kiểm tra · 01/11/2026 10:15";
-    public string AvailabilityNote { get; init; } =
-        "Giá và chỗ là dự kiến, chưa giữ chỗ trên chuyến mới. Bộ phận vận hành sẽ xác nhận lại còn chỗ và mức phí trước khi thu tiền.";
     public string Reason { get; init; } = "Thay đổi kế hoạch cá nhân";
 
-    public decimal NewTotal =>
-        NewBaseFare + Booking.Price.Taxes + Booking.Price.ServiceFee + Booking.Price.BaggageFee;
-
-    public decimal PriceDifference => NewTotal - Booking.Price.Total;
+    public decimal PriceDifference => Math.Max(0m, NewBaseFare - CurrentFare);
     public decimal ChangeFee => Booking.Flight.ChangeFee;
     public decimal TotalExtra => PriceDifference + ChangeFee;
 }
@@ -158,9 +168,9 @@ public sealed class RefundRequestViewModel
     public string AdditionalInfo { get; init; } = "Tôi không còn nhu cầu thực hiện hành trình ngày 20/11.";
 
     public decimal RefundFee => Booking.Flight.RefundFee;
-    public decimal ServiceFee => Booking.Price.ServiceFee;
+    public decimal ServiceFee => Math.Max(0m, Booking.Price.ServiceFee - Booking.Price.Discount);
     public decimal BaggageFee => Booking.Price.BaggageFee;
-    public decimal RefundTotal => Booking.Price.Total - RefundFee - ServiceFee - BaggageFee;
+    public decimal RefundTotal => Math.Max(0m, Booking.Price.Total - RefundFee - ServiceFee - BaggageFee - Booking.Price.ChangeFeePaid);
 }
 
 // -------------------------------------- 30 · Theo dõi yêu cầu đổi / hoàn
@@ -178,7 +188,10 @@ public sealed class RequestTrackingViewModel
 {
     public IReadOnlyList<TicketTab> Tabs { get; init; } = Array.Empty<TicketTab>();
     public IReadOnlyList<RequestRow> Requests { get; init; } = Array.Empty<RequestRow>();
-    public string UpdatedAtText { get; init; } = "02/11/2026";
+    public string UpdatedAtText { get; init; } = "";
+    public string? ActiveTab { get; init; }
+    public int PageNumber { get; init; } = 1;
+    public int PageCount { get; init; } = 1;
     public string DetailCode { get; init; } = "RF-1031";
     public string DetailPnr { get; init; } = "AV8K2M";
     public string DetailPassenger { get; init; } = "NGUYEN MINH ANH";
@@ -193,10 +206,11 @@ public sealed class RequestTrackingViewModel
     public decimal ServiceFee { get; init; }
     public decimal BaggageFee { get; init; }
     public string RefundToText { get; init; } = "Visa ••••4242";
-    public string OtherCode { get; init; } = "CH-1032";
-    public string OtherText { get; init; } =
-        "AV3D9P · Vé 738 2400013124 · SGN → DAD. Yêu cầu đổi sang ngày 07/12/2026 đang chờ bạn xác nhận mức phí.";
-    public string OtherStatusText { get; init; } = "Chờ xác nhận phí";
-
-    public decimal RefundTotal => PaidTotal - RefundFee - ServiceFee - BaggageFee;
+    public bool IsChange { get; init; }
+    public bool IsCompleted { get; init; }
+    public string? ChangeTargetText { get; init; }
+    public decimal? ChangeCharge { get; init; }
+    public bool CanCancelChange { get; init; }
+    public decimal ChangeFeePaid { get; init; }
+    public decimal RefundTotal { get; init; }
 }

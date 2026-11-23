@@ -1,14 +1,14 @@
 @model AdminOverviewViewModel
 @{
-    ViewData["Title"] = "Tổng quan hệ thống";
+    ViewData["Title"] = T("Tổng quan hệ thống", "System overview");
     ViewData["AdminNav"] = "overview";
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Tổng quan hệ thống</h1>
-            <p class="admin-page-subtitle">Kiểm soát toàn diện dữ liệu, tài khoản và sức khỏe vận hành.</p>
+            <h1 class="admin-page-title">@T("Tổng quan hệ thống", "System overview")</h1>
+            <p class="admin-page-subtitle">@T("Kiểm soát toàn diện dữ liệu, tài khoản và sức khỏe vận hành.", "Monitor data, accounts and system health.")</p>
         </div>
     </header>
 
@@ -24,7 +24,7 @@
         </span>
     </div>
 
-    <section class="admin-kpis" aria-label="Chỉ số hệ thống">
+    <section class="admin-kpis" aria-label="@T("Chỉ số hệ thống", "System metrics")">
         @foreach (var kpi in Model.Kpis)
         {
             <article class="admin-kpi">
@@ -55,7 +55,7 @@
                         <span class="admin-chart__legend-price">@Model.ChartLegendText</span>
                     </div>
 
-                    <div class="admin-chart__plot" role="img" aria-label="Doanh thu gộp từ tháng 05 đến tháng 10 năm 2026">
+                    <div class="admin-chart__plot" role="img" aria-label="@T("Doanh thu gộp từ tháng 05 đến tháng 10 năm 2026", "Gross revenue by month")">
                         @foreach (var point in Model.Revenue)
                         {
                             <div class="admin-chart__col">
@@ -112,10 +112,10 @@
                     <table class="av-table">
                         <thead>
                             <tr>
-                                <th scope="col">Thời gian</th>
-                                <th scope="col">Người thực hiện</th>
-                                <th scope="col">Hoạt động</th>
-                                <th scope="col">Kết quả</th>
+                                <th scope="col">@T("Thời gian", "Time")</th>
+                                <th scope="col">@T("Người thực hiện", "Actor")</th>
+                                <th scope="col">@T("Hoạt động", "Active")</th>
+                                <th scope="col">@T("Kết quả", "Result")</th>
                             </tr>
                         </thead>
                         <tbody>

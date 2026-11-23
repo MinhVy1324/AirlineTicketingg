@@ -1,0 +1,29 @@
+@model AccountFormViewModel
+@{
+    ViewData["Title"] = T("Quên mật khẩu", "Forgot your password?");
+}
+<div class="av-page av-container">
+    <section class="av-card account-form">
+        <div class="av-card__body av-card__stack">
+            <h1 class="av-page-title">@ViewData["Title"]</h1>
+            @if (Model.Sent)
+            {
+                <p class="av-alert av-alert--info" role="status">@T("Nếu email đủ điều kiện, AeroViet sẽ gửi liên kết trong hộp thư. Liên kết có hiệu lực 30 phút.", "If the email is eligible, AeroViet will send a link to the inbox. The link is valid for 30 minutes.")</p>
+            }
+            else
+            {
+                <p>@T("Nhập email của tài khoản khách hàng để nhận liên kết đặt lại mật khẩu.", "Enter the email for your customer account to receive a password reset link.")</p>
+                <form class="av-stack av-gap-16" method="post" action="/quen-mat-khau">
+                    @Html.AntiForgeryToken()
+                    @if (Model.Error is { } error) { <p class="auth__error" role="alert">@error</p> }
+                    <label class="av-field">
+                        <span class="av-label">Email</span>
+                        <span class="av-control"><input type="email" name="Email" value="@Model.Email" autocomplete="email" maxlength="254" required /></span>
+                    </label>
+                    <button type="submit" class="av-btn av-btn--primary">@T("Gửi liên kết", "Send link")</button>
+                </form>
+            }
+            <a class="av-link" href="/dang-nhap">@T("Quay lại đăng nhập", "Back to sign in")</a>
+        </div>
+    </section>
+</div>

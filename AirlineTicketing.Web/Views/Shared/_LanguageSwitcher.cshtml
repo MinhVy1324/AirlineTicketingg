@@ -1,0 +1,10 @@
+@using Microsoft.AspNetCore.Http.Extensions
+<form class="av-language" asp-controller="Language" asp-action="Set" method="post"
+      aria-label="@T("Ngôn ngữ giao diện", "Display language")">
+    <input type="hidden" name="returnUrl" value="@Context.Request.GetEncodedPathAndQuery()" />
+    @Html.Icon("globe", 16)
+    <button type="submit" name="language" value="vi" lang="vi" aria-label="Tiếng Việt" title="Tiếng Việt"
+            aria-pressed="@((!UiLanguage.IsEnglish).ToString().ToLowerInvariant())" disabled="@(!UiLanguage.IsEnglish)">VI</button>
+    <button type="submit" name="language" value="en" lang="en" aria-label="English" title="English"
+            aria-pressed="@UiLanguage.IsEnglish.ToString().ToLowerInvariant()" disabled="@UiLanguage.IsEnglish">EN</button>
+</form>

@@ -1,18 +1,25 @@
 ﻿<!DOCTYPE html>
-<html lang="vi">
+<html lang="@UiLanguage.Code">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] · AeroViet</title>
-    <meta name="description" content="AeroViet · Đặt vé máy bay nội địa và quốc tế, giá rõ ràng, hành trình an tâm." />
+    @{
+        var description = ViewData["Description"] as string
+            ?? T("AeroViet là hệ thống demo đặt vé máy bay nội địa. Tìm chuyến, chọn ghế và tra cứu vé điện tử.",
+                 "AeroViet is a domestic flight booking demo. Find flights, choose seats and look up e-tickets.");
+    }
+    <meta name="description" content="@description" />
     <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/customer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/interface.css" asp-append-version="true" />
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body>
+    <a class="av-skip-link" href="#main-content">@T("Đến nội dung chính", "Skip to main content")</a>
     @if (ViewData["CompactNav"] is true)
     {
         <partial name="_NavbarCompact" />
@@ -22,13 +29,14 @@
         <partial name="_Navbar" />
     }
 
-    <main role="main">
+    <main id="main-content" tabindex="-1">
         @RenderBody()
     </main>
 
     <partial name="_Footer" />
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <partial name="_InteractionFeedback" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

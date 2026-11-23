@@ -1,0 +1,11 @@
+<div class="av-feedback" data-interface-feedback>
+    <div class="av-feedback__message" data-feedback-display aria-hidden="true" hidden>
+        <span class="av-feedback__indicator"></span>
+        <span class="av-feedback__result av-feedback__result--success">@Html.Icon("check-circle", 19)</span>
+        <span class="av-feedback__result av-feedback__result--info">@Html.Icon("info", 19)</span>
+        <span class="av-feedback__result av-feedback__result--warning">@Html.Icon("alert", 19)</span>
+        <span data-feedback-text></span>
+    </div>
+    <span class="av-visually-hidden" role="status" aria-atomic="true" data-feedback-live></span>
+</div>
+<script src="~/js/interface.js" asp-append-version="true" defer></script>

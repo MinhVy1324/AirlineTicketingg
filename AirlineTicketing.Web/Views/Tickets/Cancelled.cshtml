@@ -1,6 +1,6 @@
 @model CancelledFlightViewModel
 @{
-    ViewData["Title"] = "Chuyến bay bị hủy";
+    ViewData["Title"] = T("Chuyến bay bị hủy", "Flight cancelled");
     ViewData["Nav"] = "tickets";
     var booking = Model.Booking;
     var flight = booking.Flight;
@@ -8,19 +8,18 @@
 
 <div class="av-page av-container">
     <header class="booking-title">
-        <h1 class="av-page-title">Chuyến bay bị hủy</h1>
-        <p class="av-page-subtitle">Vé của tôi / @booking.Pnr · Thông báo từ @flight.AirlineName</p>
+        <h1 class="av-page-title">@T("Chuyến bay bị hủy", "Flight cancelled")</h1>
+        <p class="av-page-subtitle">@T("Vé của tôi", "My tickets") / @booking.Pnr · @T("Thông báo từ", "Notice from") @flight.AirlineName</p>
     </header>
 
     <div class="av-alert av-alert--danger">
         <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
         <div class="av-alert__body">
             <span class="av-alert__title">
-                @flight.AirlineName hủy chuyến @flight.FlightNumber ngày @Money.Date(flight.Departure)
+                @T($"{flight.AirlineName} hủy chuyến {flight.FlightNumber} ngày {Money.Date(flight.Departure)}", $"{flight.AirlineName} cancelled flight {flight.FlightNumber} on {Money.Date(flight.Departure)}")
             </span>
             <span>
-                Hãng thông báo lúc 10:00 ngày 12/11/2026 do thay đổi kế hoạch khai thác.
-                Chuyến bay không còn thực hiện theo lịch đã đặt. Vui lòng chọn phương án hỗ trợ bên dưới.
+                @T("Hãng thông báo lúc 10:00 ngày 12/11/2026 do thay đổi kế hoạch khai thác. Chuyến bay không còn thực hiện theo lịch đã đặt. Vui lòng chọn phương án hỗ trợ bên dưới.", "The airline announced the operational change at 10:00 on 12/11/2026. Choose a support option below for your cancelled flight.")
             </span>
         </div>
     </div>
@@ -28,29 +27,29 @@
     <div class="cancelled-layout">
         <aside class="av-card">
             <div class="av-card__body av-stack av-gap-16">
-                <h2 class="av-card__title">Đặt chỗ · @booking.Pnr</h2>
+                <h2 class="av-card__title">@T("Đặt chỗ", "Booking") · @booking.Pnr</h2>
 
                 <partial name="_JourneyBlock" model="flight" />
 
-                <span class="av-badge av-badge--danger">Chuyến bay bị hủy</span>
+                <span class="av-badge av-badge--danger">@T("Chuyến bay bị hủy", "Flight cancelled")</span>
 
                 <hr class="av-divider" />
 
                 <div class="av-rows">
                     <div class="av-rowline">
-                        <span class="av-rowline__label">Hành khách</span>
+                        <span class="av-rowline__label">@T("Hành khách", "Passenger")</span>
                         <span class="av-rowline__value">@booking.Passenger.FullName</span>
                     </div>
                     <div class="av-rowline">
-                        <span class="av-rowline__label">Số vé</span>
+                        <span class="av-rowline__label">@T("Số vé", "Ticket number")</span>
                         <span class="av-rowline__value av-num">@Model.TicketNumber</span>
                     </div>
                     <div class="av-rowline av-rowline--total">
-                        <span class="av-rowline__label">Tổng đã thanh toán</span>
+                        <span class="av-rowline__label">@T("Tổng đã thanh toán", "Total paid")</span>
                         <span class="av-rowline__value">@Model.PaidText</span>
                     </div>
                     <div class="av-rowline">
-                        <span class="av-rowline__label">Thanh toán</span>
+                        <span class="av-rowline__label">@T("Thanh toán", "Payment")</span>
                         <span class="av-rowline__value">@Model.PaymentText</span>
                     </div>
                 </div>
@@ -58,8 +57,13 @@
                 <div class="av-alert av-alert--info">
                     <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
                     <div class="av-alert__body">
+<<<<<<< Updated upstream
                         <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
                         <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @booking.Pnr để được kiểm tra.</span>
+=======
+                        <span class="av-alert__title">@T("Hỗ trợ đặt chỗ", "Booking support")</span>
+                        <span>@ViewData["SupportHotline"] · 06:00–22:00 · @ViewData["SupportEmail"]. @T($"Cung cấp mã PNR {booking.Pnr} để được kiểm tra.", $"Have booking reference {booking.Pnr} ready.")</span>
+>>>>>>> Stashed changes
                     </div>
                 </div>
             </div>
@@ -68,33 +72,30 @@
         <div class="cancelled-options av-stack av-gap-20">
             <section class="av-card">
                 <div class="av-card__body av-stack av-gap-12">
-                    <h2 class="av-card__title">Yêu cầu chuyến thay thế</h2>
+                    <h2 class="av-card__title">@T("Yêu cầu chuyến thay thế", "Request a replacement flight")</h2>
                     <p class="av-body">
-                        Đề nghị hãng bố trí chuyến bay khác trên tuyến @flight.From.Code → @flight.To.Code.
-                        Bạn có thể nêu ngày và khung giờ mong muốn để được kiểm tra chỗ.
+                        @T($"Đề nghị hãng bố trí chuyến bay khác trên tuyến {flight.From.Code} → {flight.To.Code}. Bạn có thể nêu ngày và khung giờ mong muốn để được kiểm tra chỗ.", $"Ask the airline for a replacement flight from {flight.From.Code} to {flight.To.Code}. Share your preferred date and time so we can check availability.")
                     </p>
                     <p class="av-caption">
-                        Phương án chuyển chuyến miễn phí phụ thuộc thông báo hãng và tình trạng chỗ.
-                        Bạn sẽ được xác nhận trước khi xuất lại vé.
+                        @T("Phương án chuyển chuyến miễn phí phụ thuộc thông báo hãng và tình trạng chỗ. Bạn sẽ được xác nhận trước khi xuất lại vé.", "Free rebooking depends on the airline policy and availability. We will confirm the option before reissuing your ticket.")
                     </p>
                     <div>
-                        <a class="av-btn av-btn--primary" href="/ve-cua-toi/yeu-cau-doi">Yêu cầu chuyến thay thế</a>
+                        <a class="av-btn av-btn--primary" href="/ve-cua-toi/yeu-cau-doi">@T("Yêu cầu chuyến thay thế", "Request a replacement flight")</a>
                     </div>
                 </div>
             </section>
 
             <section class="av-card">
                 <div class="av-card__body av-stack av-gap-12">
-                    <h2 class="av-card__title">Yêu cầu hoàn do hãng hủy</h2>
+                    <h2 class="av-card__title">@T("Yêu cầu hoàn do hãng hủy", "Request a cancellation refund")</h2>
                     <p class="av-body">
-                        Nếu không tiếp tục hành trình, gửi yêu cầu hoàn theo chính sách áp dụng cho chuyến bị hãng hủy.
+                        @T("Nếu không tiếp tục hành trình, gửi yêu cầu hoàn theo chính sách áp dụng cho chuyến bị hãng hủy.", "If you will not continue your trip, request a refund under the airline cancellation policy.")
                     </p>
                     <p class="av-caption">
-                        Không áp đặt phí hoàn tự nguyện @Money.Vnd(flight.RefundFee). Khoản được hoàn và thời gian nhận tiền
-                        được xác nhận theo thông báo hãng, hoàn về nguồn thanh toán ban đầu.
+                        @T($"Không áp đặt phí hoàn tự nguyện {Money.Vnd(flight.RefundFee)}. Khoản được hoàn và thời gian nhận tiền được xác nhận theo thông báo hãng, hoàn về nguồn thanh toán ban đầu.", $"The voluntary refund fee of {Money.Vnd(flight.RefundFee)} does not apply. The airline will confirm the amount and timing. The refund goes to the original payment method.")
                     </p>
                     <div>
-                        <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">Yêu cầu hoàn do hãng hủy</a>
+                        <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-hoan">@T("Yêu cầu hoàn do hãng hủy", "Request a cancellation refund")</a>
                     </div>
                 </div>
             </section>
@@ -102,16 +103,15 @@
             <div class="av-alert av-alert--warning">
                 <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
                 <div class="av-alert__body">
-                    <span class="av-alert__title">Chưa tự động hoàn tiền</span>
+                    <span class="av-alert__title">@T("Chưa tự động hoàn tiền", "Refund requires a request")</span>
                     <span>
-                        Thông báo hủy chuyến không đồng nghĩa tiền đã được hoàn. Sau khi gửi yêu cầu, theo dõi trạng thái xử lý;
-                        chỉ ghi nhận hoàn tất khi cổng thanh toán xác nhận.
+                        @T("Thông báo hủy chuyến không đồng nghĩa tiền đã được hoàn. Sau khi gửi yêu cầu, theo dõi trạng thái xử lý; chỉ ghi nhận hoàn tất khi cổng thanh toán xác nhận.", "You can track your request after submitting it. A refund is complete once the payment provider confirms it.")
                     </span>
                 </div>
             </div>
 
             <p class="av-caption">
-                Chưa gửi yêu cầu hỗ trợ cho đặt chỗ @booking.Pnr. Bạn chỉ cần chọn một phương án phù hợp.
+                @T($"Chưa gửi yêu cầu hỗ trợ cho đặt chỗ {booking.Pnr}. Bạn chỉ cần chọn một phương án phù hợp.", $"There is no support request yet for booking {booking.Pnr}. Choose the option that suits your trip.")
             </p>
         </div>
     </div>

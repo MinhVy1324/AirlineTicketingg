@@ -13,6 +13,11 @@ public sealed class HoanTienConfiguration : IEntityTypeConfiguration<HoanTien>
         builder.Property(x => x.DonViTienTe).HasMaxLength(3).IsFixedLength().IsRequired();
         builder.Property(x => x.NhaCungCap).HasMaxLength(50).HasDefaultValue("NoiBo").IsRequired();
         builder.Property(x => x.MaGiaoDich).HasMaxLength(100);
+        builder.Property(x => x.MaGiaoDichNhaCungCap).HasMaxLength(15);
+        builder.Property(x => x.KetQuaNhaCungCap).HasMaxLength(24);
+        builder.HasIndex(x => new { x.YeuCauDoiHoanId, x.ThanhToanId }).IsUnique();
+        builder.HasOne(x => x.YeuCauDoiHoan).WithMany()
+            .HasForeignKey(x => x.YeuCauDoiHoanId).OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.LyDo).HasMaxLength(300);
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
         builder.Property(x => x.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");

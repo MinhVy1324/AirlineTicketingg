@@ -1,0 +1,15 @@
+@model string
+@{ ViewData["Title"] = T("Trạng thái VNPAY Sandbox", "VNPAY Sandbox status"); }
+<div class="av-page av-container">
+    <section class="av-card policy-card">
+        <div class="av-card__body av-card__stack">
+            <h1 class="av-page-title">@T("Trạng thái VNPAY Sandbox", "VNPAY Sandbox status")</h1>
+            <p role="status">@BookingUiText.Text(Model)</p>
+            <div class="av-row av-gap-12 av-wrap">
+                <a class="av-btn av-btn--primary" href="/dat-ve/vnpay/trang-thai">@T("Kiểm tra lại", "Check again")</a>
+                <a class="av-btn av-btn--outline" href="/dat-ve/thanh-toan">@T("Về thanh toán", "Back to checkout")</a>
+                <a class="av-link" href="/tra-cuu">@T("Tra cứu đặt chỗ", "Look up booking")</a>
+            </div>
+        </div>
+    </section>
+</div>

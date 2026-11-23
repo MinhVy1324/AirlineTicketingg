@@ -1,40 +1,64 @@
 @model PriceSummary
 <section class="av-card">
     <div class="av-card__body av-card__stack">
-        <h2 class="av-card__title">@Model.Title</h2>
+        <h2 class="av-card__title">@BookingUiText.Text(Model.Title)</h2>
 
         <div class="price-lines">
             <div class="av-rowline">
-                <span class="av-rowline__label">@Model.BaseFareLabel</span>
+                <span class="av-rowline__label">@BookingUiText.Text(Model.BaseFareLabel)</span>
                 <span class="av-rowline__value">@Money.Vnd(Model.BaseFare)</span>
             </div>
             <div class="av-rowline">
-                <span class="av-rowline__label">Thuế &amp; phí sân bay</span>
+                <span class="av-rowline__label">@T("Thuế & phí sân bay", "Taxes & airport fees")</span>
                 <span class="av-rowline__value">@Money.Vnd(Model.Taxes)</span>
             </div>
             <div class="av-rowline">
-                <span class="av-rowline__label">Phí dịch vụ</span>
+                <span class="av-rowline__label">@T("Phí dịch vụ", "Service fee")</span>
                 <span class="av-rowline__value">@Money.Vnd(Model.ServiceFee)</span>
             </div>
+<<<<<<< Updated upstream
+=======
+            @if (Model.SeatFee > 0)
+            {
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@BookingUiText.Text(Model.SeatLabel)</span>
+                    <span class="av-rowline__value">@Money.Vnd(Model.SeatFee)</span>
+                </div>
+            }
+>>>>>>> Stashed changes
             @if (Model.BaggageFee > 0)
             {
                 <div class="av-rowline">
-                    <span class="av-rowline__label">@Model.BaggageLabel</span>
+                    <span class="av-rowline__label">@BookingUiText.Text(Model.BaggageLabel)</span>
                     <span class="av-rowline__value">@Money.Vnd(Model.BaggageFee)</span>
+                </div>
+            }
+            @if (Model.Discount > 0)
+            {
+                <div class="av-rowline">
+                    <span class="av-rowline__label">@T("Ưu đãi", "Promotion") @Model.PromotionCode</span>
+                    <span class="av-rowline__value">−@Money.Vnd(Model.Discount)</span>
                 </div>
             }
         </div>
 
         <hr class="av-divider" />
 
+        @if (Model.ChangeFeePaid > 0)
+        {
+            <div class="av-rowline">
+                <span class="av-rowline__label">@T("Phí đổi vé đã thu", "Change fees already paid")</span>
+                <span class="av-rowline__value av-num">@Money.Vnd(Model.ChangeFeePaid)</span>
+            </div>
+        }
         <div class="av-rowline av-rowline--total">
-            <span class="av-rowline__label">@Model.TotalLabel</span>
+            <span class="av-rowline__label">@BookingUiText.Text(Model.TotalLabel)</span>
             <span class="av-rowline__value av-num">@Money.Vnd(Model.Total)</span>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model.Note))
         {
-            <p class="av-caption">@Model.Note</p>
+            <p class="av-caption">@BookingUiText.Text(Model.Note)</p>
         }
     </div>
 </section>

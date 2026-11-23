@@ -8,11 +8,12 @@
 }
 <header class="av-nav">
     <div class="av-container av-nav__inner">
-        <a class="av-brand" href="/" aria-label="AeroViet · Trang chủ">
+        <a class="av-brand" href="/" aria-label="@T("AeroViet · Trang chủ", "AeroViet · Home")">
             <span class="av-brand__mark">@Html.Icon("plane", 23)</span>
             <span class="av-brand__name">AeroViet</span>
         </a>
 
+<<<<<<< Updated upstream
         <nav class="av-nav__menu" aria-label="Điều hướng chính">
             <a class="av-nav__link @Active("book")" href="/" aria-current="@(nav == "book" ? "page" : null)">Đặt vé</a>
             @if (User.Identity?.IsAuthenticated == true)
@@ -32,16 +33,23 @@
             {
                 <a class="av-nav__link" href="/QuanLyTaiKhoan">Tài khoản</a>
             }
+=======
+        <nav class="av-nav__menu" aria-label="@T("Điều hướng chính", "Main navigation")">
+            <a class="av-nav__link @Active("book")" href="/" aria-current="@(nav == "book" ? "page" : null)">@T("Đặt vé", "Book")</a>
+            <a class="av-nav__link @Active("tickets")" href="/ve-cua-toi">@T("Vé của tôi", "My tickets")</a>
+            <a class="av-nav__link" href="/tra-cuu">@T("Tra cứu", "Look up")</a>
+            <a class="av-nav__link @Active("offers")" href="/khuyen-mai">@T("Ưu đãi", "Offers")</a>
+            <a class="av-nav__link @Active("about")" asp-controller="Home" asp-action="About" aria-current="@(nav == "about" ? "page" : null)">@T("Giới thiệu", "About")</a>
+            <a class="av-nav__link" asp-controller="Home" asp-action="About" asp-fragment="ho-tro">@T("Trợ giúp", "Help")</a>
+>>>>>>> Stashed changes
         </nav>
 
         <div class="av-nav__aside">
-            <span class="av-nav__locale">
-                @Html.Icon("globe", 17)
-                <span>VI · VND</span>
-            </span>
+            <partial name="_LanguageSwitcher" />
             <span class="av-nav__sep" aria-hidden="true"></span>
             @if (User.Identity?.IsAuthenticated == true)
             {
+<<<<<<< Updated upstream
                 <a class="av-nav__user" asp-controller="Account" asp-action="Profile" aria-label="Hồ sơ của @fullName">
                     <span class="av-avatar">@initials</span>
                     <span>@fullName</span>
@@ -56,6 +64,17 @@
             {
                 <a class="av-link" asp-controller="Account" asp-action="Login">Đăng nhập</a>
                 <a class="av-btn av-btn--primary" asp-controller="Account" asp-action="Register">Đăng ký</a>
+=======
+                <a class="av-nav__user" href="@(User.IsInRole(AppRoles.KhachHang) ? "/ho-so" : "/ve-cua-toi")" aria-label="@User.DisplayName()">
+                    <span class="av-avatar" aria-hidden="true">@Html.Icon("user", 16)</span>
+                    <span>@User.DisplayName()</span>
+                </a>
+                <a class="av-btn av-btn--outline av-btn--sm" href="/dang-xuat">@T("Đăng xuất", "Sign out")</a>
+            }
+            else
+            {
+                <a class="av-btn av-btn--outline" href="/dang-nhap">@T("Đăng nhập", "Sign in")</a>
+>>>>>>> Stashed changes
             }
         </div>
     </div>

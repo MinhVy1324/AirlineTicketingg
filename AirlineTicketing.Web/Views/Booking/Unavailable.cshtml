@@ -1,6 +1,6 @@
 @model SoldOutViewModel
 @{
-    ViewData["Title"] = "Chuyến bạn chọn vừa hết chỗ";
+    ViewData["Title"] = T("Chuyến bạn chọn vừa hết chỗ", "Your selected flight just sold out");
     ViewData["Nav"] = "book";
     var criteria = Model.Criteria;
     var selected = Model.SelectedFlight;
@@ -10,20 +10,19 @@
     <partial name="_Stepper" model="1" />
 
     <header class="booking-title">
-        <h1 class="av-page-title">Chuyến bạn chọn vừa hết chỗ</h1>
+        <h1 class="av-page-title">@T("Chuyến bạn chọn vừa hết chỗ", "Your selected flight just sold out")</h1>
         <p class="av-page-subtitle">
             @criteria.OriginCode → @criteria.DestinationCode · @criteria.DepartDateText ·
-            @criteria.Passengers người lớn · Bước chọn chuyến
+            @T($"{criteria.Passengers} người lớn", BookingUiText.Party(criteria.EffectiveParty)) · @T("Bước chọn chuyến", "Flight selection")
         </p>
     </header>
 
     <div class="av-alert av-alert--warning">
         <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
         <div class="av-alert__body">
-            <span class="av-alert__title">Không còn chỗ khi xác nhận chuyến @selected.FlightNumber</span>
+            <span class="av-alert__title">@T($"Không còn chỗ khi xác nhận chuyến {selected.FlightNumber}", $"No seats available on flight {selected.FlightNumber}")</span>
             <span>
-                Số chỗ đã thay đổi trong lúc bạn chọn chuyến. Chưa trừ tiền, chưa tạo đặt chỗ và chưa tạo vé.
-                Vui lòng chọn chuyến khác hoặc quay về kết quả.
+                @T("Số chỗ đã thay đổi trong lúc bạn chọn chuyến. Chưa trừ tiền, chưa tạo đặt chỗ và chưa tạo vé. Vui lòng chọn chuyến khác hoặc quay về kết quả.", "Availability changed while you were selecting the flight. No payment, booking or ticket was created. Choose another flight or return to the results.")
             </span>
         </div>
     </div>
@@ -31,7 +30,7 @@
     <div class="soldout-layout">
         <aside class="av-card">
             <div class="av-card__body av-stack av-gap-16">
-                <h2 class="av-card__title">Chuyến đã chọn</h2>
+                <h2 class="av-card__title">@T("Chuyến đã chọn", "Selected flight")</h2>
 
                 <div class="summary-flight">
                     <div class="summary-flight__airline">
@@ -42,30 +41,29 @@
                         <span class="av-badge av-badge--info">@selected.FlightNumber</span>
                     </div>
 
-                    <span class="summary-flight__date">@Money.LongDate(selected.Departure) · @selected.Stops</span>
+                    <span class="summary-flight__date">@BookingUiText.LongDate(selected.Departure) · @BookingUiText.Text(selected.Stops)</span>
 
                     <partial name="_FlightTimeline" model="new FlightTimelineModel(selected, ShowAirportName: true)" />
 
                     <hr class="av-divider" />
-                    <span class="av-caption">@selected.FareName · 1 người lớn</span>
+                    <span class="av-caption">@BookingUiText.Text(selected.FareName) · @T("1 người lớn", "1 adult")</span>
                 </div>
 
-                <span class="av-badge av-badge--danger">Hết chỗ</span>
+                <span class="av-badge av-badge--danger">@T("Hết chỗ", "Sold out")</span>
 
                 <p class="av-caption">
-                    Giá đã xem: @Money.Vnd(Model.SelectedPrice)/khách, gồm thuế và phí.
-                    Không thể tiếp tục với lựa chọn này.
+                    @T($"Giá đã xem: {Money.Vnd(Model.SelectedPrice)}/khách, gồm thuế và phí. Không thể tiếp tục với lựa chọn này.", $"Previous fare: {Money.Vnd(Model.SelectedPrice)} per passenger, including taxes and fees. Select a different flight to continue.")
                 </p>
 
                 <a class="av-btn av-btn--ghost" href="/chuyen-bay">
                     @Html.Icon("arrow-left", 17)
-                    <span>Quay về kết quả</span>
+                    <span>@T("Quay về kết quả", "Back to results")</span>
                 </a>
             </div>
         </aside>
 
-        <section class="soldout-main av-stack av-gap-16" aria-label="Các chuyến thay thế">
-            <h2 class="av-section-title">Các chuyến thay thế cùng ngày</h2>
+        <section class="soldout-main av-stack av-gap-16" aria-label="@T("Các chuyến thay thế", "Alternative flights")">
+            <h2 class="av-section-title">@T("Các chuyến thay thế cùng ngày", "Alternative flights on the same day")</h2>
 
             @for (var i = 0; i < Model.Alternatives.Count; i++)
             {
@@ -81,30 +79,30 @@
                                 <span class="av-badge av-badge--info">@alt.FlightNumber</span>
                             </div>
 
-                            <span class="summary-flight__date">@Money.LongDate(alt.Departure) · @alt.Stops</span>
+                            <span class="summary-flight__date">@BookingUiText.LongDate(alt.Departure) · @BookingUiText.Text(alt.Stops)</span>
 
                             <partial name="_FlightTimeline" model="new FlightTimelineModel(alt, ShowAirportName: false)" />
 
-                            <span class="av-caption">@alt.FareName · 1 người lớn</span>
+                            <span class="av-caption">@BookingUiText.Text(alt.FareName) · @T("1 người lớn", "1 adult")</span>
                         </div>
 
                         <div class="alt-flight__side">
                             <strong class="alt-flight__price">
                                 @Money.Vnd(alt.PricePerPassenger)
-                                <span>/ khách</span>
+                                <span>@T("/ khách", "/ passenger")</span>
                             </strong>
-                            <a class="av-btn av-btn--outline" href="/dat-ve/hanh-khach">Chọn @alt.FlightNumber</a>
+                            <a class="av-btn av-btn--outline" href="/dat-ve/hanh-khach">@T($"Chọn {alt.FlightNumber}", $"Select {alt.FlightNumber}")</a>
                         </div>
                     </div>
 
                     <p class="av-micro">
                         @if (i == Model.Alternatives.Count - 1)
                         {
-                            <span>Đã gồm thuế, phí · Chỗ sẽ được kiểm tra lại khi xác nhận.</span>
+                            <span>@T("Đã gồm thuế, phí · Chỗ sẽ được kiểm tra lại khi xác nhận.", "Taxes and fees are included. Availability is checked again when you confirm.")</span>
                         }
                         else
                         {
-                            <span>Đã gồm thuế, phí · 12 kg xách tay + 23 kg ký gửi. Chưa gồm hành lý mua thêm.</span>
+                            <span>@T("Đã gồm thuế, phí · 12 kg xách tay + 23 kg ký gửi. Chưa gồm hành lý mua thêm.", "Taxes, fees, 12 kg carry-on and 23 kg checked baggage are included. Extra baggage is excluded.")</span>
                         }
                     </p>
                 </article>

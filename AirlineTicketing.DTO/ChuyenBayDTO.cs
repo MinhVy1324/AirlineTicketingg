@@ -9,6 +9,14 @@ public sealed record ChuyenBayDTO
     public string TenSanBayDi { get; init; } = string.Empty;
     public string MaSanBayDen { get; init; } = string.Empty;
     public string TenSanBayDen { get; init; } = string.Empty;
+<<<<<<< Updated upstream
+=======
+    public string ThanhPhoDen { get; init; } = string.Empty;
+    public int MayBayId { get; init; }
+    public int HangHangKhongId { get; init; }
+    public string MaHangHangKhong { get; init; } = string.Empty;
+    public string TenHangHangKhong { get; init; } = string.Empty;
+>>>>>>> Stashed changes
     public string MaMayBay { get; init; } = string.Empty;
     public DateTimeOffset GioKhoiHanh { get; init; }
     public DateTimeOffset GioHaCanh { get; init; }

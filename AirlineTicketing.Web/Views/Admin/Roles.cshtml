@@ -1,18 +1,28 @@
 @model AdminRolesViewModel
 @{
-    ViewData["Title"] = "Vai trò & phân quyền";
+    ViewData["Title"] = T("Vai trò & phân quyền", "Roles & permissions");
     ViewData["AdminNav"] = "roles";
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Vai trò &amp; phân quyền</h1>
-            <p class="admin-page-subtitle">Phân tách trách nhiệm rõ ràng giữa quản trị, vận hành và khách hàng.</p>
+            <h1 class="admin-page-title">@T("Vai trò & phân quyền", "Roles & permissions")</h1>
+            <p class="admin-page-subtitle">@T("Phân tách trách nhiệm rõ ràng giữa quản trị, vận hành và khách hàng.", "Review responsibilities across administrators, operations staff and customers.")</p>
         </div>
     </header>
 
+<<<<<<< Updated upstream
     <section class="admin-roles" aria-label="Các vai trò trong hệ thống">
+=======
+    @if (TempData["msg"] is string rmsg)
+    {
+        var tone = TempData["tone"] as string ?? "info";
+        <div class="av-alert av-alert--@tone" role="@(tone == "danger" ? "alert" : "status")"><div class="av-alert__body"><span>@rmsg</span></div></div>
+    }
+
+    <section class="admin-roles" aria-label="@T("Các vai trò trong hệ thống", "System roles")">
+>>>>>>> Stashed changes
         @foreach (var role in Model.Roles)
         {
             <article class="admin-role">
@@ -29,7 +39,7 @@
         <div class="av-card__body admin-card__body">
             <div class="admin-card__head">
                 <div class="admin-card__head-main">
-                    <h2 class="av-card__title">Ma trận quyền truy cập</h2>
+                    <h2 class="av-card__title">@T("Ma trận quyền truy cập", "Access permissions matrix")</h2>
                     <span class="av-caption">@Model.PermissionLegend</span>
                 </div>
                 <span class="av-link">@Model.PolicyVersion</span>
@@ -39,10 +49,10 @@
                 <table class="av-table admin-matrix">
                     <thead>
                         <tr>
-                            <th scope="col">Nhóm nghiệp vụ</th>
+                            <th scope="col">@T("Nhóm nghiệp vụ", "Function")</th>
                             <th scope="col">Admin</th>
                             <th scope="col">Manager</th>
-                            <th scope="col">Khách hàng</th>
+                            <th scope="col">@T("Khách hàng", "Customer")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -103,8 +113,8 @@
 
                 <form class="admin-control-actions" method="post" action="/admin/vai-tro">
                     @Html.AntiForgeryToken()
-                    <a class="av-btn av-btn--outline" href="/admin/vai-tro">Hủy thay đổi</a>
-                    <button type="submit" class="av-btn av-btn--primary">Lưu phân quyền</button>
+                    <a class="av-btn av-btn--outline" href="/admin/vai-tro">@T("Hủy thay đổi", "Cancel changes")</a>
+                    <button type="submit" class="av-btn av-btn--primary">@T("Lưu phân quyền", "Save permissions")</button>
                 </form>
             </div>
         </article>

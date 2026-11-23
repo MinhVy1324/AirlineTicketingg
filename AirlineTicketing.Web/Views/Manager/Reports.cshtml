@@ -1,16 +1,21 @@
 @model ManagerReportsViewModel
 @{
-    ViewData["Title"] = "Báo cáo kinh doanh";
+    ViewData["Title"] = T("Báo cáo kinh doanh", "Business reports");
     ViewData["ManagerNav"] = "reports";
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Báo cáo kinh doanh</h1>
+            <h1 class="admin-page-title">@T("Báo cáo kinh doanh", "Business reports")</h1>
             <p class="admin-page-subtitle">@Model.Subtitle</p>
         </div>
     </header>
+
+    @if (Model.PeriodError is { } periodError)
+    {
+        <p class="av-alert av-alert--warning" role="alert">@periodError @T("Đang hiển thị tháng hiện tại.", "Showing the current month.")</p>
+    }
 
     <form class="admin-filters manager-filters--reports" method="post" action="/quan-ly/bao-cao">
         @Html.AntiForgeryToken()
@@ -50,15 +55,23 @@
             </span>
         </label>
 
+        <label class="av-field">
+            <span class="av-label">@T("Số hiệu chuyến", "Flight number")</span>
+            <span class="av-control">
+                <input name="chuyen" type="search" value="@Model.FlightValue" maxlength="20" placeholder="@T("Ví dụ VN216", "Example: VN216")" />
+                @Html.Icon("search", 17)
+            </span>
+        </label>
+
         <button type="submit" class="av-btn av-btn--primary admin-filters__submit">@Model.ViewText</button>
         <button type="submit" class="av-btn av-btn--outline admin-filters__submit"
-                formaction="/quan-ly/bao-cao/xuat">
+                formaction="/quan-ly/bao-cao/xuat" data-feedback-download>
             @Html.Icon("download", 17)
             <span>@Model.ExportText</span>
         </button>
     </form>
 
-    <section class="admin-kpis" aria-label="Chỉ số kinh doanh">
+    <section class="admin-kpis" aria-label="@T("Chỉ số kinh doanh", "Business metrics")">
         @foreach (var kpi in Model.Kpis)
         {
             <article class="admin-kpi">
@@ -86,8 +99,13 @@
                         <span class="manager-chart__legend">@Model.ChartLegend</span>
                     </div>
 
+<<<<<<< Updated upstream
                     <div class="admin-chart__plot" role="img"
                          aria-label="Doanh thu gộp từ tháng 05 đến tháng 10 năm 2026">
+=======
+                    <div class="admin-chart__plot" role="region" tabindex="0"
+                         aria-label="@Model.TrendTitle — @Model.TrendSubtitle">
+>>>>>>> Stashed changes
                         @foreach (var bar in Model.Bars)
                         {
                             <div class="admin-chart__col">
@@ -138,15 +156,15 @@
                 <span class="av-caption">@Model.RoutesSubtitle</span>
             </div>
 
-            <div class="admin-table">
+            <div class="admin-table" role="region" tabindex="0" aria-label="@Model.RoutesTitle">
                 <table class="av-table manager-table--reports">
                     <thead>
                         <tr>
-                            <th scope="col">Tuyến bay</th>
-                            <th scope="col">Vé đã xuất</th>
-                            <th scope="col">Doanh thu gộp</th>
-                            <th scope="col">Tiền đã hoàn</th>
-                            <th scope="col">Doanh thu sau hoàn</th>
+                            <th scope="col">@T("Tuyến bay", "Route")</th>
+                            <th scope="col">@T("Vé đã xuất", "Tickets issued")</th>
+                            <th scope="col">@T("Doanh thu gộp", "Gross revenue")</th>
+                            <th scope="col">@T("Tiền đã hoàn", "Refunds")</th>
+                            <th scope="col">@T("Doanh thu sau hoàn", "Net revenue")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,6 +183,47 @@
             </div>
 
             <p class="av-caption admin-card__note">@Model.Note</p>
+        </div>
+    </section>
+    <section class="av-card admin-card">
+        <div class="av-card__body admin-card__body">
+            <h2 class="av-card__title" id="report-by-flight">@T("Doanh thu theo chuyến bay", "Revenue by flight")</h2>
+            @if (Model.Flights.Count == 0)
+            {
+                <p class="av-caption">@T("Không có chuyến bay khớp kỳ báo cáo và bộ lọc.", "No flights match the reporting period and filters.")</p>
+            }
+            else
+            {
+                <div class="admin-table" role="region" tabindex="0" aria-labelledby="report-by-flight">
+                    <table class="av-table manager-table--reports">
+                        <thead>
+                            <tr>
+                                <th scope="col">@T("Chuyến bay", "Flight")</th>
+                                <th scope="col">@T("Khởi hành (UTC+7)", "Departure (UTC+7)")</th>
+                                <th scope="col">@T("Tuyến bay", "Route")</th>
+                                <th scope="col">@T("Vé đã xuất", "Tickets issued")</th>
+                                <th scope="col">@T("Đã thu", "Collected")</th>
+                                <th scope="col">@T("Đã hoàn", "Refunded")</th>
+                                <th scope="col">@T("Thu ròng", "Net collections")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Flights)
+                            {
+                                <tr>
+                                    <th scope="row">@row.Flight</th>
+                                    <td>@row.Departure</td>
+                                    <td>@row.Route</td>
+                                    <td>@row.Tickets</td>
+                                    <td>@row.Gross</td>
+                                    <td>@row.Refunded</td>
+                                    <td>@row.Net</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
     </section>
 </div>

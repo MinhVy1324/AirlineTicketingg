@@ -1,19 +1,24 @@
 @model RequestTrackingViewModel
 @{
-    ViewData["Title"] = "Theo dõi yêu cầu đổi / hoàn";
+    ViewData["Title"] = T("Theo dõi yêu cầu đổi / hoàn", "Track change and refund requests");
     ViewData["Nav"] = "tickets";
 }
 
 <div class="av-page av-container">
     <header class="booking-title">
-        <h1 class="av-page-title">Theo dõi yêu cầu đổi / hoàn</h1>
-        <p class="av-page-subtitle">Vé của tôi / Yêu cầu hỗ trợ · Cập nhật ngày @Model.UpdatedAtText (UTC+7)</p>
+        <h1 class="av-page-title">@T("Theo dõi yêu cầu đổi / hoàn", "Track change and refund requests")</h1>
+        <p class="av-page-subtitle">@T("Vé của tôi / Yêu cầu hỗ trợ · Cập nhật ngày", "My tickets / Support requests · Updated") @Model.UpdatedAtText (UTC+7)</p>
     </header>
 
-    <nav class="av-chips" aria-label="Lọc yêu cầu theo trạng thái">
+    @if (TempData["TicketMsg"] is string message)
+    {
+        <div class="av-alert av-alert--info" role="status">@message</div>
+    }
+    <nav class="av-chips" aria-label="@T("Lọc yêu cầu theo trạng thái", "Filter requests by status")">
         @foreach (var tab in Model.Tabs)
         {
-            <a class="av-chip @(tab.IsActive ? "is-active" : null)" href="/ve-cua-toi/yeu-cau">
+            <a class="av-chip @(tab.IsActive ? "is-active" : null)" href="@tab.Href"
+               aria-current="@(tab.IsActive ? "page" : null)">
                 @tab.Label (@tab.Count)
             </a>
         }
@@ -21,25 +26,35 @@
 
     <div class="booking-layout">
         <div class="booking-main">
+            @if (Model.Requests.Count == 0)
+            {
+                <p class="av-body">@T("Không có yêu cầu đổi hoặc hoàn vé trong mục này.", "No change or refund requests in this section.")</p>
+            }
+            else
+            {
             <section class="av-card">
                 <div class="av-card__body av-stack av-gap-16">
-                    <h2 class="av-card__title">Yêu cầu của bạn</h2>
+                    <h2 class="av-card__title">@T("Yêu cầu của bạn", "Your requests")</h2>
 
-                    <div class="av-table-wrap">
+                    <div class="av-table-wrap" tabindex="0" role="region" aria-label="@T("Danh sách yêu cầu đổi hoặc hoàn vé", "List of change and refund requests")">
                         <table class="av-table request-table">
                             <thead>
                                 <tr>
-                                    <th>Yêu cầu / PNR</th>
-                                    <th>Loại / Ngày gửi</th>
-                                    <th>Hành trình</th>
-                                    <th>Trạng thái</th>
+                                    <th>@T("Yêu cầu / PNR", "Request and booking reference")</th>
+                                    <th>@T("Loại / Ngày gửi", "Type and submitted date")</th>
+                                    <th>@T("Hành trình", "Itinerary")</th>
+                                    <th>@T("Trạng thái", "Status")</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var request in Model.Requests)
                                 {
                                     <tr class="@(request.IsSelected ? "is-selected" : null)">
-                                        <td class="cell-strong">@request.Code · @request.Pnr</td>
+                                        <td class="cell-strong">
+                                            <a class="av-link" asp-action="Requests" asp-route-id="@request.Code"
+                                               asp-route-tab="@Model.ActiveTab" asp-route-trang="@(Model.PageNumber > 1 ? Model.PageNumber.ToString() : null)"
+                                               aria-current="@(request.IsSelected ? "true" : null)">@request.Code</a> · @request.Pnr
+                                        </td>
                                         <td>@request.TypeText</td>
                                         <td>@request.RouteText</td>
                                         <td>
@@ -50,6 +65,22 @@
                             </tbody>
                         </table>
                     </div>
+                    @if (Model.PageCount > 1)
+                    {
+                        <nav class="av-row av-gap-12 av-wrap" aria-label="@T("Trang yêu cầu", "Request pages")">
+                            @if (Model.PageNumber > 1)
+                            {
+                                <a class="av-link" asp-action="Requests" asp-route-tab="@Model.ActiveTab"
+                                   asp-route-trang="@(Model.PageNumber - 1)">@T("Trang trước", "Previous page")</a>
+                            }
+                            <span>@T("Trang", "Page") @Model.PageNumber / @Model.PageCount</span>
+                            @if (Model.PageNumber < Model.PageCount)
+                            {
+                                <a class="av-link" asp-action="Requests" asp-route-tab="@Model.ActiveTab"
+                                   asp-route-trang="@(Model.PageNumber + 1)">@T("Trang sau", "Next page")</a>
+                            }
+                        </nav>
+                    }
                 </div>
             </section>
 
@@ -57,24 +88,52 @@
                 <div class="av-card__body av-stack av-gap-18">
                     <div class="av-stack av-gap-4">
                         <div class="av-row av-row--between av-gap-12">
-                            <h2 class="av-card__title">Yêu cầu hoàn · @Model.DetailCode</h2>
+                            <h2 class="av-card__title">@(Model.IsChange ? T("Yêu cầu đổi", "Change request") : T("Yêu cầu hoàn", "Refund request")) · @Model.DetailCode</h2>
                             <span class="av-badge av-badge--@Model.DetailStatusTone">@Model.DetailStatusText</span>
                         </div>
                         <span class="av-caption">
-                            @Model.DetailPnr · @Model.DetailPassenger · Vé @Model.DetailTicketNumber
+                            @Model.DetailPnr · @Model.DetailPassenger · @T("Vé", "Ticket") @Model.DetailTicketNumber
                         </span>
                     </div>
 
                     <div class="av-rows">
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Chuyến bay</span>
+                            <span class="av-rowline__label">@T("Chuyến bay", "Flight")</span>
                             <span class="av-rowline__value">@Model.FlightText</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Lý do</span>
+                            <span class="av-rowline__label">@T("Lý do", "Reason")</span>
                             <span class="av-rowline__value">@Model.ReasonText</span>
                         </div>
                     </div>
+
+                    @if (Model.ChangeTargetText is not null)
+                    {
+                        <p class="av-body">@T("Chuyến thay thế", "Replacement flight") <strong>@Model.ChangeTargetText</strong> (UTC+7)</p>
+                    }
+                    @if (Model.ChangeCharge is decimal charge)
+                    {
+                        <form class="av-stack av-gap-12" method="post" action="/ve-cua-toi/yeu-cau-doi/@Model.DetailCode/xac-nhan">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="expectedCharge" value="@charge.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                            <label class="av-check">
+                                <input type="checkbox" name="accepted" value="true" required />
+                                <span>@T($"Tôi đồng ý khoản thanh toán mô phỏng {Money.Vnd(charge)} để đổi sang chuyến đã duyệt.", $"I accept the simulated payment of {Money.Vnd(charge)} to change to the approved flight.")</span>
+                            </label>
+                            <button type="submit" class="av-btn av-btn--primary">@T("Xác nhận đổi vé", "Confirm ticket change")</button>
+                        </form>
+                    }
+                    @if (Model.CanCancelChange)
+                    {
+                        <form method="post" action="/ve-cua-toi/yeu-cau-doi/@Model.DetailCode/huy">
+                            @Html.AntiForgeryToken()
+                            <button class="av-btn av-btn--outline" type="submit">@T("Hủy yêu cầu đổi", "Cancel change request")</button>
+                        </form>
+                    }
+                    @if (Model.IsChange && Model.IsCompleted)
+                    {
+                        <a class="av-link" href="/ve-cua-toi?pnr=@Model.DetailPnr">@T("Xem vé cập nhật", "View updated ticket")</a>
+                    }
 
                     <hr class="av-divider" />
 
@@ -93,82 +152,74 @@
                 </div>
             </section>
 
-            <div class="av-alert av-alert--warning">
-                <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
-                <div class="av-alert__body">
-                    <span class="av-alert__title">Bạn chưa nhận được xác nhận đã hoàn tiền</span>
-                    <span>
-                        Trạng thái “Đã duyệt” chỉ xác nhận yêu cầu được chấp thuận. Tiền chưa được ghi nhận hoàn tất;
-                        AeroViet sẽ thông báo khi cổng thanh toán xác nhận.
-                    </span>
-                </div>
-            </div>
-
-            <section class="av-card">
-                <div class="av-card__body av-stack av-gap-16">
-                    <div class="av-stack av-gap-6">
-                        <h2 class="av-card__title">Yêu cầu đổi vé khác · @Model.OtherCode</h2>
-                        <p class="av-body">@Model.OtherText</p>
-                    </div>
-
-                    <div class="av-row av-gap-16 av-wrap">
-                        <span class="av-badge av-badge--warning">@Model.OtherStatusText</span>
-                        <a class="av-link" href="/ve-cua-toi/yeu-cau-doi">
-                            Xem phí yêu cầu đổi
-                            @Html.Icon("arrow-right", 15)
-                        </a>
-                    </div>
-                </div>
-            </section>
+            }
         </div>
 
         <aside class="booking-aside">
+            @if (!Model.IsChange && Model.Requests.Count > 0)
+            {
             <section class="av-card">
                 <div class="av-card__body av-stack av-gap-16">
-                    <h2 class="av-card__title">Tính hoàn tiền dự kiến</h2>
+                    <h2 class="av-card__title">@(Model.IsCompleted ? T("Kết quả hoàn tiền", "Refund outcome") : T("Tính hoàn tiền dự kiến", "Estimated refund breakdown"))</h2>
 
                     <div class="av-rows">
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Tổng đã thanh toán</span>
+                            <span class="av-rowline__label">@T("Tổng đã thanh toán", "Total paid")</span>
                             <span class="av-rowline__value av-num">@Money.Vnd(Model.PaidTotal)</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Phí hoàn vé</span>
+                            <span class="av-rowline__label">@T("Phí hoàn vé", "Refund fee")</span>
                             <span class="av-rowline__value av-num">−@Money.Vnd(Model.RefundFee)</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Phí dịch vụ không hoàn</span>
+                            <span class="av-rowline__label">@T("Phí dịch vụ không hoàn", "Non-refundable service fee")</span>
                             <span class="av-rowline__value av-num">−@Money.Vnd(Model.ServiceFee)</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Hành lý thêm không hoàn</span>
+                            <span class="av-rowline__label">@T("Hành lý thêm không hoàn", "Non-refundable extra baggage")</span>
                             <span class="av-rowline__value av-num">−@Money.Vnd(Model.BaggageFee)</span>
                         </div>
+                        @if (Model.ChangeFeePaid > 0)
+                        {
+                            <div class="av-rowline">
+                                <span class="av-rowline__label">@T("Phí đổi vé đã thu", "Change fee already paid")</span>
+                                <span class="av-rowline__value av-num">−@Money.Vnd(Model.ChangeFeePaid)</span>
+                            </div>
+                        }
                         <div class="av-rowline av-rowline--total">
-                            <span class="av-rowline__label">Dự kiến hoàn</span>
+                            <span class="av-rowline__label">@(Model.IsCompleted ? T("Đã hoàn", "Refunded") : T("Dự kiến hoàn", "Estimated refund"))</span>
                             <span class="av-rowline__value av-num">@Money.Vnd(Model.RefundTotal)</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Hoàn về nguồn thanh toán</span>
+                            <span class="av-rowline__label">@T("Hoàn về nguồn thanh toán", "Refund destination")</span>
                             <span class="av-rowline__value">@Model.RefundToText</span>
                         </div>
                     </div>
 
-                    <p class="av-micro">7–15 ngày làm việc sau khi được duyệt; phụ thuộc ngân hàng.</p>
+                    @if (!Model.IsCompleted)
+                    {
+                        <p class="av-micro">@T("Số tiền được ghi nhận sau khi xử lý lệnh hoàn.", "The amount is recorded once the refund is processed.")</p>
+                    }
                 </div>
             </section>
 
+            }
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
                 <div class="av-alert__body">
+<<<<<<< Updated upstream
                     <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
                     <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @Model.DetailPnr để được kiểm tra.</span>
+=======
+                    <span class="av-alert__title">@T("Hỗ trợ đặt chỗ", "Booking support")</span>
+                    <span>@ViewData["SupportHotline"] · 06:00–22:00 · @ViewData["SupportEmail"]. @T("Cung cấp mã đặt chỗ để được hỗ trợ.", "Have your booking reference ready.")</span>
+>>>>>>> Stashed changes
                 </div>
             </div>
 
             <a class="av-link" href="/ve-cua-toi">
                 @Html.Icon("arrow-left", 15)
-                Quay lại vé của tôi
+                @T("Quay lại vé của tôi", "Back to my tickets")
             </a>
         </aside>
     </div>

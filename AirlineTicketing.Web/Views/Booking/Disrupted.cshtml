@@ -1,0 +1,17 @@
+@model string
+@{
+    var supportHotline = ViewData["SupportHotline"];
+    var supportEmail = ViewData["SupportEmail"];
+    ViewData["Title"] = T("Hành trình cần xử lý", "Itinerary needs attention");
+}
+
+<section class="av-page av-container">
+    <div class="av-card">
+        <div class="av-card__body av-stack av-gap-16">
+            <h1 class="av-page-title">@T("Hành trình cần xử lý", "Itinerary needs attention")</h1>
+            <p>@T($"Đặt chỗ {Model} có chặng bị hủy hoặc đổi lịch. PDF sẽ có lại sau khi xử lý xong các chặng bị ảnh hưởng.", $"Booking {Model} includes a cancelled or rescheduled flight. The PDF will be available once all affected flights have been resolved.")</p>
+            <p>@T($"Liên hệ {supportHotline} hoặc {supportEmail} để được hỗ trợ.", $"Contact {supportHotline} or {supportEmail} for support.")</p>
+            <a class="av-link" href="/ve-cua-toi?pnr=@Model">@T("Xem đặt chỗ trong Vé của tôi", "View this booking in My tickets")</a>
+        </div>
+    </div>
+</section>

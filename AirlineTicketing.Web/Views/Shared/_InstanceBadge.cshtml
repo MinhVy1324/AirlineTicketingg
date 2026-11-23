@@ -1,0 +1,20 @@
+@inject IConfiguration Configuration
+@{
+    var instanceLabel = Configuration["App:InstanceLabel"];
+    var instanceArea = Configuration["App:DefaultArea"] ?? "customer";
+    if (UiLanguage.IsEnglish && instanceLabel is not null)
+    {
+        instanceLabel = instanceArea switch
+        {
+            "all" when instanceLabel.StartsWith("Tất cả · ", StringComparison.Ordinal) =>
+                "All areas · " + instanceLabel["Tất cả · ".Length..],
+            "customer" when instanceLabel.StartsWith("Khách hàng · ", StringComparison.Ordinal) =>
+                "Customer · " + instanceLabel["Khách hàng · ".Length..],
+            _ => instanceLabel
+        };
+    }
+}
+@if (!string.IsNullOrWhiteSpace(instanceLabel))
+{
+    <div class="av-instance-badge" data-area="@instanceArea" aria-hidden="true">@instanceLabel</div>
+}

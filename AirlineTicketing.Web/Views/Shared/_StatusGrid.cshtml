@@ -3,8 +3,8 @@
     @foreach (var item in Model)
     {
         <div class="status-card">
-            <span class="status-card__label">@item.Label</span>
-            <span class="status-card__value">@item.Value</span>
+            <span class="status-card__label">@BookingUiText.Text(item.Label)</span>
+            <span class="status-card__value">@BookingUiText.Text(item.Value)</span>
         </div>
     }
 </div>

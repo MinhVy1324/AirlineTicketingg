@@ -15,6 +15,10 @@ public sealed class ThanhToanConfiguration : IEntityTypeConfiguration<ThanhToan>
         builder.Property(x => x.NhaCungCap).HasMaxLength(50).HasDefaultValue("NoiBo").IsRequired();
         builder.Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
         builder.Property(x => x.MaGiaoDich).HasMaxLength(100);
+        builder.Property(x => x.MaDiemThanhToan).HasMaxLength(8);
+        builder.Property(x => x.MaGiaoDichNhaCungCap).HasMaxLength(15);
+        builder.Property(x => x.KetQuaNhaCungCap).HasMaxLength(24);
+        builder.HasIndex(x => new { x.MaDiemThanhToan, x.MaGiaoDichNhaCungCap }).IsUnique();
         builder.Property(x => x.NgayTao).HasDefaultValueSql("CURRENT_TIMESTAMP");
         builder.HasIndex(x => new { x.DatVeId, x.NgayTao });
         builder.HasIndex(x => new { x.NhaCungCap, x.MaGiaoDich }).IsUnique()

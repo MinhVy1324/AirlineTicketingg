@@ -1,0 +1,18 @@
+@model IEnumerable<ChungTuDoiSoat>
+@if (Model.Any())
+{
+    <details class="payment-ledger-action">
+        <summary class="av-link">@T("Lịch sử chứng từ", "Evidence history")</summary>
+        <ul class="payment-ledger-ref">
+            @foreach (var evidence in Model)
+            {
+                <li>
+                    <strong>@evidence.MaChungTu</strong> · @Money.Vnd(evidence.SoTien)
+                    · @(evidence.KetQua == "DoiSoatThanhCong" ? T("Đã xác nhận", "Confirmed") : T("Đã từ chối", "Rejected"))
+                    · @evidence.NguoiDoiSoat · @evidence.ThoiDiem.ToOffset(TimeSpan.FromHours(7)).ToString("dd/MM/yyyy HH:mm") (UTC+7)
+                    <br /> @T("Mã lệnh", "Order reference") @evidence.MaLenh
+                </li>
+            }
+        </ul>
+    </details>
+}

@@ -1,37 +1,122 @@
 @model BookingViewModel
+@inject BookingPromotion Promotion
+@using AirlineTicketing.Web.Infrastructure.Payments
+@inject Microsoft.Extensions.Options.IOptions<VnpayOptions> Vnpay
 @{
-    ViewData["Title"] = "Kiểm tra & thanh toán";
+    var supportHotline = ViewData["SupportHotline"];
+    ViewData["Title"] = T("Kiểm tra & thanh toán", "Review & pay");
     ViewData["Nav"] = "book";
     var flight = Model.Flight;
     var passengerName = Model.Passenger.FullName;
+    bool CanUse(string method) => (Model.PendingPayment is null || Model.PendingPayment == method)
+        && (method != "vnpay" || Vnpay.Value.Ready);
+    var methods = new[]
+    {
+        ("card", T("Thẻ mô phỏng", "Test card"), T("Dùng Visa hoặc Mastercard mẫu", "Use a test Visa or Mastercard"), "credit-card"),
+        ("transfer", "VietQR demo", T("Chờ nhân viên đối soát", "Staff verification required"), "qr"),
+        ("vnpay", "VNPAY Sandbox", Vnpay.Value.Ready ? T("Chuyển sang cổng thử nghiệm", "Go to the test gateway") : T("Chưa cấu hình cổng", "Gateway unavailable"), "wallet")
+    };
+    var cardLabel = T($"Thanh toán mô phỏng {Money.Vnd(Model.Price.Total)}", $"Simulate payment of {Money.Vnd(Model.Price.Total)}");
+    var transferLabel = Model.PendingPayment == "transfer" ? T("Mở lại mã QR demo", "Reopen demo QR code") : T("Mở mã QR demo", "Open demo QR code");
+    var submitLabel = Model.SelectedPayment switch
+    {
+        "transfer" => transferLabel,
+        "vnpay" => T("Tiếp tục đến VNPAY Sandbox", "Continue to VNPAY Sandbox"),
+        _ => cardLabel
+    };
 }
 
 <div class="av-page av-container">
     <partial name="_Stepper" model="3" />
 
     <header class="booking-title">
-        <h1 class="av-page-title">Kiểm tra &amp; thanh toán</h1>
-        <p class="av-page-subtitle">Vui lòng kiểm tra lần cuối trước khi hoàn tất đặt vé.</p>
+        <h1 class="av-page-title">@T("Kiểm tra & thanh toán", "Review & pay")</h1>
+        <p class="av-page-subtitle">@T("Vui lòng kiểm tra lần cuối trước khi hoàn tất đặt vé.", "Take a final look before completing your booking.")</p>
     </header>
 
     <div class="av-alert av-alert--warning">
         <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
         <div class="av-alert__body">
-            <span class="av-alert__title">
-                Giữ chỗ đến @Model.HoldUntilText (UTC+7) · @Model.HoldRemainingText
+            <span class="av-alert__title" data-hold-until="@Model.HoldUntil?.ToString("O")">
+                @T("Giữ chỗ đến", "Hold expires at") @BookingUiText.DateTimeText(Model.HoldUntilText) (UTC+7) · @BookingUiText.HoldRemaining(Model.HoldRemainingText)
             </span>
+<<<<<<< Updated upstream
             <span>Giá và chỗ chỉ được đảm bảo sau khi thanh toán thành công. Mã giữ chỗ: @Model.Pnr.</span>
         </div>
     </div>
 
     <form class="booking-layout" method="post" asp-controller="Booking" asp-action="Checkout">
+=======
+            <span class="av-visually-hidden" role="status" data-hold-status></span>
+            <span>@T("Ghế và tổng giá đã được giữ cho đặt chỗ này đến thời hạn trên. Tải lại trang không kéo dài thời hạn giữ.", "Your seats and total price are held until the time shown. Reloading the page will not extend the hold.")</span>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.PaymentError))
+    {
+        <div class="av-alert av-alert--danger" role="alert" tabindex="-1" data-validation-summary>
+            <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@T("Thông tin thanh toán chưa hợp lệ", "Review your payment information")</span>
+                <span>@BookingUiText.Text(Model.PaymentError)</span>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.BookingError))
+    {
+        <div class="av-alert av-alert--warning" role="alert">
+            <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@T("Không thể đặt thêm vé cho hành khách này", "This passenger cannot be booked on this flight again")</span>
+                <span>@BookingUiText.Text(Model.BookingError)</span>
+                <span>
+                    <a class="av-link" href="/ve-cua-toi">@T("Xem vé của tôi", "View my tickets")</a>
+                    @T("hoặc", "or")
+                    <a class="av-link" href="/chuyen-bay">@T("chọn chuyến bay khác", "choose another flight")</a>.
+                </span>
+            </div>
+        </div>
+    }
+
+    @if (TempData["PromotionError"] is string promotionError)
+    {
+        <p class="av-alert av-alert--danger" role="alert">@BookingUiText.Text(promotionError)</p>
+    }
+    @if (TempData["PromotionMessage"] is string promotionMessage)
+    {
+        <p class="av-alert av-alert--success" role="status">@BookingUiText.Text(promotionMessage)</p>
+    }
+    @if (Model.CanEditPromotion && (Promotion.IsActive || Model.Price.Discount > 0))
+    {
+        <form class="av-card passenger-block promotion-form" method="post" action="/dat-ve/khuyen-mai">
+            @Html.AntiForgeryToken()
+            <label class="av-field" for="promotion-code"><span class="av-label">@T("Mã ưu đãi", "Promo code")</span>
+                <span class="av-control"><input id="promotion-code" name="code" value="@Model.Price.PromotionCode" maxlength="30" autocomplete="off" /></span>
+            </label>
+            <div class="av-row av-gap-8 av-wrap">
+                <button class="av-btn av-btn--outline" type="submit">@T("Áp dụng", "Apply")</button>
+                @if (Model.Price.Discount > 0)
+                {
+                    <button class="av-btn av-btn--outline" type="submit" name="remove" value="true">@T("Bỏ mã", "Remove code")</button>
+                }
+                <a class="av-link" href="/khuyen-mai">@T("Điều kiện ưu đãi", "Promotion terms")</a>
+            </div>
+        </form>
+    }
+
+    <form class="booking-layout" method="post" asp-controller="Booking" asp-action="Checkout"
+          data-pending-message="@T("Đang xác nhận thanh toán…", "Confirming payment…")">
+>>>>>>> Stashed changes
         @Html.AntiForgeryToken()
+        <input type="hidden" name="expectedTotal" value="@Model.Price.Total.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
 
         <div class="booking-main">
+@if (Model.Journey is { } journey) { <partial name="_JourneySummary" model="journey" /><a class="av-link" href="/dat-ve/hanh-khach">@T("Chỉnh sửa hành khách / ghế", "Edit passengers or seats")</a> } else {
             <section class="av-card passenger-block">
                 <div class="passenger-block__head">
-                    <h2 class="passenger-block__title">Hành trình &amp; hành khách</h2>
-                    <a class="av-link" href="/dat-ve/hanh-khach">Chỉnh sửa</a>
+                    <h2 class="passenger-block__title">@T("Hành trình & hành khách", "Itinerary & passengers")</h2>
+                    <a class="av-link" href="/dat-ve/hanh-khach">@T("Chỉnh sửa", "Edit")</a>
                 </div>
 
                 <div class="av-row av-row--between av-gap-16">
@@ -49,25 +134,36 @@
 
                 <div class="av-rows">
                     <div class="av-rowline">
-                        <span class="av-rowline__label">Hành khách</span>
+                        <span class="av-rowline__label">@T("Hành khách", "Passenger")</span>
                         <span class="av-rowline__value">@passengerName</span>
                     </div>
                     <div class="av-rowline">
+<<<<<<< Updated upstream
                         <span class="av-rowline__label">Chỗ ngồi / hành lý</span>
                         <span class="av-rowline__value">@Model.SeatCode · 23 kg + thêm 10 kg</span>
+=======
+                        <span class="av-rowline__label">@T("Chỗ ngồi", "Seat")</span>
+                        <span class="av-rowline__value">@Model.SeatCode · @BookingUiText.Text(Model.SeatTypeName)</span>
                     </div>
                     <div class="av-rowline">
-                        <span class="av-rowline__label">Email nhận vé</span>
+                        <span class="av-rowline__label">@T("Hành lý ký gửi", "Checked baggage")</span>
+                        <span class="av-rowline__value">@BookingUiText.Text(Model.BaggageText)</span>
+>>>>>>> Stashed changes
+                    </div>
+                    <div class="av-rowline">
+                        <span class="av-rowline__label">@T("Email nhận vé", "Ticket email")</span>
                         <span class="av-rowline__value">@Model.Passenger.Email</span>
                     </div>
                     <div class="av-rowline">
-                        <span class="av-rowline__label">Số điện thoại</span>
+                        <span class="av-rowline__label">@T("Số điện thoại", "Phone number")</span>
                         <span class="av-rowline__value">@Model.Passenger.Phone</span>
                     </div>
                 </div>
             </section>
 
+}
             <section class="av-card passenger-block">
+<<<<<<< Updated upstream
                 <div class="av-card__head-main">
                     <h2 class="passenger-block__title">Phương thức thanh toán</h2>
                     <p class="av-page-subtitle">Giao diện minh họa · Không thu thập thông tin thẻ thật.</p>
@@ -79,6 +175,61 @@
                         <span class="av-alert__title">Màn hình đặt vé này đang ở chế độ minh họa</span>
                         <span>Không nhập hoặc gửi số thẻ, ngày hết hạn hay mã bảo mật. Luồng thanh toán dùng dữ liệu đặt vé trong hệ thống nằm ở <a class="av-link" href="/ThanhToan/ChoThanhToan">Đặt vé chờ thanh toán</a>.</span>
                     </div>
+=======
+                <fieldset class="payment-method-picker">
+                    <legend class="passenger-block__title">@T("Phương thức thanh toán", "Payment method")</legend>
+                    @if (Model.PendingPayment is not null)
+                    {
+                        <p class="av-caption">@T("Đặt chỗ đã có giao dịch đang chờ. Tiếp tục bằng phương thức đã chọn.", "A payment is already pending for this booking. Continue using the selected method.")</p>
+                    }
+                    <div class="pay-methods">
+                        @foreach (var (value, name, description, icon) in methods)
+                        {
+                            var available = CanUse(value);
+                            <label class="payment-method">
+                                <input type="radio" name="payment" value="@value" disabled="@(!available)"
+                                       checked="@(Model.SelectedPayment == value)" class="av-visually-hidden" data-payment-input />
+                                <span class="payment-method__icon">@Html.Icon(icon, 20)</span>
+                                <span class="av-stack av-gap-3">
+                                    <strong>@name</strong>
+                                    <span class="av-caption">@description</span>
+                                </span>
+                            </label>
+                        }
+                    </div>
+                </fieldset>
+
+                @if (Vnpay.Value.Ready || Model.PendingPayment == "vnpay")
+                {
+                    <div class="payment-fields @(Model.SelectedPayment != "vnpay" ? "is-hidden" : null)" data-vnpay-fields>
+                        @if (Vnpay.Value.Ready)
+                        {
+                            <p class="av-caption">@T("Bạn sẽ nhập thông tin thử nghiệm trên trang VNPAY Sandbox.", "Enter your test payment details on VNPAY Sandbox.")</p>
+                        }
+                        @if (Model.PendingPayment == "vnpay")
+                        {
+                            <a class="av-link" href="/dat-ve/vnpay/trang-thai">@T("Kiểm tra giao dịch đang chờ", "Check pending transaction")</a>
+                        }
+                    </div>
+                }
+
+                <div data-card-fields class="payment-fields @(Model.SelectedPayment != "card" ? "is-hidden" : null)">
+                    <label class="av-field">
+                        <span class="av-label">@T("Thẻ thử nghiệm", "Test card")</span>
+                        <span class="av-control">
+                            <select name="demoCard">
+                                <option value="visa" selected="@(Model.DemoCard == "visa")">Visa •••• 4242</option>
+                                <option value="mastercard" selected="@(Model.DemoCard == "mastercard")">Mastercard •••• 4444</option>
+                            </select>
+                            @Html.Icon("chevron-down", 17)
+                        </span>
+                    </label>
+                    <p class="av-caption">@T("Chọn thẻ mẫu để mô phỏng thanh toán và phát hành vé.", "Choose a test card to simulate payment and issue tickets.")</p>
+                </div>
+
+                <div class="payment-fields @(Model.SelectedPayment != "transfer" ? "is-hidden" : null)" data-transfer-fields>
+                    <p class="av-caption">@T("Mở QR demo, báo đã chuyển khoản và chờ nhân viên đối soát. Thời hạn giữ chỗ hiển thị ở đầu trang.", "Open the demo QR code, report your transfer and wait for staff to verify it. The hold deadline is shown at the top of the page.")</p>
+>>>>>>> Stashed changes
                 </div>
             </section>
 
@@ -86,19 +237,24 @@
                 <label class="av-check">
                     <input type="checkbox" name="acceptTerms" value="true" required />
                     <span>
-                        Tôi đã kiểm tra thông tin hành khách, đồng ý điều kiện vé, điều kiện vận chuyển và
-                        chính sách bảo mật của AeroViet.
+                        @T("Tôi đã kiểm tra thông tin hành khách và đồng ý các điều kiện của AeroViet.", "I have reviewed the passenger details and agree to the AeroViet terms.")
                     </span>
                 </label>
+                <p class="av-caption"><a class="av-link" href="/dieu-kien-van-chuyen" target="_blank" rel="noopener">@T("Điều kiện vận chuyển", "Conditions of carriage")</a> · <a class="av-link" href="/doi-hoan-ve" target="_blank" rel="noopener">@T("Đổi / hoàn vé", "Changes and refunds")</a> · <a class="av-link" href="/bao-mat" target="_blank" rel="noopener">@T("Bảo mật", "Privacy")</a></p>
 
                 <div class="pay-actions">
                     <a class="av-btn av-btn--outline" href="/dat-ve/hanh-khach">
                         @Html.Icon("arrow-left", 17)
-                        <span>Quay lại hành khách</span>
+                        <span>@T("Quay lại hành khách", "Back to passenger details")</span>
                     </a>
-                    <button type="submit" class="av-btn av-btn--primary av-btn--lg">
+                    <button type="submit" class="av-btn av-btn--primary av-btn--lg" disabled="@(!CanUse(Model.SelectedPayment))">
                         @Html.Icon("lock", 17)
+<<<<<<< Updated upstream
                         <span>Xem kết quả minh họa</span>
+=======
+                        <span data-payment-submit data-card-label="@cardLabel" data-transfer-label="@transferLabel"
+                              data-vnpay-label="@T("Tiếp tục đến VNPAY Sandbox", "Continue to VNPAY Sandbox")">@submitLabel</span>
+>>>>>>> Stashed changes
                     </button>
                 </div>
             </div>
@@ -109,16 +265,22 @@
 
             <section class="av-card">
                 <div class="av-card__body av-card__stack">
-                    <h2 class="av-card__title">Điều kiện vé</h2>
+                    <h2 class="av-card__title">@T("Điều kiện vé", "Fare conditions")</h2>
                     <div class="av-rows">
                         <p class="av-caption">
-                            Đổi vé: phí @Money.Vnd(flight.ChangeFee)/khách + chênh lệch giá. Hoàn vé: phí
-                            @Money.Vnd(flight.RefundFee)/khách.
+                            @if (Model.Journey is not null)
+                            {
+                                <text>@T($"Đổi đơn nhóm/khứ hồi/Thương gia cần liên hệ hỗ trợ. Hoàn toàn bộ đặt chỗ: phí demo {Money.Vnd(flight.RefundFee)}/đặt chỗ.", $"Contact support to change group, round-trip or business bookings. Full refunds carry a demo fee of {Money.Vnd(flight.RefundFee)} per booking.")</text>
+                            }
+                            else
+                            {
+                                <text>@T($"Đổi vé: phí {Money.Vnd(flight.ChangeFee)} + chênh lệch giá. Hoàn vé: phí {Money.Vnd(flight.RefundFee)}.", $"Changes cost {Money.Vnd(flight.ChangeFee)} plus any fare difference. The refund fee is {Money.Vnd(flight.RefundFee)}.")</text>
+                            }
                         </p>
                         <p class="av-caption">
-                            Yêu cầu trước giờ bay ít nhất 3 tiếng. Không đổi/hoàn khi không có mặt.
+                            @T("Yêu cầu trước giờ bay ít nhất 3 tiếng. Không đổi/hoàn khi không có mặt.", "Submit requests at least 3 hours before departure. No-shows are ineligible for changes or refunds.")
                         </p>
-                        <p class="av-micro">Phí dịch vụ và hành lý mua thêm không hoàn. Số tiền cuối cùng được xác nhận khi xử lý.</p>
+                        <p class="av-micro">@T("Phí dịch vụ và hành lý mua thêm không hoàn. Số tiền cuối cùng được xác nhận khi xử lý.", "Service fees and extra baggage are nonrefundable. The final amount is confirmed during processing.")</p>
                     </div>
                 </div>
             </section>
@@ -126,8 +288,13 @@
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
                 <div class="av-alert__body">
+<<<<<<< Updated upstream
                     <span class="av-alert__title">Cần hỗ trợ thanh toán?</span>
                     <span>Gọi 1900 6868 và cung cấp mã @Model.Pnr.</span>
+=======
+                    <span class="av-alert__title">@T("Cần hỗ trợ thanh toán?", "Need help with your payment?")</span>
+                    <span>@T($"Gọi {supportHotline} và cung cấp mã {Model.Pnr}.", $"Call {supportHotline} with booking reference {Model.Pnr}.")</span>
+>>>>>>> Stashed changes
                 </div>
             </div>
         </aside>

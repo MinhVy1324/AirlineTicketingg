@@ -85,6 +85,24 @@ table {
   outline-offset: 2px;
 }
 
+.av-skip-link {
+  position: fixed;
+  inset: 12px auto auto 12px;
+  z-index: 1000;
+  transform: translateY(-200%);
+  padding: 10px 15px;
+  background: var(--av-surface);
+  color: var(--av-primary);
+  border: 2px solid currentColor;
+  border-radius: 6px;
+}
+
+.av-skip-link:focus { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+
 [hidden] {
   display: none !important;
 }

@@ -1,0 +1,339 @@
+/* Shared presentation and interaction states for AeroViet. */
+:root {
+  --av-r-control: 10px;
+  --av-r-card: 16px;
+  --av-shadow-card: 0 2px 5px rgb(16 46 80 / .035), 0 8px 26px rgb(16 46 80 / .05);
+  --av-shadow-hover: 0 12px 26px rgb(16 46 80 / .11);
+  --av-motion-fast: 160ms;
+  --av-motion-enter: 300ms;
+  --av-motion-ease: cubic-bezier(.2, .7, .25, 1);
+}
+
+body {
+  background: radial-gradient(ellipse at 52% 0, #e8f0fc 0, transparent 38rem), var(--av-page);
+}
+
+.av-nav,
+.admin-topbar {
+  box-shadow: 0 2px 14px rgb(16 46 80 / .04);
+}
+
+.auth__panel { background: linear-gradient(145deg, #f7faff, #fff 56%); }
+.auth__hero-title { line-height: 1.16; letter-spacing: -.035em; }
+
+.av-page-title,
+.admin-page-title {
+  letter-spacing: -.027em;
+}
+
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: block;
+  min-height: 254px;
+  padding: 42px 44px 80px;
+  border-radius: 24px;
+  background: #0b2441;
+  box-shadow: 0 12px 30px rgb(16 46 80 / .13);
+}
+
+.home-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #0b2441 24%, rgb(11 36 65 / .92) 34%, rgb(11 36 65 / .18) 82%),
+    url("../img/login-hero.png") right 53% / 76% auto no-repeat;
+}
+
+.home-hero__title {
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 3.75rem);
+  line-height: 1.12;
+  letter-spacing: -.04em;
+}
+
+.home-hero__main { gap: 16px; }
+.home-hero__assurance { color: #edf6ff; }
+.home-hero__assurance .icon { color: #a2e4dd; flex: none; }
+
+.home > .search-card {
+  position: relative;
+  z-index: 1;
+  margin: -74px 26px 0;
+  border-color: #d4e1f2;
+  box-shadow: var(--av-shadow-hover);
+}
+
+.av-card,
+.admin-kpi,
+.flight-card,
+.pnr-card,
+.dest-card,
+.ticket {
+  box-shadow: var(--av-shadow-card);
+}
+
+.av-btn--primary {
+  background-image: linear-gradient(112deg, #ffffff12, transparent 65%);
+  box-shadow: 0 3px 9px rgb(22 85 161 / .19);
+}
+
+.av-btn--outline:hover { background-color: #f3f7fd; }
+.av-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.av-btn .icon { flex: none; }
+
+.av-control:focus-within {
+  border-color: var(--av-primary);
+  box-shadow: 0 0 0 3px rgb(22 85 161 / .13);
+}
+
+.av-control:has([aria-invalid="true"]),
+.av-control:has(:user-invalid) {
+  border-color: var(--av-danger);
+  box-shadow: 0 0 0 3px rgb(187 69 69 / .11);
+}
+
+.av-alert {
+  --notice-border: var(--av-info);
+  border-inline-start: 3px solid var(--notice-border);
+}
+
+.av-alert--success { --notice-border: var(--av-success); }
+.av-alert--warning { --notice-border: var(--av-warning); }
+.av-alert--danger { --notice-border: var(--av-danger); }
+
+.av-alert[data-hold-state="urgent"] {
+  --notice-border: #b16d0a;
+  background: #fff1d7;
+  color: #764306;
+}
+
+.av-alert[data-hold-state="expired"] {
+  --notice-border: var(--av-danger);
+  background: var(--av-danger-soft);
+  color: #8e2525;
+}
+
+.admin-side,
+.admin-sidebar {
+  background: linear-gradient(155deg, #0c2946, #102e50 65%, #173d57);
+}
+
+.admin-nav__item.is-active,
+.admin-nav__link.is-active {
+  box-shadow: inset 3px 0 #91e1d9;
+}
+
+.admin-side :focus-visible,
+.admin-sidebar :focus-visible {
+  outline-color: #b9efed;
+}
+
+.admin-kpi {
+  background: linear-gradient(145deg, #fff 45%, #f2f8ff);
+}
+
+.admin-kpi__head .icon { color: var(--av-primary); }
+
+.av-table tr:has(a[href], button):focus-within > td {
+  background: #f0f6ff;
+}
+
+.ticket__code-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.av-copy {
+  align-self: center;
+  width: max-content;
+  max-width: 100%;
+  border: 1px solid currentColor;
+  border-radius: var(--av-r-control);
+  padding: 5px 9px;
+  font-size: var(--av-fs-caption);
+  line-height: 1.5;
+}
+
+.av-password-toggle {
+  flex: none;
+  color: var(--av-primary);
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 5px;
+}
+
+.av-password-toggle:hover { background: var(--av-primary-soft); }
+
+.av-rowline__value.ticket__code-tools { justify-content: flex-end; }
+
+.ticket__head .av-copy { color: #fff; }
+.ticket__head .av-copy:hover { background: rgb(255 255 255 / .16); }
+.ticket__head .av-copy:focus-visible { outline-color: white; }
+
+.qr-payment__head .ticket__pnr { color: var(--av-text); }
+.qr-payment__head .ticket__pnr-label { color: var(--av-text-muted); }
+
+.success-hero {
+  background: linear-gradient(133deg, #ebf8f2, #f1f7ff);
+  border: 1px solid #cddfdc;
+  border-radius: var(--av-r-card);
+  padding: clamp(18px, 3vw, 38px);
+}
+
+.av-modal-open { overflow: hidden; }
+.av-modal__panel [tabindex="-1"]:focus { outline: none; }
+
+.av-feedback {
+  position: fixed;
+  z-index: 120;
+  inset-inline-end: clamp(12px, 3vw, 28px);
+  inset-block-end: max(20px, env(safe-area-inset-bottom));
+  max-width: min(25rem, calc(100vw - 24px));
+  pointer-events: none;
+}
+
+body:has(.av-instance-badge) .av-feedback { inset-block-end: max(58px, env(safe-area-inset-bottom)); }
+
+.av-feedback__message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #102e50;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 26px rgb(11 36 65 / .24);
+  font-size: var(--av-fs-sm);
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.av-feedback__indicator,
+.av-feedback__result { display: none; flex: none; }
+
+.av-feedback__message[data-tone="pending"] .av-feedback__indicator {
+  display: block;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #a8c0df;
+  border-top-color: white;
+  border-radius: 50%;
+}
+
+.av-feedback__message[data-tone="info"] .av-feedback__result--info,
+.av-feedback__message[data-tone="success"] .av-feedback__result--success,
+.av-feedback__message[data-tone="warning"] .av-feedback__result--warning { display: block; }
+.av-feedback__result--success { color: #a2e4dd; }
+.av-feedback__result--warning { color: #ffe1a5; }
+
+[aria-disabled="true"][data-submitting] {
+  cursor: progress;
+  opacity: .82;
+  box-shadow: 0 0 0 3px rgb(22 85 161 / .17);
+}
+
+@media (max-width: 760px) {
+  .home-hero {
+    min-height: 174px;
+    padding: 22px 20px 42px;
+    border-radius: var(--av-r-card);
+  }
+
+  .home-hero::before {
+    background:
+      linear-gradient(90deg, rgb(11 36 65 / .98), rgb(11 36 65 / .68)),
+      url("../img/login-hero.png") center 54% / cover no-repeat;
+  }
+
+  .home > .search-card { margin: -46px 8px 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .av-btn,
+  .av-chip,
+  .dest-card,
+  .flight-card,
+  .pnr-card,
+  .seat,
+  .av-control,
+  .admin-nav__item {
+    transition: color var(--av-motion-fast) ease, background-color var(--av-motion-fast) ease,
+      border-color var(--av-motion-fast) ease, box-shadow var(--av-motion-fast) ease,
+      transform var(--av-motion-fast) var(--av-motion-ease);
+  }
+
+  .av-btn:not(:disabled):not([aria-disabled="true"]):active { transform: translateY(1px); }
+  .home-hero__main,
+  .auth__form,
+  .auth__error,
+  .booking-title,
+  .admin-page-head,
+  .av-alert:is([role="status"], [role="alert"]),
+  .av-feedback__message {
+    animation: av-interface-enter var(--av-motion-enter) var(--av-motion-ease) backwards;
+  }
+
+  .av-modal__panel { animation: av-interface-enter 220ms var(--av-motion-ease) backwards; }
+  .success-hero__check { animation: av-interface-confirm 300ms var(--av-motion-ease) backwards; }
+  .av-feedback__indicator { animation: av-interface-spin 780ms linear infinite; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dest-card:hover { transform: translateY(-3px); box-shadow: var(--av-shadow-hover); }
+    .flight-card:hover, .pnr-card:hover { box-shadow: var(--av-shadow-hover); }
+    .av-table tr:has(a[href], button):hover > td { background: #f6faff; }
+  }
+}
+
+@keyframes av-interface-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes av-interface-confirm {
+  from { opacity: .4; transform: scale(.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes av-interface-spin {
+  to { transform: rotate(360deg); }
+}
+ 
+.payment-ledger-ref {
+    overflow-wrap: anywhere;
+}
+
+.payment-ledger-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    align-items: end;
+}
+
+.payment-ledger-filters button {
+    min-height: 46px;
+}
+
+.payment-ledger-action > summary {
+    cursor: pointer;
+    inline-size: fit-content;
+}
+
+.payment-ledger-action > :not(summary) {
+    margin-block-start: 0.75rem;
+}
+
+.payment-ledger-action {
+    scroll-margin-top: calc(var(--av-toolbar-h, 80px) + 16px);
+}
+
+.payment-evidence-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 12px;
+}

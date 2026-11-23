@@ -2,13 +2,13 @@
 @{
     var steps = new[]
     {
-        "Chọn chuyến bay",
-        "Hành khách & dịch vụ",
-        "Kiểm tra & thanh toán",
-        "Vé điện tử"
+        T("Chọn chuyến bay", "Select flights"),
+        T("Hành khách & dịch vụ", "Passengers & extras"),
+        T("Kiểm tra & thanh toán", "Review & pay"),
+        T("Vé điện tử", "E-ticket")
     };
 }
-<nav class="av-stepper" aria-label="Tiến trình đặt vé">
+<nav class="av-stepper" aria-label="@T("Tiến trình đặt vé", "Booking progress")">
     @for (var i = 0; i < steps.Length; i++)
     {
         var number = i + 1;

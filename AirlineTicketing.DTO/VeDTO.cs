@@ -9,6 +9,9 @@ public sealed record VeDTO
     public DateTimeOffset GioKhoiHanh { get; init; }
     public string SoGhe { get; init; } = string.Empty;
     public string HangVe { get; init; } = string.Empty;
+    public string LoaiHanhKhach { get; init; } = "NguoiLon";
+    public int HanhLyXachTayKg { get; init; }
+    public int HanhLyKyGuiKg { get; init; }
     public decimal GiaVe { get; init; }
     public string TrangThai { get; init; } = string.Empty;
     public HanhKhachDTO HanhKhach { get; init; } = new();

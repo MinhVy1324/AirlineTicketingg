@@ -1,80 +1,109 @@
 @model FlightResultsViewModel
 @{
-    var counts = Model.IsEmpty;
+    var criteria = Model.Criteria;
+    var trip = criteria.TripTypeText == "Khứ hồi" ? "roundtrip" : "oneway";
 }
-<aside class="filters">
-    <div class="av-card filters__card">
-        <div class="filters__head">
-            <h2 class="av-card__title">Lọc chuyến bay</h2>
-            <a class="av-link" href="/chuyen-bay">Đặt lại</a>
-        </div>
+<aside class="filters" aria-label="@T("Bộ lọc kết quả", "Search filters")">
+    <details class="filters__drawer" open data-filter-drawer data-filter-errors="@(Model.Filters.Errors.Count > 0 ? "true" : "false")">
+        <summary class="filters__toggle">
+            <span>@T("Lọc chuyến bay", "Filter flights")</span>
+            <span>@(Model.Filters.IsActive ? T("Đang áp dụng", "Filters active") : T("Hãng · Giờ · Giá", "Airline · Time · Price"))</span>
+        </summary>
+        <form id="flight-filter-form" class="av-card filters__card" method="get" action="/chuyen-bay">
+            @foreach (var field in FlightSearchUrl.Parameters(Model, clearFilters: true).Where(field => field.Key != "sort"))
+            {
+                @foreach (var value in field.Value)
+                {
+                    <input type="hidden" name="@field.Key" value="@value" />
+                }
+            }
 
-        <div class="filter-group">
-            <span class="filter-group__title">Khoảng giá / khách</span>
-            <span class="filter-group__meta">@Model.Criteria.PriceRangeText</span>
-            <div class="price-track" aria-hidden="true">
-                <span class="price-track__fill" style="@(Model.IsEmpty ? "width:34%" : null)"></span>
-                <span class="price-track__knob" style="left:18%"></span>
-                <span class="price-track__knob" style="@(Model.IsEmpty ? "left:52%" : "left:82%")"></span>
+            <div class="filters__head">
+                <h2 class="av-card__title">@T("Lọc chuyến bay", "Filter flights")</h2>
+                <a class="av-link" href="@Model.SearchUrl(clearFilters: true)">@T("Đặt lại", "Reset")</a>
             </div>
-        </div>
 
-        <hr class="av-divider" />
+            @if (Model.Filters.Errors.Count > 0)
+            {
+                <div class="av-alert av-alert--danger" role="alert" tabindex="-1" data-validation-summary>
+                    <div class="av-alert__body">
+                        <strong>@T("Vui lòng kiểm tra bộ lọc", "Review your filters")</strong>
+                        <ul>
+                            @foreach (var error in Model.Filters.Errors)
+                            {
+                                <li><a href="#@error.Key">@BookingUiText.Text(error.Value)</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
 
-        <div class="filter-group">
-            <span class="filter-group__title">Hãng hàng không</span>
-            <label class="av-check">
-                <input type="checkbox" checked />
-                <span>Vietnam Airlines@(counts ? "" : " (6)")</span>
-            </label>
-            <label class="av-check">
-                <input type="checkbox" />
-                <span>Vietjet Air@(counts ? "" : " (8)")</span>
-            </label>
-            <label class="av-check">
-                <input type="checkbox" />
-                <span>Bamboo Airways@(counts ? "" : " (4)")</span>
-            </label>
-        </div>
+            <fieldset class="filter-group" id="priceRange">
+                <legend class="filter-group__title">@T("Khoảng giá / người lớn", "Price range per adult")</legend>
+                <span class="filter-group__meta">@Model.Filters.PriceRangeText</span>
+                <div class="filter-price-fields">
+                    <label class="av-field">
+                        <span class="av-label">@T("Giá từ (₫)", "Minimum fare (₫)")</span>
+                        <span class="av-control">
+                            <input id="minPrice" type="text" name="minPrice" value="@Model.Filters.MinPriceText"
+                                   inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="0"
+                                   aria-describedby="filter-price-help"
+                                   aria-invalid="@(Model.Filters.Errors.ContainsKey("minPrice") || Model.Filters.Errors.ContainsKey("priceRange") ? "true" : "false")" />
+                        </span>
+                    </label>
+                    <label class="av-field">
+                        <span class="av-label">@T("Giá đến (₫)", "Maximum fare (₫)")</span>
+                        <span class="av-control">
+                            <input id="maxPrice" type="text" name="maxPrice" value="@Model.Filters.MaxPriceText"
+                                   inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="@T("Không giới hạn", "No limit")"
+                                   aria-describedby="filter-price-help"
+                                   aria-invalid="@(Model.Filters.Errors.ContainsKey("maxPrice") || Model.Filters.Errors.ContainsKey("priceRange") ? "true" : "false")" />
+                        </span>
+                    </label>
+                </div>
+                <span class="filter-group__meta" id="filter-price-help">@T("Giá đã gồm thuế, phí bắt buộc. Nhập số tiền không có dấu phân cách; để trống nếu không giới hạn.", "Fares include mandatory taxes and fees. Enter an amount without separators, or leave blank for no limit.")</span>
+            </fieldset>
 
-        <hr class="av-divider" />
+            <hr class="av-divider" />
 
-        <div class="filter-group">
-            <span class="filter-group__title">Giờ khởi hành</span>
-            <label class="av-check">
-                <input type="checkbox" checked="@(counts)" />
-                <span>Sáng · 05:00–12:00</span>
-            </label>
-            <label class="av-check">
-                <input type="checkbox" />
-                <span>Chiều · 12:00–18:00</span>
-            </label>
-            <label class="av-check">
-                <input type="checkbox" />
-                <span>Tối · 18:00–23:59</span>
-            </label>
-        </div>
+            <fieldset class="filter-group" id="airlines">
+                <legend class="filter-group__title">@T("Hãng hàng không", "Airlines")</legend>
+                @if (Model.AirlineOptions.Count == 0)
+                {
+                    <span class="filter-group__meta">@T("Chưa có hãng còn chuyến phù hợp trên tuyến và ngày đã chọn.", "No airlines have matching flights for the selected route and date.")</span>
+                }
+                @foreach (var option in Model.AirlineOptions)
+                {
+                    <label class="av-check">
+                        <input type="checkbox" name="airlines" value="@option.Value" checked="@option.Selected" />
+                        <span>@option.Label <span class="filter-count">(@option.Count)</span></span>
+                    </label>
+                }
+            </fieldset>
 
-        <hr class="av-divider" />
+            <hr class="av-divider" />
 
-        <div class="filter-group">
-            <span class="filter-group__title">Điểm dừng</span>
-            <label class="av-check">
-                <input type="checkbox" checked />
-                <span>Bay thẳng</span>
-            </label>
-            <label class="av-check">
-                <input type="checkbox" />
-                <span>1 điểm dừng</span>
-            </label>
-        </div>
-    </div>
+            <fieldset class="filter-group" id="times">
+                <legend class="filter-group__title">@T("Giờ khởi hành (UTC+7)", "Departure times (UTC+7)")</legend>
+                @foreach (var option in Model.DepartureOptions)
+                {
+                    <label class="av-check">
+                        <input type="checkbox" name="times" value="@option.Value" checked="@option.Selected" />
+                        <span>@BookingUiText.Text(option.Label) <span class="filter-count">(@option.Count)</span></span>
+                    </label>
+                }
+            </fieldset>
+
+            <p class="filter-group__meta">@T("Có thể chọn nhiều hãng và khung giờ. Số trong ngoặc là số chuyến phù hợp các điều kiện khác đang chọn.", "You can select multiple airlines and time periods. Counts show how many flights match the other filters.")</p>
+            <button class="av-btn av-btn--primary filter-apply" type="submit">@T("Áp dụng bộ lọc", "Apply filters")</button>
+        </form>
+    </details>
 
     <div class="av-alert av-alert--info">
         <span class="av-alert__icon">@Html.Icon("info", 20)</span>
         <div class="av-alert__body">
-            <span class="av-alert__title">Giờ Việt Nam (UTC+7)</span>
-            <span>Tất cả giờ bay hiển thị theo giờ địa phương.</span>
+            <span class="av-alert__title">@T("Giờ Việt Nam (UTC+7)", "Vietnam time (UTC+7)")</span>
+            <span>@T("Hiện hỗ trợ chuyến bay thẳng. Giá chưa gồm dịch vụ tùy chọn.", "Direct flights are currently available. Fares exclude optional services.")</span>
         </div>
     </div>
 </aside>

@@ -37,10 +37,18 @@ public sealed record FlightSearchCriteria
     public int Passengers { get; init; } = 1;
     public string Cabin { get; init; } = "Phổ thông";
     public string PriceRangeText { get; init; } = "1.500.000 ₫ – 4.000.000 ₫";
+    public AirlineTicketing.BUS.PassengerParty? Party { get; init; }
+    public AirlineTicketing.BUS.PassengerParty EffectiveParty => Party ?? new(Passengers);
+    public string? ReturnDateText { get; init; }
+    public string? OutboundDateText { get; init; }
+    public string? JourneyOriginCode { get; init; }
+    public string? JourneyDestinationCode { get; init; }
+    public int? SelectedOutboundId { get; init; }
+    public bool SelectingReturn => SelectedOutboundId.HasValue;
 
     public string RouteText => $"{OriginCity} ({OriginCode}) → {DestinationCity} ({DestinationCode})";
     public string ShortRouteText => $"{OriginCity} → {DestinationCity}";
-    public string SummaryText => $"{TripTypeText} · {DepartDateText} · {Passengers} người lớn · {Cabin}";
+    public string SummaryText => $"{TripTypeText} · {DepartDateText} · {EffectiveParty.Summary} · {Cabin}";
 }
 
 public sealed class SearchFormModel
@@ -52,6 +60,9 @@ public sealed class SearchFormModel
     public string Passengers { get; set; } = "1 người lớn";
     public string Cabin { get; set; } = "Phổ thông";
     public string Trip { get; set; } = "oneway";
+    public int Adults { get; set; } = 1;
+    public int Children { get; set; }
+    public int Infants { get; set; }
 }
 
 public sealed record DestinationCard(string Name, string Code, decimal FromPrice, string ImageFile);
@@ -77,22 +88,58 @@ public sealed class FlightResultsViewModel
 
     public int ResultCount => Flights.Count;
 
-    /// <summary>Total flights available on the route (the demo only materialises three cards).</summary>
+    /// <summary>Số chuyến còn chỗ sau khi áp dụng bộ lọc.</summary>
     public int TotalCount { get; init; }
+<<<<<<< Updated upstream
 }
 
 public sealed record DayPriceChip(string DateText, decimal Price, bool IsActive);
+=======
+    public int AvailableCount { get; init; }
+    public FlightFilters Filters { get; init; } = FlightFilters.Parse();
+    public IReadOnlyList<FlightFilterOption> AirlineOptions { get; init; } = [];
+    public IReadOnlyList<FlightFilterOption> DepartureOptions { get; init; } = [];
+    public string SearchUrl(DateOnly? date = null, bool clearFilters = false) => FlightSearchUrl.Build(this, date, clearFilters);
+    public FlightOffer? SelectedOutbound { get; init; }
+
+    /// <summary>Kiểu sắp xếp đang áp dụng (xem <see cref="Infrastructure.FlightSort"/>).</summary>
+    public string SortKey { get; init; } = Infrastructure.FlightSort.Recommended;
+    public IReadOnlyList<FlightSortOption> SortOptions => Infrastructure.FlightSort.Options;
+    public string SortLabel => Infrastructure.FlightSort.LabelFor(SortKey);
+
+    /// <summary>Khoảng ngày của tuần đang hiển thị trên biểu đồ giá.</summary>
+    public string WeekRangeText => DayPrices.Count == 0
+        ? string.Empty
+        : $"{DayPrices[0].Date.ToString("dd/MM", System.Globalization.CultureInfo.InvariantCulture)} – " +
+          $"{DayPrices[^1].Date.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture)}";
+
+    public DateOnly? PreviousWeek => DayPrices.Count == 0 ? null : DayPrices[0].Date.AddDays(-7);
+    public DateOnly? NextWeek => DayPrices.Count == 0 ? null : DayPrices[^1].Date.AddDays(7);
+}
+
+public sealed record FlightFilterOption(string Value, string Label, int Count, bool Selected);
+
+public sealed record DayPriceChip(
+    DateOnly Date,
+    string DateText,
+    string WeekdayText,
+    decimal Price,
+    bool IsActive)
+{
+    public bool HasPrice => Price > 0m;
+}
+>>>>>>> Stashed changes
 
 public sealed class PassengerFormModel
 {
-    public string LastName { get; set; } = "NGUYEN";
-    public string FirstName { get; set; } = "MINH ANH";
+    public string LastName { get; set; } = "";
+    public string FirstName { get; set; } = "";
     public string Gender { get; set; } = "Nữ";
-    public string DateOfBirth { get; set; } = "15/08/1998";
+    public string DateOfBirth { get; set; } = "";
     public string Nationality { get; set; } = "Việt Nam";
-    public string IdentityNumber { get; set; } = "079098001234";
-    public string Email { get; set; } = "minhanh@example.com";
-    public string Phone { get; set; } = "+84 912 345 678";
+    public string IdentityNumber { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Phone { get; set; } = "";
 
     public string FullName => $"{LastName} {FirstName}".Trim();
 }
@@ -106,10 +153,22 @@ public sealed class PriceSummary
     public decimal ServiceFee { get; init; }
     public decimal BaggageFee { get; init; }
     public string BaggageLabel { get; init; } = "Hành lý thêm 10 kg";
+<<<<<<< Updated upstream
     public string TotalLabel { get; init; } = "Tổng thanh toán";
     public string? Note { get; init; } = "Giá đã bao gồm thuế, phí · Thanh toán bằng VND";
 
     public decimal Total => BaseFare + Taxes + ServiceFee + BaggageFee;
+=======
+    public decimal SeatFee { get; init; }
+    public decimal ChangeFeePaid { get; init; }
+    public decimal Discount { get; init; }
+    public string? PromotionCode { get; init; }
+    public string SeatLabel { get; init; } = "Chọn chỗ ngồi";
+    public string TotalLabel { get; init; } = "Tổng thanh toán";
+    public string? Note { get; init; } = "Giá đã bao gồm thuế, phí · Thanh toán bằng VND";
+
+    public decimal Total => BaseFare + Taxes + ServiceFee + BaggageFee + SeatFee + ChangeFeePaid - Discount;
+>>>>>>> Stashed changes
 }
 
 public sealed record FlightTimelineModel(
@@ -118,7 +177,13 @@ public sealed record FlightTimelineModel(
     bool Compact = false,
     string? MidFooter = null);
 
-public sealed record FlightCardModel(FlightOffer Flight, bool Expanded = false, bool Highlighted = false);
+public sealed record FlightCardModel(FlightOffer Flight, bool Expanded = false, bool Highlighted = false)
+{
+    public string? SelectUrl { get; init; }
+    public string SelectLabel { get; init; } = "Chọn chuyến";
+    public decimal? PartyTotal { get; init; }
+    public string? PartySummary { get; init; }
+}
 
 public sealed class BookingViewModel
 {
@@ -129,8 +194,29 @@ public sealed class BookingViewModel
     public string SeatCode { get; init; } = "18A";
     public string SeatPosition { get; init; } = "Cạnh cửa sổ";
     public IReadOnlyList<SeatRow> SeatRows { get; init; } = Array.Empty<SeatRow>();
+<<<<<<< Updated upstream
     public string ExtraBaggage { get; init; } = "+10 kg";
     public string PaymentMethod { get; init; } = "Thẻ ngân hàng";
+=======
+    public string SeatTypeName { get; init; } = "Ghế tiêu chuẩn";
+    public string? SeatError { get; set; }
+    public Dictionary<string, string> ValidationErrors { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public string BaggageCode { get; init; } = AirlineTicketing.BUS.BaggageCatalog.None;
+    public DateTimeOffset? HoldUntil { get; init; }
+    public string? ErrorFor(string field) => ValidationErrors.GetValueOrDefault(field);
+    public string ExtraBaggage { get; init; } = "Không";
+    public string BaggageText { get; init; } = "Không mua thêm";
+    public string PaymentMethod { get; init; } = "Thẻ ngân hàng";
+    public string PaymentDisplayText { get; init; } = "Thẻ ngân hàng";
+    public string SelectedPayment { get; set; } = "card";
+    public string? PendingPayment { get; set; }
+    public string DemoCard { get; set; } = "visa";
+    public string? PaymentError { get; set; }
+    public bool CanEditPromotion { get; init; }
+
+    /// <summary>Lỗi nghiệp vụ khi đặt vé (ví dụ hành khách đã có vé trên chuyến bay).</summary>
+    public string? BookingError { get; set; }
+>>>>>>> Stashed changes
     public string CardBrand { get; init; } = "Visa";
     public string CardLast4 { get; init; } = "4242";
     public string Pnr { get; init; } = "AV8K2M";
@@ -147,6 +233,7 @@ public sealed class BookingViewModel
 
     /// <summary>Frame 21: the passenger step rendered with validation errors.</summary>
     public bool ShowValidationErrors { get; init; }
+    public JourneyBookingViewModel? Journey { get; set; }
 }
 
 public sealed record SeatCell(string Label, SeatState State);
@@ -159,7 +246,30 @@ public enum SeatState
 }
 
 public sealed record SeatRow(string Number, IReadOnlyList<SeatCell> Seats);
+public sealed record SeatGridViewModel(string Id, string Aircraft, IReadOnlyList<SeatRow> Rows);
 
+<<<<<<< Updated upstream
+=======
+public sealed class QrPaymentViewModel
+{
+    public JourneyBookingViewModel? Journey { get; init; }
+    public string Pnr { get; init; } = string.Empty;
+    public decimal Amount { get; init; }
+    public string AmountText => Money.Vnd(Amount);
+    public string BankName { get; init; } = "Vietcombank";
+    public string AccountNumber { get; init; } = "0123456789";
+    public string AccountName { get; init; } = "CONG TY AEROVIET";
+    public string Memo { get; init; } = string.Empty;
+    public string HoldUntilText { get; init; } = string.Empty;
+    public string QrUrl { get; init; } = string.Empty;
+    public string SeatCode { get; init; } = string.Empty;
+    public string FlightNumber { get; init; } = string.Empty;
+    public string PassengerName { get; init; } = string.Empty;
+    /// <summary>Khách đã báo chuyển khoản; đặt chỗ vẫn chờ nhân viên đối soát.</summary>
+    public bool Reported { get; init; }
+}
+
+>>>>>>> Stashed changes
 public sealed class LoginViewModel
 {
     public string Email { get; set; } = "minhanh@example.com";

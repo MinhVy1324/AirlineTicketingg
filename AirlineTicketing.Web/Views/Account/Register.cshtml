@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 @model DangKyDTO
 @{
     ViewData["Title"] = "Đăng ký tài khoản";
@@ -75,3 +76,32 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+=======
+@model RegisterViewModel
+@{
+    ViewData["Title"] = T("Đăng ký tài khoản", "Create an account");
+}
+<div class="av-page av-container">
+    <section class="av-card account-form">
+        <div class="av-card__body av-card__stack">
+            <h1 class="av-page-title">@ViewData["Title"]</h1>
+            <p>@T("Tạo tên đăng nhập và mật khẩu riêng cho AeroViet. Bạn sẽ bổ sung thông tin liên hệ sau khi đăng nhập.",
+                  "Create a username and password for AeroViet. You will add your contact details after signing in.")</p>
+            <form asp-action="Register" method="post" class="av-stack av-gap-16">
+                @if (Model.Error is { } error) { <p class="auth__error" role="alert">@error</p> }
+                <label class="av-field">
+                    <span class="av-label">@T("Tên đăng nhập", "Username")</span>
+                    <span class="av-control"><input asp-for="Username" autocomplete="username" minlength="3" maxlength="50" required /></span>
+                </label>
+                <label class="av-field">
+                    <span class="av-label">@T("Mật khẩu AeroViet", "AeroViet password")</span>
+                    <span class="av-control"><input type="password" name="Password" autocomplete="new-password" minlength="12" maxlength="128" required /></span>
+                </label>
+                <p class="av-caption">@T("Dùng mật khẩu từ 12 đến 128 ký tự.", "Use a password between 12 and 128 characters.")</p>
+                <button type="submit" class="av-btn av-btn--primary">@T("Tạo tài khoản", "Create account")</button>
+            </form>
+            <a class="av-link" href="/dang-nhap">@T("Quay lại đăng nhập", "Back to sign in")</a>
+        </div>
+    </section>
+</div>
+>>>>>>> Stashed changes

@@ -1,6 +1,6 @@
 @model ScheduleChangedViewModel
 @{
-    ViewData["Title"] = "Chuyến bay của bạn thay đổi giờ";
+    ViewData["Title"] = T("Chuyến bay của bạn thay đổi giờ", "Your flight time has changed");
     ViewData["Nav"] = "tickets";
     var booking = Model.Booking;
     var flight = booking.Flight;
@@ -8,19 +8,18 @@
 
 <div class="av-page av-container">
     <header class="booking-title">
-        <h1 class="av-page-title">Chuyến bay của bạn thay đổi giờ</h1>
-        <p class="av-page-subtitle">Vé của tôi / @booking.Pnr · Thông báo từ @flight.AirlineName</p>
+        <h1 class="av-page-title">@T("Chuyến bay của bạn thay đổi giờ", "Your flight time has changed")</h1>
+        <p class="av-page-subtitle">@T("Vé của tôi", "My tickets") / @booking.Pnr · @T("Thông báo từ", "Notice from") @flight.AirlineName</p>
     </header>
 
     <div class="av-alert av-alert--warning">
         <span class="av-alert__icon">@Html.Icon("alert", 20)</span>
         <div class="av-alert__body">
             <span class="av-alert__title">
-                @flight.FlightNumber ngày @Money.Date(flight.Departure) khởi hành muộn hơn 1 giờ 30 phút
+                @T($"{flight.FlightNumber} ngày {Money.Date(flight.Departure)} khởi hành muộn hơn 1 giờ 30 phút", $"{flight.FlightNumber} on {Money.Date(flight.Departure)} departs 1 hour and 30 minutes later")
             </span>
             <span>
-                @flight.AirlineName thông báo điều chỉnh lịch khai thác lúc 14:00 ngày 10/11/2026.
-                Vui lòng xem giờ mới và lựa chọn phương án phù hợp.
+                @T($"{flight.AirlineName} thông báo điều chỉnh lịch khai thác lúc 14:00 ngày 10/11/2026. Vui lòng xem giờ mới và lựa chọn phương án phù hợp.", $"{flight.AirlineName} announced a schedule change at 14:00 on 10/11/2026. Review the new time and choose a suitable option.")
             </span>
         </div>
     </div>
@@ -29,19 +28,19 @@
         <div class="booking-main">
             <section class="av-card">
                 <div class="av-card__body av-stack av-gap-16">
-                    <h2 class="av-card__title">Chi tiết vé · @booking.Pnr</h2>
+                    <h2 class="av-card__title">@T("Chi tiết vé", "Ticket details") · @booking.Pnr</h2>
 
                     <div class="av-rows">
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Hành khách</span>
+                            <span class="av-rowline__label">@T("Hành khách", "Passenger")</span>
                             <span class="av-rowline__value">@booking.Passenger.FullName</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Số vé</span>
+                            <span class="av-rowline__label">@T("Số vé", "Ticket number")</span>
                             <span class="av-rowline__value av-num">@booking.TicketNumber</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Chuyến bay / tuyến</span>
+                            <span class="av-rowline__label">@T("Chuyến bay / tuyến", "Flight and route")</span>
                             <span class="av-rowline__value">
                                 @flight.FlightNumber · @flight.From.Code → @flight.To.Code · @Money.Date(flight.Departure)
                             </span>
@@ -54,7 +53,7 @@
                         <div class="schedule-compare__col">
                             <span class="schedule-compare__label">@Model.OldScheduleLabel</span>
                             <strong class="schedule-compare__time">@Model.OldScheduleText</strong>
-                            <span class="av-caption">Khởi hành @flight.From.Code · Đến @flight.To.Code</span>
+                            <span class="av-caption">@T("Khởi hành", "Departing from") @flight.From.Code · @T("Đến", "Arriving at") @flight.To.Code</span>
                         </div>
 
                         <div class="schedule-compare__col schedule-compare__col--new">
@@ -65,43 +64,41 @@
                     </div>
 
                     <p class="av-caption">
-                        Tất cả thời gian theo giờ Việt Nam (UTC+7). Hành trình bay thẳng, thời lượng
-                        @Money.Duration(flight.Duration) không thay đổi.
+                        @T($"Tất cả thời gian theo giờ Việt Nam (UTC+7). Hành trình bay thẳng, thời lượng {Money.Duration(flight.Duration)} không thay đổi.", $"All times use Vietnam time (UTC+7). Your nonstop flight duration remains {BookingUiText.Duration(flight.Duration)}.")
                     </p>
 
                     <hr class="av-divider" />
 
                     <div class="av-rows">
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Hạng / ghế</span>
-                            <span class="av-rowline__value">@flight.FareName · @booking.SeatCode</span>
+                            <span class="av-rowline__label">@T("Hạng / ghế", "Cabin class and seat")</span>
+                            <span class="av-rowline__value">@UiLanguage.Label(flight.FareName) · @booking.SeatCode</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Hành lý</span>
-                            <span class="av-rowline__value">12 kg xách tay + 23 kg ký gửi + thêm 10 kg</span>
+                            <span class="av-rowline__label">@T("Hành lý", "Baggage")</span>
+                            <span class="av-rowline__value">@T("12 kg xách tay + 23 kg ký gửi + thêm 10 kg", "12 kg carry-on + 23 kg checked + 10 kg extra")</span>
                         </div>
                         <div class="av-rowline">
-                            <span class="av-rowline__label">Thanh toán</span>
-                            <span class="av-rowline__value">Đã thanh toán · @Money.Vnd(booking.Price.Total)</span>
+                            <span class="av-rowline__label">@T("Thanh toán", "Payment")</span>
+                            <span class="av-rowline__value">@T("Đã thanh toán", "Paid") · @Money.Vnd(booking.Price.Total)</span>
                         </div>
                     </div>
 
                     <hr class="av-divider" />
 
                     <div class="av-stack av-gap-12">
-                        <h3 class="av-title-20">Lựa chọn của bạn</h3>
+                        <h3 class="av-title-20">@T("Lựa chọn của bạn", "Your options")</h3>
                         <p class="av-body">
-                            Chấp nhận lịch mới nếu lịch trình vẫn phù hợp. Nếu cần chuyến khác, gửi yêu cầu
-                            để AeroViet kiểm tra phương án với hãng.
+                            @T("Chấp nhận lịch mới nếu lịch trình vẫn phù hợp. Nếu cần chuyến khác, gửi yêu cầu để AeroViet kiểm tra phương án với hãng.", "Accept the new schedule if it suits your trip. If you need another flight, send a request so AeroViet can check alternatives with the airline.")
                         </p>
 
                         <div class="av-row av-gap-12 av-wrap">
-                            <button type="button" class="av-btn av-btn--primary">Xác nhận lịch mới</button>
-                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">Yêu cầu hỗ trợ / đổi chuyến</a>
+                            <button type="button" class="av-btn av-btn--primary">@T("Xác nhận lịch mới", "Accept new schedule")</button>
+                            <a class="av-btn av-btn--outline" href="/ve-cua-toi/yeu-cau-doi">@T("Yêu cầu hỗ trợ / đổi chuyến", "Request support or a flight change")</a>
                         </div>
 
                         <p class="av-caption">
-                            Chưa xác nhận lịch mới. Việc gửi yêu cầu hỗ trợ không tự động đổi vé.
+                            @T("Chưa xác nhận lịch mới. Việc gửi yêu cầu hỗ trợ không tự động đổi vé.", "The new schedule is awaiting your confirmation. Support requests are reviewed before your ticket changes.")
                         </p>
                     </div>
                 </div>
@@ -111,20 +108,19 @@
         <aside class="booking-aside">
             <section class="av-card">
                 <div class="av-card__body av-card__stack">
-                    <h2 class="av-card__title">Thông báo của hãng</h2>
+                    <h2 class="av-card__title">@T("Thông báo của hãng", "Airline notice")</h2>
                     <p class="av-body">@Model.NoticeReason</p>
                     <p class="av-caption">@Model.NoticeAppliedText</p>
-                    <span class="av-badge av-badge--warning">Chờ khách xác nhận</span>
+                    <span class="av-badge av-badge--warning">@T("Chờ khách xác nhận", "Awaiting your confirmation")</span>
                 </div>
             </section>
 
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("info", 20)</span>
                 <div class="av-alert__body">
-                    <span class="av-alert__title">Thay đổi do hãng hàng không</span>
+                    <span class="av-alert__title">@T("Thay đổi do hãng hàng không", "Airline schedule change")</span>
                     <span>
-                        Không tự áp phí đổi tự nguyện @Money.Vnd(flight.ChangeFee). Phương án đổi miễn phí hoặc hỗ trợ khác
-                        phụ thuộc thông báo và điều kiện của hãng; AeroViet sẽ xác nhận trước khi thực hiện.
+                        @T($"Không tự áp phí đổi tự nguyện {Money.Vnd(flight.ChangeFee)}. Phương án đổi miễn phí hoặc hỗ trợ khác phụ thuộc thông báo và điều kiện của hãng; AeroViet sẽ xác nhận trước khi thực hiện.", $"The voluntary change fee of {Money.Vnd(flight.ChangeFee)} does not apply automatically. AeroViet will confirm any free rebooking or other assistance based on the airline conditions.")
                     </span>
                 </div>
             </div>
@@ -132,8 +128,13 @@
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("headset", 20)</span>
                 <div class="av-alert__body">
+<<<<<<< Updated upstream
                     <span class="av-alert__title">Hỗ trợ đặt chỗ</span>
                     <span>1900 6868 · 06:00–22:00 · support@aeroviet.vn. Cung cấp mã PNR @booking.Pnr để được kiểm tra.</span>
+=======
+                    <span class="av-alert__title">@T("Hỗ trợ đặt chỗ", "Booking support")</span>
+                    <span>@ViewData["SupportHotline"] · 06:00–22:00 · @ViewData["SupportEmail"]. @T($"Cung cấp mã PNR {booking.Pnr} để được kiểm tra.", $"Have booking reference {booking.Pnr} ready.")</span>
+>>>>>>> Stashed changes
                 </div>
             </div>
         </aside>

@@ -299,6 +299,51 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filter-group legend { margin-bottom: 12px; padding: 0; }
+.filter-price-fields { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.filter-count { color: var(--av-text-muted); white-space: nowrap; }
+.filter-apply { width: 100%; }
+.results-more[hidden] { display: none; }
+.search-party-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; min-width: 0; }
+.journey-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.journey-fields--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.journey-table { width: 100%; border-collapse: collapse; }
+.journey-table th, .journey-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--av-border); vertical-align: top; }
+.journey-table small { display: block; color: var(--av-text-muted); margin-top: 4px; }
+.journey-person { padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+.journey-legs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (min-width: 1081px) { .search-grid--who { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.3fr) 180px; } }
+@media (max-width: 720px) { .journey-fields, .journey-fields--three, .journey-legs { grid-template-columns: minmax(0, 1fr); } .journey-person { padding: 18px; } }
+.filters__drawer { min-width: 0; }
+.filters__toggle { display: none; }
+.filters__drawer:not([open]) > .filters__toggle { display: flex; gap: 12px; cursor: pointer; }
+
+@media (max-width: 1080px) {
+  .results-layout > .filters { order: 0; }
+  .filters__toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--av-border);
+    border-radius: var(--av-r-card, 12px);
+    background: var(--av-surface, #fff);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  .filters__toggle::-webkit-details-marker { display: none; }
+  .filters__toggle::after { content: '+'; }
+  .filters__drawer[open] > .filters__toggle::after { content: '−'; }
+  .filter-price-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
 .filter-group__title {
@@ -635,6 +680,34 @@
   align-items: start;
 }
 
+.journey-seat-passengers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px;
+}
+
+.journey-seat-passenger {
+  display: grid;
+  align-content: center;
+  justify-content: start;
+  gap: 4px;
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 8px 12px;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.journey-seat-passenger[aria-pressed="true"] {
+  background: var(--av-primary-soft);
+  border-color: var(--av-primary);
+}
+
+.journey-seat-passenger strong { font-size: var(--av-fs-caption); }
+[id^="journey-seats-"] { scroll-margin-top: 5rem; }
+
 .seatmap {
   display: flex;
   flex-direction: column;
@@ -680,6 +753,12 @@
 }
 
 .seat:hover:not(:disabled) { background: var(--av-primary-soft); }
+.seat:focus-visible { outline-offset: -3px; box-shadow: 0 0 0 2px var(--av-primary); }
+.seat.is-selected:focus-visible { outline-color: white; }
+.av-chip:has(input:focus-visible), .av-toggle__item:has(input:focus-visible) {
+  outline: 2px solid var(--av-primary);
+  outline-offset: 2px;
+}
 
 .seat.is-taken {
   background: var(--av-border);
@@ -827,9 +906,81 @@
 
 /* checkout */
 
-.pay-methods { display: flex; gap: 6px; flex-wrap: wrap; }
+.payment-method-picker { display: grid; gap: 12px; margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+.payment-method-picker legend { margin-bottom: 12px; }
+.pay-methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; }
 
+.payment-method {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-control);
+  cursor: pointer;
+}
+
+.payment-method__icon { display: inline-flex; flex: none; color: var(--av-primary); }
+.payment-method:has(input:checked) { border-color: var(--av-primary); background: var(--av-primary-soft); }
+.payment-method:has(input:focus-visible) { outline: 2px solid var(--av-primary); outline-offset: 2px; }
+.payment-method:has(input:disabled) { cursor: default; background: var(--av-page); }
+.payment-method:has(input:disabled) .payment-method__icon { color: var(--av-text-muted); }
+
+<<<<<<< Updated upstream
 .card-brands { display: flex; gap: 8px; flex-wrap: wrap; }
+=======
+.av-chip { cursor: pointer; }
+
+.payment-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+
+/* trang thanh toán QR */
+
+.qr-payment__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.qr-payment__body {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.qr-payment__code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--av-border);
+  border-radius: var(--av-r-control);
+  background: #fff;
+  text-align: center;
+}
+
+.qr-payment__code img {
+  width: 216px;
+  height: 216px;
+  image-rendering: pixelated;
+}
+
+.qr-payment__info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+>>>>>>> Stashed changes
 
 .checkout-terms {
   display: flex;
@@ -1563,4 +1714,18 @@
   .compare-table__row { grid-template-columns: minmax(0, 1fr) 100px 110px; gap: 10px; font-size: var(--av-fs-sm); }
   .request-actions .av-btn { width: 100%; }
   .request-table { min-width: 640px; }
+}
+
+@media (max-width: 720px) { .pay-actions { flex-direction: column; align-items: stretch; } .pay-actions .av-btn { width: 100%; white-space: normal; text-align: center; } .journey-person { overflow-wrap: anywhere; } }
+
+.account-form { max-width: 540px; margin-inline: auto; }
+.policy-card { max-width: 820px; margin-inline: auto; }
+.promotion-form { flex-direction: row; align-items: end; gap: 16px; flex-wrap: wrap; margin-block: 16px; }
+.promotion-form .av-field { flex: 1 1 200px; max-width: 380px; }
+@media (max-width: 720px) {
+  .promotion-form .av-field { flex-basis: 100%; max-width: 100%; }
+}
+@media (max-width: 400px) {
+  .seatmap__cols, .seatmap__row { grid-template-columns: repeat(3, minmax(0, 1fr)) 14px repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .search-party-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 }

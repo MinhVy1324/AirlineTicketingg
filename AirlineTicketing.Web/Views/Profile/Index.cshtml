@@ -1,0 +1,62 @@
+@model AccountProfileViewModel
+@{
+    ViewData["Title"] = Model.NeedsProfile ? T("Hoàn thiện hồ sơ", "Complete your profile") : T("Hồ sơ cá nhân", "My profile");
+}
+
+<div class="av-page av-container">
+    <header class="booking-title">
+        <h1 class="av-page-title">@ViewData["Title"]</h1>
+        @if (Model.NeedsProfile)
+        {
+            <p class="av-page-subtitle">@T("Nhập đầy đủ họ tên, số điện thoại và Gmail để tiếp tục.", "Enter your full name, phone number and Gmail address to continue.")</p>
+        }
+    </header>
+
+    @if (TempData["ProfileMessage"] is string message)
+    {
+        <p class="av-alert av-alert--success" role="status">@message</p>
+    }
+
+    <section class="av-card passenger-block" aria-labelledby="profile-contact">
+        <h2 class="passenger-block__title" id="profile-contact">@T("Thông tin liên hệ", "Contact details")</h2>
+        <form asp-action="Update" method="post" class="av-stack av-gap-16">
+            <input asp-for="ReturnUrl" type="hidden" />
+            <label class="av-field">
+                <span class="av-label">@T("Họ và tên", "Full name")</span>
+                <span class="av-control"><input asp-for="FullName" autocomplete="name" maxlength="150" required /></span>
+                <span asp-validation-for="FullName" class="av-field__error"></span>
+            </label>
+            @if (Model.UsernameAccount)
+            {
+                <label class="av-field">
+                    <span class="av-label">@T("Gmail liên hệ", "Contact Gmail")</span>
+                    <span class="av-control"><input asp-for="Email" type="email" autocomplete="email" maxlength="254" required /></span>
+                    <span asp-validation-for="Email" class="av-field__error"></span>
+                </label>
+            }
+            else
+            {
+                <label class="av-field">
+                    <span class="av-label">@T("Email đăng nhập", "Sign-in email")</span>
+                    <span class="av-control"><input type="email" value="@Model.Email" readonly /></span>
+                </label>
+            }
+            <label class="av-field">
+                <span class="av-label">@T("Số điện thoại", "Phone number")</span>
+                <span class="av-control"><input asp-for="Phone" type="tel" autocomplete="tel" maxlength="20" required="@Model.UsernameAccount" /></span>
+                <span asp-validation-for="Phone" class="av-field__error"></span>
+            </label>
+            <div class="av-row av-wrap av-gap-12">
+                <button type="submit" class="av-btn av-btn--primary">@T("Lưu hồ sơ", "Save profile")</button>
+                @if (!Model.UsernameAccount)
+                {
+                    <a class="av-link" href="/quen-mat-khau">@T("Đặt lại mật khẩu", "Reset password")</a>
+                }
+                @if (!Model.NeedsProfile)
+                {
+                    <a class="av-link" href="/ve-cua-toi">@T("Vé của tôi", "My tickets")</a>
+                }
+            </div>
+        </form>
+    </section>
+</div>

@@ -3,7 +3,7 @@
     var crumb = AdminNav.LabelFor(activeNav);
 }
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="@UiLanguage.Code">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,14 +14,17 @@
     <link rel="stylesheet" href="~/css/base.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/interface.css" asp-append-version="true" />
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="admin-body">
+    <a class="av-skip-link" href="#main-content">@T("Đến nội dung chính", "Skip to main content")</a>
     <input type="checkbox" id="admin-nav-toggle" class="admin-nav-toggle" aria-hidden="true" tabindex="-1" />
 
     <div class="admin-shell">
         <label for="admin-nav-toggle" class="admin-scrim" aria-hidden="true"></label>
 
+<<<<<<< Updated upstream
         <aside class="admin-sidebar">
             <a class="admin-brand" href="/admin" aria-label="AeroViet · Tổng quan hệ thống">
                 <span class="admin-brand__mark">@Html.Icon("plane", 23)</span>
@@ -34,13 +37,36 @@
             </div>
 
             <nav class="admin-nav" aria-label="Điều hướng quản trị">
+=======
+        <aside id="staff-navigation" class="admin-side" aria-label="@T("Quản trị hệ thống", "System administration")">
+            <div class="admin-side__top">
+                <a class="admin-brand" href="/admin">
+                    <span class="admin-brand__mark">@Html.Icon("plane", 20)</span>
+                    <span class="admin-brand__text">
+                        <strong>AeroViet</strong>
+                        <span>@T("Quản trị hệ thống", "System administration")</span>
+                    </span>
+                </a>
+
+                <button type="button" class="admin-side__close" data-staff-nav-close aria-label="@T("Đóng điều hướng", "Close navigation")">
+                    @Html.Icon("x", 18)
+                </button>
+            </div>
+
+            <nav class="admin-nav" aria-label="@T("Mục quản trị", "Administration sections")">
+>>>>>>> Stashed changes
                 @foreach (var item in AdminNav.Items)
                 {
                     var isActive = item.Key == activeNav;
                     <a class="admin-nav__link @(isActive ? "is-active" : null)" href="@item.Href"
                        aria-current="@(isActive ? "page" : null)">
+<<<<<<< Updated upstream
                         @Html.Icon(item.Icon, 19)
                         <span>@item.Label</span>
+=======
+                        <span class="admin-nav__icon">@Html.Icon(item.Icon, 18)</span>
+                        <span>@item.DisplayLabel</span>
+>>>>>>> Stashed changes
                     </a>
                 }
                 <a class="admin-nav__link" href="/Dashboard">
@@ -57,6 +83,7 @@
                 </a>
             </nav>
 
+<<<<<<< Updated upstream
             <div class="admin-scope">
                 @Html.Icon("shield-check", 20)
                 <span class="admin-scope__title">Toàn quyền hệ thống</span>
@@ -67,10 +94,17 @@
                 @Html.Icon("help", 20)
                 <span>Hỗ trợ nội bộ</span>
             </a>
+=======
+            <p class="admin-side__foot">
+                @T("Phiên bản 1.0 · Dữ liệu theo hệ thống.", "Version 1.0 · Live system data.")<br />
+                @T("Quyền truy cập theo vai trò được cấp.", "Access is based on the assigned role.")
+            </p>
+>>>>>>> Stashed changes
         </aside>
 
         <div class="admin-area">
             <header class="admin-topbar">
+<<<<<<< Updated upstream
                 <label for="admin-nav-toggle" class="admin-menu-btn" aria-label="Mở hoặc đóng menu quản trị">
                     @Html.Icon("layout-dashboard", 20)
                 </label>
@@ -79,10 +113,19 @@
                     <span>AeroViet Workspace</span>
                     <span class="admin-crumb__sep" aria-hidden="true">/</span>
                     <span>Admin</span>
+=======
+                <button type="button" class="admin-topbar__menu" data-staff-nav-open aria-label="@T("Mở điều hướng", "Open navigation")" aria-expanded="false" aria-controls="staff-navigation">
+                    @Html.Icon("menu", 20)
+                </button>
+
+                <nav class="admin-crumb" aria-label="@T("Đường dẫn", "Breadcrumb")">
+                    <a href="/admin">Admin</a>
+>>>>>>> Stashed changes
                     <span class="admin-crumb__sep" aria-hidden="true">/</span>
                     <span class="admin-crumb__current">@crumb</span>
                 </nav>
 
+<<<<<<< Updated upstream
                 <div class="admin-session">
                     <a class="admin-bell" href="/admin/nhat-ky" aria-label="Xem nhật ký hoạt động">
                         @Html.Icon("bell", 20)
@@ -97,21 +140,53 @@
                         @Html.AntiForgeryToken()
                         <button type="submit" class="admin-nav__link">Đăng xuất</button>
                     </form>
+=======
+                <span class="admin-topbar__sep" aria-hidden="true"></span>
+
+                <p class="admin-topbar__note">
+                    @Html.Icon("clock", 16)
+                    <span>@T("Giờ hệ thống (UTC+7)", "System time (UTC+7)")</span>
+                </p>
+
+                <span class="admin-pill admin-pill--ok">
+                    <span class="admin-dot" aria-hidden="true"></span>
+                    @T("Hoạt động", "Active")
+                </span>
+
+                <div class="admin-topbar__user" title="@User.DisplayName()">
+                    <span class="admin-avatar">@User.Initials()</span>
+                    <span class="admin-topbar__name">
+                        <strong>@User.DisplayName()</strong>
+                        <span>@(User.FindFirstValue(ClaimTypes.Role) == "Admin" ? T("Quản trị viên", "Administrator") : T("Nhân sự", "Staff"))</span>
+                    </span>
+                    <a class="av-link av-link--sm" href="/dang-xuat">@T("Đăng xuất", "Sign out")</a>
+>>>>>>> Stashed changes
                 </div>
+                <partial name="_LanguageSwitcher" />
             </header>
 
+<<<<<<< Updated upstream
             <main class="admin-main" role="main">
+=======
+            <main id="main-content" class="admin-content" tabindex="-1">
+>>>>>>> Stashed changes
                 @RenderBody()
             </main>
 
             <footer class="admin-footer">
+<<<<<<< Updated upstream
                 <span>AeroViet · Hệ thống bán vé máy bay</span>
                 <span>Dữ liệu mẫu · Giờ Việt Nam (UTC+7)</span>
+=======
+                <span>@T("AeroViet · Hệ thống bán vé máy bay", "AeroViet · Flight booking system")</span>
+                <span>@T("Dữ liệu hệ thống · Giờ Việt Nam (UTC+7)", "System data · Vietnam time (UTC+7)")</span>
+>>>>>>> Stashed changes
             </footer>
         </div>
     </div>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <partial name="_InteractionFeedback" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

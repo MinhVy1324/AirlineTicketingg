@@ -11,7 +11,7 @@
                 @flight.AirlineName
             </span>
             <span class="flight-card__meta">@flight.FlightNumber · @flight.Aircraft</span>
-            <span class="av-badge av-badge--neutral">@flight.FareName</span>
+            <span class="av-badge av-badge--neutral">@BookingUiText.Text(flight.FareName)</span>
         </div>
 
         <div class="flight-card__time">
@@ -20,9 +20,9 @@
         </div>
 
         <div class="flight-card__leg">
-            <span class="flight-card__leg-duration">@Money.Duration(flight.Duration)</span>
+            <span class="flight-card__leg-duration">@BookingUiText.Duration(flight.Duration)</span>
             <span class="flight-card__leg-line">@Html.Icon("plane", 14)</span>
-            <span class="flight-card__leg-stop">@flight.Stops</span>
+            <span class="flight-card__leg-stop">@BookingUiText.Text(flight.Stops)</span>
         </div>
 
         <div class="flight-card__time av-text-right">
@@ -32,9 +32,19 @@
 
         <div class="flight-card__price">
             <strong>@Money.Vnd(flight.PricePerPassenger)</strong>
-            <span>/khách · Đã gồm thuế, phí</span>
+            <span>@T("/người lớn · Đã gồm thuế, phí", "/adult · Taxes and fees included")</span>
+            <span class="av-caption">@T("Chưa gồm dịch vụ tùy chọn", "Optional services excluded")</span>
+            @if (Model.PartyTotal.HasValue)
+            {
+                <span class="av-caption">@Model.PartySummary</span>
+                <strong class="av-title-20">@T("Nhóm:", "Group total:") @Money.Vnd(Model.PartyTotal.Value)</strong>
+            }
             <a class="av-btn av-btn--primary av-btn--sm"
+<<<<<<< Updated upstream
                asp-controller="Booking" asp-action="Passengers">Chọn chuyến</a>
+=======
+               href="@(Model.SelectUrl ?? Url.Action("Passengers", "Booking", new { flightId = flight.Id }))">@BookingUiText.Text(Model.SelectLabel)</a>
+>>>>>>> Stashed changes
         </div>
     </div>
 
@@ -42,15 +52,15 @@
     {
         <div class="flight-card__foot">
             <div class="rules">
-                <span>@Html.Icon("check", 14) @flight.CabinBaggage · @flight.CheckedBaggage</span>
-                <span>Đổi: @Money.Vnd(flight.ChangeFee) + chênh lệch</span>
-                <span>Hoàn: phí @Money.Vnd(flight.RefundFee)</span>
+                <span>@Html.Icon("check", 14) @BookingUiText.Text(flight.CabinBaggage) · @BookingUiText.Text(flight.CheckedBaggage)</span>
+                <span>@T($"Đổi: {Money.Vnd(flight.ChangeFee)} + chênh lệch", $"Change: {Money.Vnd(flight.ChangeFee)} plus fare difference")</span>
+                <span>@T($"Hoàn: phí {Money.Vnd(flight.RefundFee)}", $"Refund: {Money.Vnd(flight.RefundFee)} fee")</span>
             </div>
             <div class="av-alert av-alert--info">
                 <span class="av-alert__icon">@Html.Icon("info", 20)</span>
                 <div class="av-alert__body">
-                    <span class="av-alert__title">Điều kiện áp dụng trước giờ bay 3 tiếng</span>
-                    <span>Sau thời hạn trên hoặc không có mặt: không đổi/hoàn. Hành lý mua thêm và phí dịch vụ không hoàn. Xem chi tiết trước khi chọn.</span>
+                    <span class="av-alert__title">@T("Điều kiện áp dụng trước giờ bay 3 tiếng", "Conditions apply until 3 hours before departure")</span>
+                    <span>@T("Sau thời hạn trên hoặc không có mặt: không đổi/hoàn. Hành lý mua thêm và phí dịch vụ không hoàn. Xem chi tiết trước khi chọn.", "Changes and refunds are unavailable after the cutoff or for no-shows. Extra baggage and service fees are nonrefundable. Review the details before selecting.")</span>
                 </div>
             </div>
         </div>

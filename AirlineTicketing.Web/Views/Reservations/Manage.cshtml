@@ -1,0 +1,46 @@
+@model ManageReservationViewModel
+@using AirlineTicketing.Web.Infrastructure
+@{
+    ViewData["Title"] = T("Tra cứu và quản lý đặt chỗ", "Find and manage a booking");
+}
+
+<div class="av-page av-container">
+    <header class="booking-title"><h1 class="av-page-title">@T("Tra cứu và quản lý đặt chỗ", "Find and manage a booking")</h1></header>
+    <section class="av-card"><div class="av-card__body">
+        <form method="post" class="lookup-form">
+            @Html.AntiForgeryToken()
+            <label class="av-field"><span class="av-label">@T("Mã đặt chỗ", "Booking reference")</span><input asp-for="MaDatVe" required /></label>
+            <label class="av-field"><span class="av-label">@T("Email xác minh", "Contact email")</span><input asp-for="Email" required /></label>
+            <button class="av-btn av-btn--primary" type="submit">@T("Tra cứu", "Find booking")</button>
+        </form>
+    </div></section>
+
+    @if (Model.Loi is not null) { <div class="av-alert av-alert--danger">@Model.Loi</div> }
+    @if (Model.KetQua is { } booking)
+    {
+        <section class="av-card"><div class="av-card__body av-stack av-gap-16">
+            <h2 class="av-card__title">@booking.MaDatVe · @UiLanguage.Label(booking.TrangThai)</h2>
+            <p>@T("Tổng tiền:", "Total") <strong>@Money.Vnd(booking.TongTien)</strong></p>
+            @foreach (var ticket in booking.Ves)
+            {
+                <div class="av-rowline"><span>@ticket.MaVe · @ticket.HanhKhach.HoTen · @T("ghế", "seat") @ticket.SoGhe</span><strong>@UiLanguage.Label(ticket.TrangThai)</strong></div>
+                @if (ticket.TrangThai == "DaPhatHanh")
+                {
+                    <form method="post" action="/quan-ly-dat-ve/doi" class="av-stack av-gap-8">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="veId" value="@ticket.Id" />
+                        <input type="hidden" name="email" value="@Model.Email" />
+                        <p>@T("Đăng nhập tài khoản liên hệ để gửi yêu cầu và theo dõi phản hồi của nhân viên.", "Sign in to the account associated with this booking to send requests and track staff responses.")</p>
+                        <button class="av-btn av-btn--outline" type="submit">@T("Quản lý yêu cầu đổi vé", "Manage ticket change requests")</button>
+                    </form>
+                    <form method="post" action="/quan-ly-dat-ve/huy">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="maVe" value="@ticket.MaVe" />
+                        <input type="hidden" name="email" value="@Model.Email" />
+                        <button class="av-btn av-btn--outline" type="submit">@T("Gửi yêu cầu hoàn vé", "Request a refund")</button>
+                    </form>
+                }
+            }
+        </div></section>
+    }
+</div>

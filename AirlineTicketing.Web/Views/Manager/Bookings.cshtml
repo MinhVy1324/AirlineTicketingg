@@ -1,11 +1,20 @@
 @model ManagerBookingsViewModel
 @{
+<<<<<<< Updated upstream
     ViewData["Title"] = "Quản lý đặt vé";
+=======
+    ViewData["Title"] = T("Quản lý khách hàng, đặt chỗ và vé", "Customer, booking and ticket management");
+>>>>>>> Stashed changes
     ViewData["ManagerNav"] = "bookings";
+
+    string When(DateTimeOffset value) => $"{FlightMapping.DisplayDate(value)} {FlightMapping.DisplayTime(value)}";
+    string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
+    string Amount(decimal value, string currency) => currency == "VND" ? Money.Vnd(value) : $"{value:N2} {currency}";
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
+<<<<<<< Updated upstream
         <div class="admin-page-head__main">
             <h1 class="admin-page-title">Quản lý đặt vé</h1>
             <p class="admin-page-subtitle">@Model.Subtitle</p>
@@ -87,10 +96,23 @@
                     <span class="is-current">1</span>
                     <a href="/quan-ly/dat-ve">Sau</a>
                 </span>
+=======
+        <h1 class="admin-page-title">@T("Khách hàng, đặt chỗ và vé", "Customers, bookings and tickets")</h1>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone" role="@(Model.MessageTone == "danger" ? "alert" : "status")">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check-circle" : "info", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@(Model.MessageTone == "success" ? T("Đã cập nhật", "Updated") : T("Thông báo", "Notice"))</span>
+                <span>@Model.Message</span>
+>>>>>>> Stashed changes
             </div>
         </div>
     </section>
 
+<<<<<<< Updated upstream
     <section class="admin-grid manager-grid--bookings">
         <article class="av-card admin-card">
             <div class="av-card__body admin-card__body">
@@ -183,4 +205,160 @@
             </article>
         </div>
     </section>
+=======
+    <section class="av-card">
+        <div class="av-card__body admin-card__body">
+            <form method="get" asp-action="Bookings" class="admin-filters manager-booking-search" role="search">
+                <label class="av-field">
+                    <span class="av-label">@T("Mã đặt chỗ, mã vé, tên hoặc email", "Booking reference, ticket number, name or email")</span>
+                    <span class="av-control">
+                        <input type="search" name="q" value="@Model.TuKhoa" autocomplete="off" />
+                        @Html.Icon("search", 18)
+                    </span>
+                </label>
+                <button type="submit" class="av-btn av-btn--primary admin-filters__submit">@T("Tìm kiếm", "Search")</button>
+            </form>
+        </div>
+    </section>
+
+    @if (Model.DatVes.Count == 0)
+    {
+        <p class="av-alert av-alert--info">@T("Không có đặt chỗ phù hợp.", "No bookings match your search.")</p>
+    }
+    @foreach (var booking in Model.DatVes)
+    {
+        var pendingTransfer = booking.ThanhToans.FirstOrDefault(t =>
+            t.PhuongThuc == nameof(PhuongThucThanhToan.ChuyenKhoan) && t.TrangThai == nameof(TrangThaiThanhToan.ChoXuLy));
+        var (statusText, statusTone) = booking.TrangThai switch
+        {
+            nameof(TrangThaiDatVe.ChoThanhToan) => (T("Chờ thanh toán", "Awaiting payment"), "warning"),
+            nameof(TrangThaiDatVe.DaXacNhan) => (T("Đã xác nhận", "Confirmed"), "success"),
+            nameof(TrangThaiDatVe.DaHuy) => (T("Đã hủy", "Cancelled"), "danger"),
+            nameof(TrangThaiDatVe.HoanTien) => (T("Đã hoàn tiền", "Refunded"), "info"),
+            nameof(TrangThaiDatVe.HetHan) => (T("Hết hạn giữ chỗ", "Hold expired"), "neutral"),
+            _ => (booking.TrangThai, "neutral")
+        };
+
+        <article class="av-card" aria-labelledby="booking-@booking.Id">
+            <div class="av-card__body admin-card__body">
+                <header class="manager-booking-heading">
+                    <div class="av-stack av-gap-6">
+                        <span class="av-caption">@T("Mã đặt chỗ", "Booking reference")</span>
+                        <div class="av-row av-wrap av-gap-10">
+                            <h2 class="av-card__title" id="booking-@booking.Id">@booking.MaDatVe</h2>
+                            <span class="av-badge av-badge--@statusTone">@statusText</span>
+                        </div>
+                    </div>
+                    <div class="manager-booking-total">
+                        <span class="av-caption">@T("Tổng đặt chỗ", "Booking total")</span>
+                        <strong>@Amount(booking.TongTien, booking.DonViTienTe)</strong>
+                    </div>
+                </header>
+
+                <section class="manager-booking-section">
+                    <h3>@T("Thông tin liên hệ", "Contact information")</h3>
+                    <dl class="admin-data-fields manager-booking-contact">
+                        <div><dt>@T("Khách hàng", "Customer")</dt><dd>@Display(booking.KhachHang.HoTen)</dd></div>
+                        <div><dt>@T("Điện thoại", "Phone")</dt><dd>@Display(booking.KhachHang.SoDienThoai)</dd></div>
+                        <div class="manager-booking-contact__email"><dt>Email</dt><dd>@Display(booking.KhachHang.Email)</dd></div>
+                        <div><dt>@T("Đặt lúc (UTC+7)", "Booked at (UTC+7)")</dt><dd><time datetime="@(booking.NgayDat.ToString("O"))">@When(booking.NgayDat)</time></dd></div>
+                        <div><dt>@T("Hạn giữ chỗ (UTC+7)", "Hold expires (UTC+7)")</dt><dd><time datetime="@(booking.HetHanGiuCho.ToString("O"))">@When(booking.HetHanGiuCho)</time></dd></div>
+                    </dl>
+                </section>
+
+                <section class="manager-booking-section">
+                    <h3>@T("Thanh toán", "Payment")</h3>
+                    @if (booking.ThanhToans.Count == 0)
+                    {
+                        <p class="av-caption">@T("Chưa có giao dịch thanh toán.", "No payment transactions yet.")</p>
+                    }
+                    else
+                    {
+                        <ul class="manager-booking-records" role="list">
+                            @foreach (var payment in booking.ThanhToans)
+                            {
+                                var (paymentText, paymentTone) = payment.TrangThai switch
+                                {
+                                    nameof(TrangThaiThanhToan.ChoXuLy) => (T("Chờ đối soát", "Awaiting reconciliation"), "warning"),
+                                    nameof(TrangThaiThanhToan.ThanhCong) => (T("Đã thanh toán", "Paid"), "success"),
+                                    nameof(TrangThaiThanhToan.ThatBai) => (T("Thất bại", "Failed"), "danger"),
+                                    _ => (payment.TrangThai, "neutral")
+                                };
+                                var method = payment.PhuongThuc switch
+                                {
+                                    nameof(PhuongThucThanhToan.TheNganHang) => T("Thẻ ngân hàng", "Bank card"),
+                                    nameof(PhuongThucThanhToan.ChuyenKhoan) => T("Chuyển khoản", "Bank transfer"),
+                                    nameof(PhuongThucThanhToan.TienMat) => T("Tiền mặt", "Cash"),
+                                    nameof(PhuongThucThanhToan.ViDienTu) => T("Ví điện tử", "Digital wallet"),
+                                    _ => Display(payment.PhuongThuc)
+                                };
+                                <li class="manager-booking-record">
+                                    <div class="admin-record-heading">
+                                        <strong>@method</strong>
+                                        <span class="av-badge av-badge--@paymentTone">@paymentText</span>
+                                    </div>
+                                    <dl class="admin-data-fields">
+                                        <div><dt>@T("Nhà cung cấp", "Provider")</dt><dd>@Display(payment.NhaCungCap)</dd></div>
+                                        <div><dt>@T("Mã giao dịch", "Transaction reference")</dt><dd>@Display(payment.MaGiaoDich)</dd></div>
+                                        <div><dt>@T("Số tiền", "Amount")</dt><dd><strong>@Amount(payment.SoTien, payment.DonViTienTe)</strong></dd></div>
+                                    </dl>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    @if (pendingTransfer is not null && booking.TrangThai == nameof(TrangThaiDatVe.ChoThanhToan))
+                    {
+                        <div class="av-alert av-alert--warning">
+                            <span class="av-alert__icon">@Html.Icon("clock", 20)</span>
+                            <div class="av-alert__body">
+                                <span class="av-alert__title">@T("Chờ đối soát chuyển khoản", "Bank transfer awaiting reconciliation")</span>
+                                <span>@T("Đối chiếu", "Reconcile") @Amount(pendingTransfer.SoTien, pendingTransfer.DonViTienTe) @T("và nội dung chuyển khoản", "and the bank transfer description") <strong>AEROVIET @booking.MaDatVe</strong>.</span>
+                            </div>
+                        </div>
+                        <div>
+                            <a asp-controller="VnpayManager" asp-action="Index" asp-route-q="@booking.MaDatVe" asp-route-kenh="qr"
+                               class="av-btn av-btn--primary">@Html.Icon("check", 17) @T("Đối soát khoản thu", "Reconcile collection")</a>
+                        </div>
+                    }
+                </section>
+
+                <section class="manager-booking-section">
+                    <h3>@T("Vé (", "Tickets (")@booking.Ves.Count)</h3>
+                    @if (booking.Ves.Count == 0)
+                    {
+                        <p class="av-caption">@T("Chưa có vé trong đặt chỗ.", "This booking has no tickets.")</p>
+                    }
+                    else
+                    {
+                        <ul class="manager-booking-records" role="list">
+                            @foreach (var ticket in booking.Ves)
+                            {
+                                var (ticketText, ticketTone) = ticket.TrangThai switch
+                                {
+                                    nameof(TrangThaiVe.TamGiu) => (T("Đang giữ chỗ", "On hold"), "warning"),
+                                    nameof(TrangThaiVe.DaPhatHanh) => (T("Đã phát hành", "Issued"), "success"),
+                                    nameof(TrangThaiVe.DaHuy) => (T("Đã hủy", "Cancelled"), "danger"),
+                                    nameof(TrangThaiVe.DaHoanTien) => (T("Đã hoàn tiền", "Refunded"), "info"),
+                                    _ => (ticket.TrangThai, "neutral")
+                                };
+                                <li class="manager-booking-record">
+                                    <div class="admin-record-heading">
+                                        <strong>@Display(ticket.HanhKhach.HoTen)</strong>
+                                        <span class="av-badge av-badge--@ticketTone">@ticketText</span>
+                                    </div>
+                                    <dl class="admin-data-fields manager-booking-ticket">
+                                        <div class="manager-booking-ticket__number"><dt>@T("Mã vé", "Ticket number")</dt><dd>@Display(ticket.MaVe)</dd></div>
+                                        <div><dt>@T("Chuyến bay", "Flight")</dt><dd>@Display(ticket.SoHieuChuyenBay)</dd></div>
+                                        <div><dt>@T("Ghế", "Seat")</dt><dd>@Display(ticket.SoGhe)</dd></div>
+                                        <div><dt>@T("Giá vé", "Fare")</dt><dd><strong>@Amount(ticket.GiaVe, booking.DonViTienTe)</strong></dd></div>
+                                    </dl>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+            </div>
+        </article>
+    }
+>>>>>>> Stashed changes
 </div>

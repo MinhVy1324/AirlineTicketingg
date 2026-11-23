@@ -1,40 +1,43 @@
-﻿@model HomeViewModel
+@model HomeViewModel
+@inject BookingPromotion Promotion
 @{
-    ViewData["Title"] = "Đặt vé máy bay";
+    ViewData["Title"] = T("Đặt vé máy bay", "Book a flight");
     ViewData["Nav"] = "book";
 }
 
 <div class="av-page av-container home">
     <section class="home-hero">
         <div class="home-hero__main">
-            <span class="av-eyebrow">XIN CHÀO, @Model.CustomerName.ToUpperInvariant()</span>
-            <h1 class="home-hero__title">Hành trình mới bắt đầu từ đây.</h1>
-            <p class="home-hero__sub">Chọn điểm đến, chúng tôi đồng hành cùng bạn.</p>
+            <h1 class="home-hero__title">@ViewData["Title"]</h1>
+            <p class="home-hero__assurance">
+                @Html.Icon("shield-check", 20)
+                <span>@T("Giá hiển thị đã gồm thuế, phí.", "Displayed prices include taxes and fees.")</span>
+            </p>
         </div>
-        <p class="home-hero__assurance">
-            @Html.Icon("shield-check", 20)
-            <span>Đặt vé an toàn · Giá rõ ràng</span>
-        </p>
     </section>
 
+<<<<<<< Updated upstream
     <form class="search-card" method="get" action="/chuyen-bay" role="search" aria-label="Tìm chuyến bay">
+=======
+    <form class="search-card" id="tim-chuyen" method="get" action="/chuyen-bay" role="search" aria-label="@T("Tìm chuyến bay", "Find flights")"
+          data-journey-search data-pending-message="@T("Đang tìm chuyến bay…", "Searching for flights…")">
+>>>>>>> Stashed changes
         <div class="search-card__types">
             <div class="av-toggle">
-                <label class="av-toggle__item is-active">
-                    <input type="radio" name="trip" value="oneway" checked />
-                    <span>Một chiều</span>
+                <label class="av-toggle__item @(Model.Search.Trip == "oneway" ? "is-active" : null)">
+                    <input type="radio" name="trip" value="oneway" checked="@(Model.Search.Trip == "oneway")" />
+                    <span>@T("Một chiều", "One-way")</span>
                 </label>
-                <label class="av-toggle__item">
-                    <input type="radio" name="trip" value="roundtrip" />
-                    <span>Khứ hồi</span>
+                <label class="av-toggle__item @(Model.Search.Trip == "roundtrip" ? "is-active" : null)">
+                    <input type="radio" name="trip" value="roundtrip" checked="@(Model.Search.Trip == "roundtrip")" />
+                    <span>@T("Khứ hồi", "Round trip")</span>
                 </label>
             </div>
-            <span class="search-card__hint">Chuyến bay nội địa &amp; quốc tế</span>
         </div>
 
         <div class="search-grid search-grid--route">
             <label class="av-field">
-                <span class="av-label">Nơi đi</span>
+                <span class="av-label">@T("Nơi đi", "From")</span>
                 <span class="av-control">
                     <input type="text" name="from" value="@Model.Search.From" autocomplete="off" />
                     @Html.Icon("plane-takeoff", 17)
@@ -42,7 +45,7 @@
             </label>
 
             <label class="av-field">
-                <span class="av-label">Nơi đến</span>
+                <span class="av-label">@T("Nơi đến", "To")</span>
                 <span class="av-control">
                     <input type="text" name="to" value="@Model.Search.To" autocomplete="off" />
                     @Html.Icon("plane-landing", 17)
@@ -50,77 +53,94 @@
             </label>
 
             <label class="av-field">
-                <span class="av-label">Ngày đi</span>
+                <span class="av-label">@T("Ngày đi", "Departure date")</span>
                 <span class="av-control">
-                    <input type="text" name="depart" value="@Model.Search.DepartDate" autocomplete="off" />
-                    @Html.Icon("calendar", 17)
+                    <input type="date" name="depart" value="@(FlightMapping.TryParseDate(Model.Search.DepartDate, out var departDay) ? departDay.ToString("yyyy-MM-dd") : "")" required />
                 </span>
             </label>
 
             <label class="av-field">
-                <span class="av-label">Ngày về</span>
+                <span class="av-label">@T("Ngày về", "Return date")</span>
                 <span class="av-control">
-                    <input type="text" name="return" value="@(string.IsNullOrWhiteSpace(Model.Search.ReturnDate) ? "Không áp dụng · Một chiều" : Model.Search.ReturnDate)" autocomplete="off" />
-                    @Html.Icon("calendar", 17)
+                    <input type="date" name="returnDate" value="@(FlightMapping.TryParseDate(Model.Search.ReturnDate, out var returnDay) ? returnDay.ToString("yyyy-MM-dd") : "")" data-return-date />
                 </span>
             </label>
         </div>
 
         <div class="search-grid search-grid--who">
-            <label class="av-field">
-                <span class="av-label">Hành khách</span>
-                <span class="av-control">
-                    <input type="text" name="passengers" value="@Model.Search.Passengers" autocomplete="off" />
-                    @Html.Icon("users", 17)
-                </span>
-            </label>
+            <div class="search-party-fields">
+                <label class="av-field"><span class="av-label">@T("Người lớn ≥12", "Adults ≥12")</span><span class="av-control"><input type="number" name="adults" value="@Model.Search.Adults" min="1" max="9" required /></span></label>
+                <label class="av-field"><span class="av-label">@T("Trẻ em 2–<12", "Children 2–<12")</span><span class="av-control"><input type="number" name="children" value="@Model.Search.Children" min="0" max="8" required /></span></label>
+                <label class="av-field"><span class="av-label">@T("Em bé <2", "Infants <2")</span><span class="av-control"><input type="number" name="infants" value="@Model.Search.Infants" min="0" max="9" required /></span></label>
+            </div>
 
             <label class="av-field">
-                <span class="av-label">Hạng vé</span>
+                <span class="av-label">@T("Hạng vé", "Cabin")</span>
                 <span class="av-control">
-                    <input type="text" name="cabin" value="@Model.Search.Cabin" autocomplete="off" />
+                    <select name="cabin">
+                        @foreach (var fare in JourneyRules.Cabins)
+                        {
+                            <option value="@fare.Code" selected="@(JourneyBookingBuilder.CabinOf(Model.Search.Cabin).Code == fare.Code)">@UiLanguage.Label(fare.Name)</option>
+                        }
+                    </select>
                     @Html.Icon("chevron-down", 17)
                 </span>
             </label>
 
             <p class="search-grid__note">
-                <span>Giá hiển thị đã gồm thuế, phí.</span>
-                <span>Giờ bay theo giờ địa phương.</span>
+                <span>@T("Giờ bay theo giờ địa phương.", "Flight times are local.")</span>
             </p>
 
             <button type="submit" class="av-btn av-btn--primary search-submit">
                 @Html.Icon("search", 17)
-                <span>Tìm chuyến bay</span>
+                <span>@T("Tìm chuyến bay", "Find flights")</span>
             </button>
         </div>
     </form>
+    <p class="av-caption">@T("Tối đa 9 khách/đơn. Em bé ngồi cùng một người lớn từ 18 tuổi; không chiếm ghế riêng. Tuổi tính theo ngày bay.", "Book up to 9 passengers. Infants sit on the lap of an adult aged 18 or over. Age is calculated on the travel date.")</p>
 
+    @if (Promotion.IsActive)
+    {
     <section class="promo" id="uu-dai">
         <span class="promo__icon">@Html.Icon("ticket-percent", 26)</span>
         <div class="promo__body">
+<<<<<<< Updated upstream
             <h2 class="promo__title">Thêm một lý do để cất cánh</h2>
             <p class="promo__text">Giảm 100.000 ₫ phí dịch vụ cho đơn từ 3.000.000 ₫ · Đến 15/11/2026</p>
+=======
+            <h2 class="promo__title">@T("Ưu đãi đặt vé", "Booking offer")</h2>
+            <p class="promo__text">@T(
+                $"Giảm đến {Money.Vnd(BookingPromotion.MaximumDiscount)} phí dịch vụ cho đơn từ {Money.Vnd(BookingPromotion.Minimum)} · Đến {Promotion.EndsAtText}",
+                $"Save up to {Money.Vnd(BookingPromotion.MaximumDiscount)} on service fees for bookings from {Money.Vnd(BookingPromotion.Minimum)} · Until {Promotion.EndsAtText}")</p>
+>>>>>>> Stashed changes
         </div>
-        <span class="av-badge av-badge--info">Mã: AERONEW</span>
-        <a class="av-btn av-btn--outline" href="#uu-dai">Xem điều kiện</a>
+        <span class="av-badge av-badge--info">@T("Mã", "Code") @BookingPromotion.Code</span>
+        <a class="av-btn av-btn--outline" href="/khuyen-mai">@T("Xem điều kiện", "View terms")</a>
     </section>
+    }
 
+    @if (Model.Destinations.Count > 0)
+    {
     <section class="av-stack av-gap-20">
         <header class="dest-head">
             <div class="dest-head__main">
-                <h2 class="dest-head__title">Đi gần hơn, khám phá nhiều hơn</h2>
-                <p class="av-page-subtitle">Gợi ý khởi hành từ TP. Hồ Chí Minh</p>
+                <h2 class="dest-head__title">@T("Đi gần hơn, khám phá nhiều hơn", "Explore more of Vietnam")</h2>
+                <p class="av-page-subtitle">@T("Gợi ý khởi hành từ TP. Hồ Chí Minh", "Suggested flights from Ho Chi Minh City")</p>
             </div>
-            <a class="av-link" href="/chuyen-bay">Khám phá điểm đến @Html.Icon("arrow-right", 15)</a>
+            <a class="av-link" href="/chuyen-bay">@T("Khám phá điểm đến", "Explore destinations") @Html.Icon("arrow-right", 15)</a>
         </header>
 
         <div class="dest-grid">
             @foreach (var dest in Model.Destinations)
             {
                 <a class="dest-card" asp-controller="Flights" asp-action="Index"
+<<<<<<< Updated upstream
                    asp-route-to="@dest.Name" asp-route-depart="20/11/2026">
+=======
+                   asp-route-from="SGN" asp-route-to="@dest.Code" asp-route-depart="@Model.Search.DepartDate">
+>>>>>>> Stashed changes
                     <span class="dest-card__media" style="background-image:url('/img/@dest.ImageFile')" role="img"
-                          aria-label="Ảnh @dest.Name"></span>
+                          aria-label="@T($"Ảnh {dest.Name}", $"Photo of {dest.Name}")"></span>
                     <span class="dest-card__body">
                         <span class="dest-card__name">
                             <strong>@dest.Name</strong>
@@ -136,27 +156,150 @@
             }
         </div>
     </section>
+    }
 
+<<<<<<< Updated upstream
     <section class="benefits" aria-label="Dịch vụ đồng hành">
+=======
+    <section class="av-stack av-gap-20" id="huong-dan" aria-labelledby="home-steps-title">
+        <header class="dest-head">
+            <div class="dest-head__main">
+                <h2 class="dest-head__title" id="home-steps-title">@T("Hướng dẫn đặt vé", "How to book")</h2>
+                <p class="av-page-subtitle">@T("Bốn bước từ tìm chuyến đến nhận vé điện tử.", "Four steps from finding a flight to receiving your e-ticket.")</p>
+            </div>
+            <a class="av-link" href="#tim-chuyen">@T("Bắt đầu tìm chuyến", "Start searching") @Html.Icon("arrow-right", 15)</a>
+        </header>
+
+        <ol class="step-list">
+            <li class="step-card">
+                <span class="step-card__num">1</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">@T("Tìm chuyến bay", "Find flights")</span>
+                    <span class="step-card__text">@T("Nhập nơi đi, nơi đến, ngày bay và số hành khách. Giá hiển thị đã gồm thuế, phí.", "Enter your route, travel dates and number of passengers. Prices include taxes and fees.")</span>
+                </div>
+            </li>
+            <li class="step-card">
+                <span class="step-card__num">2</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">@T("Chọn chuyến & hạng vé", "Choose a flight and cabin")</span>
+                    <span class="step-card__text">@T("So sánh giờ bay, giá Phổ thông / Thương gia và chọn chuyến cho từng chiều.", "Compare flight times and Economy or Business fares, then choose a flight for each leg.")</span>
+                </div>
+            </li>
+            <li class="step-card">
+                <span class="step-card__num">3</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">@T("Nhập thông tin hành khách", "Enter passenger details")</span>
+                    <span class="step-card__text">@T("Họ tên trùng giấy tờ tùy thân, email và số điện thoại dùng để nhận vé.", "Enter names as shown on identification, plus the contact email and phone number for the booking.")</span>
+                </div>
+            </li>
+            <li class="step-card">
+                <span class="step-card__num">4</span>
+                <div class="step-card__body">
+                    <span class="step-card__title">@T("Thanh toán & nhận vé", "Pay and receive your ticket")</span>
+                    <span class="step-card__text">@T("Xem hạn giữ chỗ tại trang thanh toán. Sau khi giao dịch được xác nhận, bạn có thể tải vé điện tử.", "Check when your hold expires on the payment page. Download your e-ticket after the transaction is confirmed.")</span>
+                </div>
+            </li>
+        </ol>
+    </section>
+
+    <section class="av-stack av-gap-20" id="quy-tac" aria-labelledby="home-rules-title">
+        <header class="dest-head">
+            <div class="dest-head__main">
+                <h2 class="dest-head__title" id="home-rules-title">@T("Quy tắc & thủ tục", "Travel rules and policies")</h2>
+                <p class="av-page-subtitle">@T("Những điều cần biết trước khi khởi hành.", "What to know before departure.")</p>
+            </div>
+            <a class="av-link" href="/tra-cuu">@T("Tra cứu đặt chỗ", "Look up a booking") @Html.Icon("arrow-right", 15)</a>
+        </header>
+
+        <div class="rule-grid">
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("id-card", 20)</span>
+                        <h3 class="rule-card__title">@T("Thông tin hành khách", "Passenger details")</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>@T("Nhập họ tên theo giấy tờ của từng người và kiểm tra trước khi giữ chỗ.", "Enter each passenger's name as shown on their ID and check it before placing a hold.")</li>
+                        <li>@T("Tuổi được tính theo ngày bay của từng chặng. Xem", "Age is calculated on the date of each flight. See the") <a asp-controller="Policies" asp-action="Carriage">@T("điều kiện vận chuyển", "conditions of carriage")</a> @T("khi đặt vé cho trẻ em hoặc em bé.", "when booking for children or infants.")</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("luggage", 20)</span>
+                        <h3 class="rule-card__title">@T("Hành lý", "Baggage")</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>@T("Hành lý demo cho khách có ghế: 12 kg xách tay.", "The demo allowance is 12 kg of carry-on baggage for passengers with a seat.")</li>
+                        <li>@T("Hành lý demo: 23 kg ký gửi/khách có ghế; mua thêm 10 kg hoặc 20 kg ở bước đặt vé. Em bé không có hành lý riêng.", "Passengers with a seat get 23 kg of checked baggage in the demo. Add 10 kg or 20 kg when booking. Lap infants have no separate allowance.")</li>
+                        <li>@T("Chất lỏng, pin dự phòng và vật phẩm cấm tuân theo quy định an ninh hàng không.", "Liquids, power banks and prohibited items are subject to aviation security rules.")</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("refresh", 20)</span>
+                        <h3 class="rule-card__title">@T("Đổi / hoàn vé", "Changes and refunds")</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>@T("Gửi yêu cầu cho vé chưa sử dụng khi còn hơn 3 giờ trước chuyến đầu tiên.", "Request a change or refund for unused tickets more than 3 hours before the first flight.")</li>
+                        <li>@T("Đổi đơn nhóm/khứ hồi/Thương gia cần liên hệ hỗ trợ. Yêu cầu hoàn trong demo áp dụng toàn bộ đặt chỗ.", "Contact support to change a group, round-trip or Business booking. Demo refunds cover the entire booking.")</li>
+                        <li>@T("Phí dịch vụ và hành lý mua thêm không hoàn. Số tiền cuối cùng được xác nhận khi xử lý.", "Service fees and extra baggage are non-refundable. The final amount is confirmed when the request is processed.")</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="av-card">
+                <div class="av-card__body av-card__stack">
+                    <div class="rule-card__head">
+                        <span class="rule-card__icon">@Html.Icon("credit-card", 20)</span>
+                        <h3 class="rule-card__title">@T("Thanh toán & hoàn tiền", "Payment and refunds")</h3>
+                    </div>
+                    <ul class="rule-list">
+                        <li>@T("Thanh toán bằng VNPAY Sandbox khi đã cấu hình merchant, thẻ mô phỏng nội bộ hoặc QR do nhân viên đối soát.", "Try a demo card or a QR transfer verified by staff. VNPAY Sandbox is available when a merchant is configured.")</li>
+                        <li>@T("Kiểm tra thời hạn giữ ghế hiển thị tại trang thanh toán.", "Check the seat hold expiry on the payment page.")</li>
+                        <li>@T("Hoàn tiền hiện là quy trình demo; trạng thái “Đã duyệt” chưa phải đã nhận tiền.", "In the refund demo, an approved request is still awaiting a refund.")</li>
+                    </ul>
+                </div>
+            </article>
+        </div>
+
+        <p class="rules__note">
+            <strong>@T("Cần hỗ trợ?", "Need help?")</strong>
+            @T("Chuẩn bị mã đặt chỗ (PNR) rồi", "Have your booking reference (PNR) ready and") <a class="av-link" asp-controller="Home" asp-action="About" asp-fragment="ho-tro">@T("xem thông tin liên hệ và hỗ trợ", "view support contacts")</a>.
+        </p>
+    </section>
+
+    <section class="benefits" aria-label="@T("Dịch vụ đồng hành", "Booking benefits")">
+>>>>>>> Stashed changes
         <div class="benefit">
             @Html.Icon("badge-check", 24)
             <div class="benefit__body">
-                <span class="benefit__title">Giá vé minh bạch</span>
-                <span class="benefit__text">Xem đủ thuế và phí trước khi thanh toán.</span>
+                <span class="benefit__title">@T("Giá vé minh bạch", "Clear pricing")</span>
+                <span class="benefit__text">@T("Xem đủ thuế và phí trước khi thanh toán.", "See all taxes and fees before you pay.")</span>
             </div>
         </div>
         <div class="benefit">
             @Html.Icon("luggage", 24)
             <div class="benefit__body">
-                <span class="benefit__title">Dịch vụ theo nhu cầu</span>
-                <span class="benefit__text">Chủ động chọn hành lý và chỗ ngồi.</span>
+                <span class="benefit__title">@T("Dịch vụ theo nhu cầu", "Travel options")</span>
+                <span class="benefit__text">@T("Chủ động chọn hành lý và chỗ ngồi.", "Choose your seat and baggage.")</span>
             </div>
         </div>
         <div class="benefit">
             @Html.Icon("headset", 24)
             <div class="benefit__body">
+<<<<<<< Updated upstream
                 <span class="benefit__title">Luôn sẵn sàng hỗ trợ</span>
                 <span class="benefit__text">Tổng đài 1900 6868 · 06:00–22:00.</span>
+=======
+                <span class="benefit__title">@T("Hỗ trợ đặt vé", "Booking support")</span>
+                <span class="benefit__text">@T("Tổng đài", "Call") @ViewData["SupportHotline"].</span>
+>>>>>>> Stashed changes
             </div>
         </div>
     </section>

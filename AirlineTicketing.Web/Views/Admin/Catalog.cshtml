@@ -1,6 +1,6 @@
 @model AdminCatalogViewModel
 @{
-    ViewData["Title"] = "Danh mục hệ thống";
+    ViewData["Title"] = T("Danh mục hệ thống", "System catalog");
     ViewData["AdminNav"] = "catalog";
 
     var activeTab = Model.Tabs.FirstOrDefault(tab => tab.IsActive);
@@ -13,13 +13,22 @@
         _ => ""
     };
     Func<string, string> statusTone = status => status is "Tạm dừng" or "Bảo trì" ? "warning" : "success";
+    string DisplayStatus(string status) => status switch
+    {
+        "Tất cả" => T(status, "All"),
+        "Tạm dừng" => T(status, "Suspended"),
+        "Bảo trì" => T(status, "Maintenance"),
+        "Đang khai thác" => T(status, "Active"),
+        "Ngừng" => T(status, "Inactive"),
+        _ => UiLanguage.Label(status)
+    };
 }
 
 <div class="admin-page">
     <header class="admin-page-head">
         <div class="admin-page-head__main">
-            <h1 class="admin-page-title">Danh mục hệ thống</h1>
-            <p class="admin-page-subtitle">Quản lý dữ liệu nền dùng chung cho tìm kiếm, đặt vé và lịch khai thác.</p>
+            <h1 class="admin-page-title">@T("Danh mục hệ thống", "System catalog")</h1>
+            <p class="admin-page-subtitle">@T("Quản lý dữ liệu nền dùng chung cho tìm kiếm, đặt vé và lịch khai thác.", "Manage shared reference data for search, bookings and flight operations.")</p>
         </div>
         <button type="button" class="av-btn av-btn--primary">
             @Html.Icon("plus", 17)
@@ -27,7 +36,22 @@
         </button>
     </header>
 
+<<<<<<< Updated upstream
     <nav class="admin-tabs" aria-label="Nhóm dữ liệu danh mục">
+=======
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="av-alert av-alert--@Model.MessageTone" role="@(Model.MessageTone == "danger" ? "alert" : "status")">
+            <span class="av-alert__icon">@Html.Icon(Model.MessageTone == "success" ? "check" : "info", 20)</span>
+            <div class="av-alert__body">
+                <span class="av-alert__title">@(Model.MessageTone == "success" ? T("Đã cập nhật", "Updated") : T("Không thể lưu", "Could not save"))</span>
+                <span>@Model.Message</span>
+            </div>
+        </div>
+    }
+
+    <nav class="admin-tabs" aria-label="@T("Nhóm dữ liệu danh mục", "Catalog categories")">
+>>>>>>> Stashed changes
         @foreach (var tab in Model.Tabs)
         {
             <a class="admin-tab @(tab.IsActive ? "is-active" : null)" href="@tab.Href"
@@ -67,10 +91,10 @@
                         <span class="av-label">@Model.StatusLabel</span>
                         <span class="av-control">
                             <select name="trang-thai">
-                                <option selected>@Model.StatusFilter</option>
-                                <option>Hoạt động</option>
-                                <option>Tạm dừng</option>
-                                <option>Bảo trì</option>
+                                <option value="@Model.StatusFilter" selected>@DisplayStatus(Model.StatusFilter)</option>
+                                <option value="Hoạt động">@T("Hoạt động", "Active")</option>
+                                <option value="Tạm dừng">@T("Tạm dừng", "Suspended")</option>
+                                <option value="Bảo trì">@T("Bảo trì", "Maintenance")</option>
                             </select>
                             @Html.Icon("chevron-down", 17)
                         </span>
@@ -100,9 +124,18 @@
                                         }
                                     </td>
                                     <td>@row.Meta</td>
-                                    <td class="admin-table__result admin-table__result--@statusTone(row.StatusText)">@row.StatusText</td>
+                                    <td class="admin-table__result admin-table__result--@statusTone(row.StatusText)">@DisplayStatus(row.StatusText)</td>
                                 </tr>
                             }
+<<<<<<< Updated upstream
+=======
+                            @if (Model.Rows.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="4" class="av-caption">@T("Chưa có dữ liệu phù hợp bộ lọc.", "No records match the filters.")</td>
+                                </tr>
+                            }
+>>>>>>> Stashed changes
                         </tbody>
                     </table>
                 </div>
@@ -110,9 +143,9 @@
                 <div class="av-pagination">
                     <span>@Model.ResultText</span>
                     <span class="av-pagination__links">
-                        <a href="@(activeTab?.Href ?? "/admin/danh-muc")">Trước</a>
+                        <a href="@(activeTab?.Href ?? "/admin/danh-muc")">@T("Trước", "Previous")</a>
                         <span class="is-current">1</span>
-                        <a href="@(activeTab?.Href ?? "/admin/danh-muc")">Sau</a>
+                        <a href="@(activeTab?.Href ?? "/admin/danh-muc")">@T("Sau", "Next")</a>
                     </span>
                 </div>
             </div>
@@ -169,7 +202,16 @@
                                     </span>
                                     @if (field.Hint is not null)
                                     {
+<<<<<<< Updated upstream
                                         <span class="av-field__hint">@field.Hint</span>
+=======
+                                        <select name="@field.Name">
+                                            @foreach (var option in field.Options)
+                                            {
+                                                <option value="@option" selected="@(option == field.Value)">@DisplayStatus(option)</option>
+                                            }
+                                        </select>
+>>>>>>> Stashed changes
                                     }
                                 </label>
                             }
@@ -179,8 +221,8 @@
                     <p class="admin-editor__note">@Model.EditorNote</p>
 
                     <div class="admin-editor__actions">
-                        <a class="av-btn av-btn--outline" href="@(activeTab?.Href ?? "/admin/danh-muc")">Hủy</a>
-                        <button type="submit" class="av-btn av-btn--primary">Lưu thay đổi</button>
+                        <a class="av-btn av-btn--outline" href="@(activeTab?.Href ?? "/admin/danh-muc")">@T("Hủy", "Cancel")</a>
+                        <button type="submit" class="av-btn av-btn--primary">@T("Lưu thay đổi", "Save changes")</button>
                     </div>
                 </form>
             </article>

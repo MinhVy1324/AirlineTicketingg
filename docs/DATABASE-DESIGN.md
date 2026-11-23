@@ -17,6 +17,10 @@ erDiagram
     KHACHHANG o|--o| TAIKHOAN : account
     DATVE ||--o{ THANHTOAN : payment_attempts
     THANHTOAN ||--o{ HOANTIEN : refund_attempts
+    KHACHHANG o|--o{ TAIKHOAN : linked_identity
+    TAIKHOAN o|--o{ NHATKYHOATDONG : records
+    THANHTOAN ||--o{ CHUNGTUDOISOAT : reconciles
+    HOANTIEN o|--o{ CHUNGTUDOISOAT : refund_evidence
 
     SANBAY {
         int Id PK
@@ -122,6 +126,31 @@ erDiagram
         timestamptz NgayTao
         timestamptz NgayHoanTat
     }
+    TAIKHOAN {
+        int Id PK
+        int KhachHangId FK
+        string Email UK
+        string TenDangNhap UK
+        string MatKhauHash
+        string VaiTro
+        string TrangThai
+    }
+    NHATKYHOATDONG {
+        int Id PK
+        int TaiKhoanId FK
+        string MaNhatKy UK
+        string HanhDong
+        timestamptz ThoiGian
+    }
+    CHUNGTUDOISOAT {
+        int Id PK
+        int ThanhToanId FK
+        int HoanTienId FK
+        string NhaCungCap
+        string MaChungTu
+        numeric SoTien
+        timestamptz ThoiDiem
+    }
 ```
 
 ## Vì sao tách các bảng
@@ -153,10 +182,14 @@ erDiagram
 | `KhachHangDTO`, `HanhKhachDTO`, `VeDTO` | Hợp đồng riêng cho người liên hệ, người bay và vé |
 | `DangKyDTO`, `DangNhapDTO`, `TaiKhoanDTO` | Đăng ký, đăng nhập, hồ sơ và quản lý tài khoản theo vai trò |
 | `TaoThanhToanDTO` / `ThanhToanDTO` / `HoanTienDTO` | Gửi yêu cầu thanh toán, xem giao dịch và lịch sử hoàn tiền |
-| `ThongKeDoanhThuDTO` / `DoanhThuTheoNgayDTO` | Trả báo cáo tiền đã thu, tiền đã hoàn và doanh thu thuần |
+| `BaoCaoDoanhThuDTO` / `DoanhThuTheoChuyen` | Trả tổng đã thu, đã hoàn, thu ròng và dòng chi tiết theo chuyến |
 
 DTO đầu vào có validation annotations cơ bản. BUS/API vẫn phải kiểm tra quyền, trạng thái nghiệp vụ, ghế còn, giới hạn trang và tổng tiền; không tin tổng tiền do client gửi. Server tính tổng từ giá chuyến bay và lưu snapshot trên từng vé/đặt vé.
 
 ## Docker và migration
 
-`compose.yaml` giữ PostgreSQL trong named volume `postgres_data`, chờ health check đăng nhập được bằng chính user/database/mật khẩu trong `.env`, rồi mới khởi động web. `Database__ApplyMigrationsOnStartup=true` chạy EF migrations khi web khởi động. Doanh thu thuần tổng hợp theo cùng đơn vị tiền tệ: giao dịch thanh toán thành công trừ giao dịch hoàn tiền thành công trong kỳ. Mọi thay đổi model sau migration đầu cần tạo migration mới và commit cùng code; không xóa volume để cập nhật schema.
+`compose.yaml` giữ PostgreSQL trong volume `postgres_data`. Khi cơ sở dữ liệu đạt health check, dịch vụ `migrate` áp dụng các migration và seed dữ liệu demo theo cấu hình. Web khởi động sau khi dịch vụ `migrate` hoàn tất.
+
+### Số liệu doanh thu
+
+`ThongKeBUS` chỉ tổng hợp giao dịch VND thành công. Kỳ báo cáo được tính theo ngày thu hoặc hoàn (UTC+7). Với khoản thu thành công cũ thiếu thời điểm hoàn tất, hệ thống lấy ngày tạo. Báo cáo theo chuyến phân bổ tiền theo giá và phí của các vé đang gắn với đặt chỗ. Nếu hành trình được đổi sau khi thu tiền, báo cáo theo chuyến phản ánh hành trình hiện tại của đặt chỗ.

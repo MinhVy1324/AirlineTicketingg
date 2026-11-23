@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+using System.Data;
+>>>>>>> Stashed changes
 using AirlineTicketing.DAL;
 using AirlineTicketing.Domain;
 using AirlineTicketing.DTO;
@@ -5,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicketing.BUS;
 
+<<<<<<< Updated upstream
 public sealed class ThongKeBUS(AppDbContext dbContext) : IThongKeBUS
 {
     public async Task<ThongKeDoanhThuDTO> GetDoanhThuTongQuanAsync(
@@ -310,4 +315,86 @@ public sealed class ThongKeBUS(AppDbContext dbContext) : IThongKeBUS
             DoanhThuThangNay = thuMonth - hoanMonth
         };
     }
+=======
+public sealed class ThongKeBUS(AppDbContext db)
+{
+    public const string DonViBaoCao = "VND";
+
+    public async Task<BaoCaoDoanhThuDTO> LayBaoCaoAsync(DateTimeOffset tuLuc, DateTimeOffset denLuc,
+        DateTimeOffset tuLucKyTruoc, DateTimeOffset tuLucXuHuong, DateTimeOffset denLucXuHuong,
+        string? hang, string? tuyen, string? soHieu, CancellationToken ct)
+    {
+        var start = tuLuc.ToUniversalTime();
+        var end = denLuc.ToUniversalTime();
+        var previous = tuLucKyTruoc.ToUniversalTime();
+        var trendStart = tuLucXuHuong.ToUniversalTime();
+        var trendEnd = denLucXuHuong.ToUniversalTime();
+        var paymentStart = previous < trendStart ? previous : trendStart;
+        var paymentEnd = end > trendEnd ? end : trendEnd;
+        bool Matches(ChuyenBaoCao flight) =>
+            (hang is null || flight.Hang == hang) &&
+            (tuyen is null || flight.Tuyen == tuyen) &&
+            (soHieu is null || string.Equals(flight.SoHieu, soHieu, StringComparison.OrdinalIgnoreCase));
+
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, ct);
+        var payments = await db.ThanhToans.AsNoTracking().AsSplitQuery()
+            .Include(p => p.DatVe).ThenInclude(b => b.Ves).ThenInclude(v => v.ChuyenBay).ThenInclude(f => f.TuyenBay).ThenInclude(t => t.SanBayDi)
+            .Include(p => p.DatVe).ThenInclude(b => b.Ves).ThenInclude(v => v.ChuyenBay).ThenInclude(f => f.TuyenBay).ThenInclude(t => t.SanBayDen)
+            .Include(p => p.DatVe).ThenInclude(b => b.Ves).ThenInclude(v => v.ChuyenBay).ThenInclude(f => f.HangHangKhong)
+            .Where(p => p.DonViTienTe == DonViBaoCao && p.TrangThai == TrangThaiThanhToan.ThanhCong
+                && (p.NgayHoanTat ?? p.NgayTao) >= paymentStart && (p.NgayHoanTat ?? p.NgayTao) < paymentEnd)
+            .ToListAsync(ct);
+        var collections = payments.SelectMany(p => Allocate(p.Id, p.DatVe, p.NgayHoanTat ?? p.NgayTao, p.SoTien))
+            .Where(p => Matches(p.Chuyen)).ToArray();
+
+        var refunds = await db.HoanTiens.AsNoTracking().AsSplitQuery()
+            .Include(r => r.ThanhToan).ThenInclude(p => p.DatVe).ThenInclude(b => b.Ves).ThenInclude(v => v.ChuyenBay).ThenInclude(f => f.TuyenBay).ThenInclude(t => t.SanBayDi)
+            .Include(r => r.ThanhToan).ThenInclude(p => p.DatVe).ThenInclude(b => b.Ves).ThenInclude(v => v.ChuyenBay).ThenInclude(f => f.TuyenBay).ThenInclude(t => t.SanBayDen)
+            .Include(r => r.ThanhToan).ThenInclude(p => p.DatVe).ThenInclude(b => b.Ves).ThenInclude(v => v.ChuyenBay).ThenInclude(f => f.HangHangKhong)
+            .Where(r => r.DonViTienTe == DonViBaoCao && r.ThanhToan.DonViTienTe == DonViBaoCao
+                && r.ThanhToan.TrangThai == TrangThaiThanhToan.ThanhCong
+                && r.TrangThai == TrangThaiHoanTien.ThanhCong && r.NgayHoanTat >= start && r.NgayHoanTat < end)
+            .ToListAsync(ct);
+        var returns = refunds.SelectMany(r => Allocate(r.Id, r.ThanhToan.DatVe, r.NgayHoanTat!.Value, r.SoTien))
+            .Where(r => Matches(r.Chuyen)).ToArray();
+
+        var issued = await db.Ves.AsNoTracking()
+            .Include(v => v.ChuyenBay).ThenInclude(f => f.TuyenBay).ThenInclude(t => t.SanBayDi)
+            .Include(v => v.ChuyenBay).ThenInclude(f => f.TuyenBay).ThenInclude(t => t.SanBayDen)
+            .Include(v => v.ChuyenBay).ThenInclude(f => f.HangHangKhong)
+            .Where(v => v.NgayPhatHanh >= previous && v.NgayPhatHanh < end)
+            .ToListAsync(ct);
+        var ticketFacts = issued.Select(v => (When: v.NgayPhatHanh!.Value, Flight: Flight(v.ChuyenBay)))
+            .Where(v => Matches(v.Flight)).ToArray();
+
+        var bookingCounts = await db.DatVes.AsNoTracking().Where(b => b.NgayDat >= start && b.NgayDat < end)
+            .GroupBy(b => b.TrangThai).Select(status => new { Status = status.Key, Count = status.Count() }).ToListAsync(ct);
+        await transaction.CommitAsync(ct);
+
+        var activity = collections.Where(p => p.GhiNhanLuc >= start && p.GhiNhanLuc < end)
+            .Select(p => new DoanhThuTheoChuyen(p.Chuyen, 0, p.SoTien, 0))
+            .Concat(returns.Select(r => new DoanhThuTheoChuyen(r.Chuyen, 0, 0, r.SoTien)))
+            .Concat(ticketFacts.Where(v => v.When >= start).Select(v => new DoanhThuTheoChuyen(v.Flight, 1, 0, 0)));
+        var byFlight = activity.GroupBy(row => row.Chuyen)
+            .Select(group => new DoanhThuTheoChuyen(group.Key, group.Sum(x => x.VeDaXuat), group.Sum(x => x.DaThu), group.Sum(x => x.DaHoan)))
+            .OrderBy(row => row.Chuyen.KhoiHanh).ThenBy(row => row.Chuyen.Id).ToArray();
+        return new BaoCaoDoanhThuDTO(byFlight,
+            collections.Where(p => p.GhiNhanLuc >= trendStart && p.GhiNhanLuc < trendEnd).ToArray(),
+            collections.Where(p => p.GhiNhanLuc >= previous && p.GhiNhanLuc < start).Sum(p => p.SoTien),
+            ticketFacts.Count(v => v.When < start),
+            bookingCounts.Sum(x => x.Count),
+            bookingCounts.Where(x => x.Status is TrangThaiDatVe.DaHuy or TrangThaiDatVe.HetHan).Sum(x => x.Count),
+            returns.Select(r => r.Id).Distinct().Count());
+    }
+
+    private static IEnumerable<KhoanBaoCao> Allocate(int id, DatVe booking, DateTimeOffset at, decimal amount) =>
+        JourneyAmounts.Allocate(booking, amount).Select(part => new KhoanBaoCao(id, at, part.Amount, Flight(part.Ticket?.ChuyenBay)));
+
+    private static ChuyenBaoCao Flight(ChuyenBay? flight) =>
+        flight is null
+            ? new(null, null, null, "Khác", "Khác")
+            : new(flight.Id, flight.SoHieu, flight.GioKhoiHanh, TenTuyen(flight.TuyenBay), flight.HangHangKhong?.TenHang ?? "Khác");
+
+    public static string TenTuyen(TuyenBay route) => $"{route.SanBayDi.MaSanBay} ↔ {route.SanBayDen.MaSanBay}";
+>>>>>>> Stashed changes
 }

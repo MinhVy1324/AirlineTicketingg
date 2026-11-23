@@ -214,8 +214,9 @@ Không dùng một trường `TrangThai` để đại diện đồng thời tr�
 - **Sao lưu/khôi phục:** Backup PostgreSQL định kỳ, kiểm tra khôi phục; thời gian lưu audit và dữ liệu cá nhân cần được chủ hệ thống chốt.
 - **Khả dụng:** Lỗi cổng thanh toán không làm mất booking; worker có retry có giới hạn và hàng chờ xử lý thủ công khi kết quả không rõ.
 
-## 9. Mô hình dữ liệu đích và khoảng cách với code hiện tại
+## 9. Ánh xạ nghiệp vụ vào mã nguồn
 
+<<<<<<< Updated upstream
 | Thành phần                        | Vai trò                                                                                                  | Tình trạng trong project hiện tại                                                             |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `SanBay`                          | Danh mục sân bay, cần thêm mã IATA/múi giờ/trạng thái theo quy ước.                                      | Đã có entity và EF configuration cơ bản.                                                      |
@@ -231,8 +232,20 @@ Không dùng một trường `TrangThai` để đại diện đồng thời tr�
 | `TaiKhoan`                        | Tài khoản người dùng hệ thống, mã hóa mật khẩu PBKDF2, phân quyền (Admin, Nhân viên, Khách hàng).        | Đã có entity TaiKhoan, EF configuration, migration AddTaiKhoanManagement, DTO, BUS và UI.      |
 | `LichSuDatVe`                     | Lịch sử đổi/hủy, lý do, phí/chênh lệch, actor.                                                           | Chưa có; cần bổ sung để audit và đối soát.                                                    |
 | `QuyTacVe`                        | Điều kiện giá, hạn đổi/hủy và phí; cần snapshot phiên bản lúc bán.                                       | Chưa có; nên lưu chính sách có phiên bản và snapshot áp dụng cho từng chi tiết đặt vé.        |
+=======
+| Thành phần | Triển khai hiện tại |
+| --- | --- |
+| Sân bay, máy bay, tuyến và chuyến | Có các entity và cấu hình EF riêng. Chuyến bay tham chiếu tuyến qua TuyenBayId. Tuyến tham chiếu sân bay đi và đến. |
+| Hạng vé | HangVe lưu giá, hành lý, phí và số ghế theo chuyến. Sơ đồ ghế demo được dùng chung giữa các hạng và tồn chỗ được kiểm tra tại thời điểm đặt. |
+| Đặt chỗ, người liên hệ và hành khách | DatVe lưu tổng đã chốt, thông tin liên hệ và hạn giữ chỗ. KhachHang và HanhKhach lưu người đặt và người bay. Ve gắn một người bay với một chuyến của đặt chỗ, lưu ghế, giá và phí thực tế. |
+| Thanh toán, hoàn tiền và đối soát | ThanhToan lưu lần thu và mã nhà cung cấp. HoanTien liên kết khoản thu gốc. ChungTuDoiSoat lưu chứng từ, số tiền, kết quả và người ghi nhận. |
+| Đổi, hoàn và biến động | YeuCauDoiHoan và LichSuDatVe ghi yêu cầu và quá trình xử lý. Các khoản phí áp dụng được lưu trên vé hoặc yêu cầu. |
+| Tài khoản và nhân viên | TaiKhoan dùng chung cho Admin, Manager và KhachHang. TaiKhoanBUS xử lý đăng nhập, đăng ký, đổi mật khẩu qua email và hồ sơ. NhatKyHoatDong lưu mã riêng cho từng thao tác. |
+| Báo cáo doanh thu | ThongKeBUS lấy giao dịch đã thu và đã hoàn cùng đơn vị VND, theo thời điểm ghi nhận UTC+7. Ngày tạo được dùng cho khoản thu thành công cũ thiếu ngày hoàn tất. Báo cáo nhóm theo tuyến, hãng và chuyến bay, có lọc theo số hiệu và xuất CSV. |
 
-Quan hệ tối thiểu: `SanBay` → `TuyenBay` (vai trò đi/đến); `TuyenBay` → `ChuyenBay`; `MayBay` → `ChuyenBay`; `ChuyenBay` → tồn kho `ChuyenBayHangVe`; `DatVe` → `HanhKhach`, `ChiTietDatVe`, `GiaoDichThanhToan`, `LichSuDatVe`; mỗi `ChiTietDatVe` tham chiếu một hành khách, một chuyến/hạng vé và có thể phát hành một hay nhiều bản ghi vé lịch sử nhưng tối đa một vé còn hiệu lực.
+Hồ sơ tại /ho-so dùng email đăng nhập để nhận diện tài khoản. Khách có thể cập nhật họ tên và số điện thoại. Thông tin liên hệ của đơn đã tạo được lưu trên DatVe để phục vụ tra cứu và đối soát.
+>>>>>>> Stashed changes
+
 
 ## 10. Quy ước đặt tên, định dạng và DTO
 
@@ -342,7 +355,7 @@ Các mục trên cần được chốt trước khi viết nghiệp vụ đổi/
 
 ## 12. Mô hình phân tích và thiết kế
 
-Các sơ đồ dưới đây mô tả mô hình nghiệp vụ mục tiêu cho hệ thống. Đây là đặc tả để thống nhất trước khi triển khai; một số đối tượng như `TuyenBay`, `HanhKhach`, giao dịch thanh toán/hoàn tiền và lịch sử trạng thái chưa có đầy đủ trong code hiện tại. Tên trong sơ đồ là tên khái niệm; khi ánh xạ sang C# và PostgreSQL áp dụng quy ước tại mục 10. Các khối Mermaid có thể xem trực tiếp trên nền tảng hỗ trợ Mermaid hoặc tại [tài liệu cú pháp Mermaid](https://mermaid.js.org/intro/syntax-reference.html).
+Các sơ đồ dưới đây mô tả mô hình nghiệp vụ mục tiêu cho hệ thống. Mục 9 mô tả các entity và dịch vụ đang dùng để hiện thực mô hình này. Tên trong sơ đồ là tên khái niệm; khi ánh xạ sang C# và PostgreSQL áp dụng quy ước tại mục 10. Các khối Mermaid có thể xem trực tiếp trên nền tảng hỗ trợ Mermaid hoặc tại [tài liệu cú pháp Mermaid](https://mermaid.js.org/intro/syntax-reference.html).
 
 ### 12.1. Sơ đồ Use Case tổng quan
 
